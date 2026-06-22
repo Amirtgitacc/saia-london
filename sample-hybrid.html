@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SAÏA London — Yoga Mat Hire Across London</title>
+<meta name="description" content="Yoga mat hire across London — same-week delivery from £8.50 a mat. A female-led club: fitness, community & mindset.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/base.css">
+<style>
+  body { background: #F5F1E8; color: #2B2620; font-family: 'Libre Baskerville', Georgia, serif; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+  .home-desktop-nav { display: block; }
+  .home-mobile-nav { display: none; }
+  @media (max-width: 767px) {
+    .home-desktop-nav { display: none; }
+    .home-mobile-nav { display: block; }
+  }
+</style>
+<style>
+  .band-inner { will-change: transform, opacity; }
+  /* static fallback: mobile / prefers-reduced-motion / WebGL failure */
+  .is-static #top { height: auto !important; }
+  .is-static .home-sticky { position: static !important; height: auto !important; overflow: visible !important; }
+  .is-static #homeCanvas { display: none !important; }
+  .is-static #homeMat { display: block !important; position: static !important; transform: none !important; height: auto; width: auto; max-width: 86%; max-height: 44vh; margin: 32px auto; }
+  .is-static #stage { position: static !important; inset: auto !important; pointer-events: auto !important; }
+  .is-static [data-band] { position: static !important; inset: auto !important; opacity: 1 !important; display: block !important; padding: 48px 7vw !important; background: none !important; }
+  .is-static .band-inner { background: none !important; padding: 0 !important; max-width: 640px !important; margin: 0 auto; }
+  .is-static .band-inner { transform: none !important; }
+  .is-static #homeBar, .is-static #homeHint { display: none !important; }
+</style>
+</head>
+<body>
+<!-- SAÏA boot config — the ONE place URLs/endpoints live (becomes Liquid on Shopify) -->
+<script>
+  window.SAIA = window.SAIA || {};
+  window.SAIA_ASSETS = {
+    matGlb:     'assets/saia-mat.glb',
+    matTexture: 'assets/saia-mat-texture.png',
+    matFlatPng: 'assets/mat-flat.png'
+  };
+  window.SAIA_CONFIG = { conciergeEndpoint: 'http://localhost:8787/api/concierge' };
+</script>
+
+<div id="homeRoot" style="background:#F5F1E8; color:#2B2620; font-family:'Libre Baskerville',Georgia,serif; overflow-x:clip; position:relative;">
+
+  <!-- announcement -->
+  <div style="background:#2B2620; color:#F5F1E8; text-align:center; font-size:11px; letter-spacing:.24em; text-transform:uppercase; padding:11px 16px;">Yoga mat hire across London — same-week delivery from £8.50 a mat</div>
+
+  <!-- ============ HEADER (desktop) ============ -->
+  <header class="home-desktop-nav" style="position:sticky; top:0; z-index:50; background:rgba(245,241,232,.92); backdrop-filter:blur(10px); border-bottom:1px solid #DAD4C8;">
+    <div style="display:grid; grid-template-columns:1fr auto 1fr; align-items:center; padding:22px 48px; max-width:1480px; margin:0 auto;">
+      <nav style="display:flex; gap:32px; font-size:12px; letter-spacing:.18em; text-transform:uppercase; white-space:nowrap;">
+        <a href="#hire" class="saia-link" style="color:#2B2620; text-decoration:none;">Mat Hire</a>
+        <a href="#events" class="saia-link" style="color:#2B2620; text-decoration:none;">Events</a>
+        <a href="#story" class="saia-link" style="color:#2B2620; text-decoration:none;">Our Story</a>
+      </nav>
+      <a href="#top" style="text-align:center; text-decoration:none; color:#2B2620;"><div style="font-family:'Cormorant Garamond',serif; font-size:30px; letter-spacing:.2em; line-height:1;">SAÏA</div><div style="font-size:9px; letter-spacing:.52em; text-transform:uppercase; color:#6B6358; margin-top:3px;">London</div></a>
+      <div style="display:flex; gap:24px; justify-content:flex-end; align-items:center;">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#2B2620" stroke-width="1.3"><circle cx="11" cy="11" r="7"></circle><line x1="16.5" y1="16.5" x2="21" y2="21"></line></svg>
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#2B2620" stroke-width="1.3"><circle cx="12" cy="8" r="4"></circle><path d="M4.5 20.5c0-4 3.5-6 7.5-6s7.5 2 7.5 6"></path></svg>
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#2B2620" stroke-width="1.3"><path d="M6 8h12l-1 12H7L6 8z"></path><path d="M9 8V6.2a3 3 0 0 1 6 0V8"></path></svg>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============ HEADER (mobile) ============ -->
+  <header class="home-mobile-nav" style="position:sticky; top:0; z-index:50; background:rgba(245,241,232,.94); backdrop-filter:blur(10px); border-bottom:1px solid #DAD4C8;">
+    <div style="display:flex; align-items:center; justify-content:space-between; padding:16px 20px;">
+      <button id="navToggle" aria-label="Open menu" style="background:none; border:none; padding:6px; cursor:pointer; display:flex;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2B2620" stroke-width="1.3"><line x1="3" y1="7" x2="21" y2="7"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="17" x2="21" y2="17"></line></svg></button>
+      <a href="#top" style="text-align:center; text-decoration:none; color:#2B2620;"><div style="font-family:'Cormorant Garamond',serif; font-size:25px; letter-spacing:.2em; line-height:1;">SAÏA</div></a>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2B2620" stroke-width="1.3"><path d="M6 8h12l-1 12H7L6 8z"></path><path d="M9 8V6.2a3 3 0 0 1 6 0V8"></path></svg>
+    </div>
+  </header>
+  <div id="mobileDrawer" style="display:none; position:fixed; inset:0; z-index:60; background:#F5F1E8; padding:24px 28px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:48px;">
+      <div style="font-family:'Cormorant Garamond',serif; font-size:26px; letter-spacing:.2em;">SAÏA</div>
+      <button id="navClose" aria-label="Close menu" style="background:none; border:none; cursor:pointer; display:flex;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2B2620" stroke-width="1.3"><line x1="5" y1="5" x2="19" y2="19"></line><line x1="19" y1="5" x2="5" y2="19"></line></svg></button>
+    </div>
+    <nav style="display:flex; flex-direction:column; gap:6px;">
+      <a href="#hire" data-drawer-link style="font-family:'Cormorant Garamond',serif; font-size:38px; color:#2B2620; text-decoration:none; padding:10px 0; border-bottom:1px solid #DAD4C8;">Mat Hire</a>
+      <a href="#events" data-drawer-link style="font-family:'Cormorant Garamond',serif; font-size:38px; color:#2B2620; text-decoration:none; padding:10px 0; border-bottom:1px solid #DAD4C8;">Events</a>
+      <a href="#story" data-drawer-link style="font-family:'Cormorant Garamond',serif; font-size:38px; color:#2B2620; text-decoration:none; padding:10px 0; border-bottom:1px solid #DAD4C8;">Our Story</a>
+    </nav>
+  </div>
+
+  <!-- ============ THE PINNED 3D JOURNEY ============ -->
+  <div id="top" style="position:relative; height:700vh; background:#F5F1E8;">
+    <div class="home-sticky" style="position:sticky; top:0; height:100vh; overflow:hidden; background:#F5F1E8;">
+      <canvas id="homeCanvas" aria-hidden="true" style="position:absolute; inset:0; width:100%; height:100%; z-index:1; opacity:0;"></canvas>
+      <!-- film layer cross-fades in once the 3D mat is flat -->
+      <canvas id="filmCanvas" aria-hidden="true" style="position:absolute; inset:0; width:100%; height:100%; z-index:1; opacity:0;"></canvas>
+      <!-- readability scrim: keeps left-aligned chapter copy legible over footage -->
+      <div aria-hidden="true" style="position:absolute; inset:0; z-index:2; pointer-events:none; background:linear-gradient(90deg, rgba(245,241,232,.92) 0%, rgba(245,241,232,.6) 30%, rgba(245,241,232,0) 58%), linear-gradient(0deg, rgba(43,38,32,.14) 0%, rgba(43,38,32,0) 28%);"></div>
+
+      <div id="stage" style="position:absolute; inset:0; z-index:3; pointer-events:none;">
+
+        <!-- BAND 1 — HERO -->
+        <div data-band="0,0.10" style="position:absolute; inset:0; display:flex; align-items:center; justify-content:flex-start; padding:0 7vw;">
+          <div class="band-inner" style="max-width:620px;">
+            <div style="font-size:12px; letter-spacing:.3em; text-transform:uppercase; color:#2B2620; opacity:.7; margin-bottom:18px;">A women's club in London</div>
+            <h1 style="font-family:'Cormorant Garamond',serif; font-weight:500; font-size:clamp(3.4rem,8.5vw,6.4rem); line-height:.96; margin:0; color:#2B2620;">Yoga mat hire,<br>across London.</h1>
+            <p style="font-size:clamp(15px,1.5vw,18px); line-height:1.6; color:#2B2620; max-width:460px; margin:26px 0 0;">If you're organising a wellness event, you've landed in the right place — rent our mats for £8.50 each, with same-day delivery from our Central London warehouse.</p>
+            <div style="margin-top:26px; font-size:12px; letter-spacing:.36em; text-transform:uppercase; color:#6B6358;">Fitness · Community · Mindset</div>
+          </div>
+        </div>
+
+        <!-- BAND 2 — THE OPEN MAT + SPECS -->
+        <div data-band="0.10,0.28" style="position:absolute; inset:0; display:flex; align-items:center; justify-content:flex-start; padding:0 7vw;">
+          <div class="band-inner" style="max-width:440px;">
+            <div style="font-size:12px; letter-spacing:.3em; text-transform:uppercase; color:#6B6358; margin-bottom:18px;">The signature mat</div>
+            <h2 style="font-family:'Cormorant Garamond',serif; font-weight:500; font-size:clamp(34px,4.4vw,54px); line-height:1.04; margin:0 0 22px; color:#2B2620;">Made for grip,<br>made to last.</h2>
+            <p style="font-size:16px; line-height:1.75; color:#6B6358; margin:0 0 26px; max-width:400px;">One mat, exceptionally made — an ethically sourced natural-rubber base with a non-slip, anti-odour PU surface. Weighted to fall open and lie flat the moment you unroll it.</p>
+            <div style="display:flex; flex-wrap:wrap; gap:8px;">
+              <span style="font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:#6B6358; border:1px solid #C9C2B4; border-radius:30px; padding:6px 13px;">68 × 185 cm</span>
+              <span style="font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:#6B6358; border:1px solid #C9C2B4; border-radius:30px; padding:6px 13px;">4 mm</span>
+              <span style="font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:#6B6358; border:1px solid #C9C2B4; border-radius:30px; padding:6px 13px;">Natural rubber</span>
+              <span style="font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:#6B6358; border:1px solid #C9C2B4; border-radius:30px; padding:6px 13px;">Non-slip</span>
+            </div>
+            <div style="font-size:13px; color:#6B6358; margin-top:18px;">Retail value £79 each — <strong style="color:#2B2620;">for hire only.</strong></div>
+          </div>
+        </div>
+
+        <!-- BAND 3 — HOW HIRE WORKS -->
+        <div data-band="0.28,0.44" style="position:absolute; inset:0; display:flex; align-items:center; justify-content:flex-start; padding:0 7vw;">
+          <div class="band-inner" style="max-width:480px;">
+            <div style="font-size:12px; letter-spacing:.3em; text-transform:uppercase; color:#B8624A; margin-bottom:16px;">Mat hire</div>
+            <h2 style="font-family:'Cormorant Garamond',serif; font-weight:500; font-size:clamp(32px,4.4vw,52px); line-height:1.04; margin:0 0 14px; color:#2B2620;">Hiring is effortless.</h2>
+            <p style="font-size:15px; line-height:1.7; color:#6B6358; margin:0 0 28px; max-width:420px;">From a 10-mat morning class to a 200-person retreat — we handle delivery, set-up time and collection. £8.50 a mat, 2-day hire, minimum of ten.</p>
+            <div style="display:flex; flex-direction:column; gap:18px;">
+              <div style="display:flex; gap:16px; align-items:baseline;"><span style="font-family:'Cormorant Garamond',serif; font-size:22px; color:#B8624A;">01</span><div><div style="font-family:'Cormorant Garamond',serif; font-size:20px; color:#2B2620;">Tell us your event</div><div style="font-size:14px; line-height:1.6; color:#6B6358;">Date, location and how many mats. Minimum of ten.</div></div></div>
+              <div style="display:flex; gap:16px; align-items:baseline;"><span style="font-family:'Cormorant Garamond',serif; font-size:22px; color:#B8624A;">02</span><div><div style="font-family:'Cormorant Garamond',serif; font-size:20px; color:#2B2620;">We deliver early</div><div style="font-size:14px; line-height:1.6; color:#6B6358;">Mats arrive the day before by London courier — or collect from our NW3 studio.</div></div></div>
+              <div style="display:flex; gap:16px; align-items:baseline;"><span style="font-family:'Cormorant Garamond',serif; font-size:22px; color:#B8624A;">03</span><div><div style="font-family:'Cormorant Garamond',serif; font-size:20px; color:#2B2620;">You practise</div><div style="font-size:14px; line-height:1.6; color:#6B6358;">A clean, grippy mat under every guest. Nothing to set up, nothing to launder.</div></div></div>
+              <div style="display:flex; gap:16px; align-items:baseline;"><span style="font-family:'Cormorant Garamond',serif; font-size:22px; color:#B8624A;">04</span><div><div style="font-family:'Cormorant Garamond',serif; font-size:20px; color:#2B2620;">We collect after</div><div style="font-size:14px; line-height:1.6; color:#6B6358;">We pick everything up the day after. A 2-day hire from £8.50 a mat.</div></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- BAND 4 — FOR EVERY GATHERING -->
+        <div data-band="0.44,0.58" style="position:absolute; inset:0; display:flex; align-items:flex-start; justify-content:center; padding:13vh 6vw 0;">
+          <div class="band-inner" style="width:100%; max-width:1000px;">
+            <div style="text-align:center; margin-bottom:36px;">
+              <div style="font-size:12px; letter-spacing:.3em; text-transform:uppercase; color:#6B6358; margin-bottom:14px;">Hire the range</div>
+              <h2 style="font-family:'Cormorant Garamond',serif; font-weight:500; font-size:clamp(32px,4.4vw,52px); line-height:1.03; margin:0; color:#2B2620;">For every gathering.</h2>
+            </div>
+            <div style="display:grid; grid-template-columns:repeat(3,minmax(200px,1fr)); gap:20px;">
+              <div style="pointer-events:auto; background:rgba(245,241,232,.92); border:1px solid #E2DCCF; border-radius:4px; padding:24px;">
+                <div style="font-family:'Cormorant Garamond',serif; font-size:22px; color:#2B2620;">Events &amp; retreats</div>
+                <p style="font-size:14px; line-height:1.6; color:#6B6358; margin:8px 0 14px;">10–60 mats, delivered and collected. Ideal for classes, brunch clubs &amp; weekenders.</p>
+                <div style="font-size:15px; color:#2B2620;">From £8.50 / mat</div>
+                <button data-hire-cta style="margin-top:16px; width:100%; background:#2B2620; color:#F5F1E8; border:none; font-family:'Libre Baskerville',serif; font-size:11px; letter-spacing:.2em; text-transform:uppercase; padding:13px; border-radius:2px; cursor:pointer;">Enquire to hire</button>
+              </div>
+              <div style="pointer-events:auto; background:rgba(245,241,232,.92); border:1px solid #E2DCCF; border-radius:4px; padding:24px;">
+                <div style="font-family:'Cormorant Garamond',serif; font-size:22px; color:#2B2620;">Studios &amp; partners</div>
+                <p style="font-size:14px; line-height:1.6; color:#6B6358; margin:8px 0 14px;">60+ mats on a reduced rate, with recurring delivery to keep your studio stocked.</p>
+                <div style="font-size:15px; color:#2B2620;">Reduced volume rate</div>
+                <button data-hire-cta style="margin-top:16px; width:100%; background:#2B2620; color:#F5F1E8; border:none; font-family:'Libre Baskerville',serif; font-size:11px; letter-spacing:.2em; text-transform:uppercase; padding:13px; border-radius:2px; cursor:pointer;">Request a rate</button>
+              </div>
+              <div style="pointer-events:auto; background:#2B2620; color:#F5F1E8; border-radius:4px; padding:24px; display:flex; flex-direction:column;">
+                <div style="font-size:11px; letter-spacing:.24em; text-transform:uppercase; color:rgba(245,241,232,.6); margin-bottom:10px;">Brand partnerships</div>
+                <div style="font-family:'Cormorant Garamond',serif; font-size:24px; line-height:1.05;">Let's build something together.</div>
+                <p style="font-size:14px; line-height:1.6; color:rgba(245,241,232,.7); margin:12px 0 14px;">Branded mats, press days and activations — designed with your team.</p>
+                <button data-hire-cta style="margin-top:auto; width:100%; background:transparent; color:#F5F1E8; border:1px solid rgba(245,241,232,.5); font-family:'Libre Baskerville',serif; font-size:11px; letter-spacing:.2em; text-transform:uppercase; padding:13px; border-radius:2px; cursor:pointer;">Work with us</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- BAND 5 — THE SAÏA CLUB -->
+        <div data-band="0.58,0.72" style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; text-align:center; padding:0 7vw;">
+          <div class="band-inner" style="max-width:680px; background:radial-gradient(110% 95% at 50% 50%, rgba(245,241,232,.96) 0%, rgba(245,241,232,.88) 42%, rgba(245,241,232,0) 78%); padding:56px;">
+            <div style="font-size:12px; letter-spacing:.3em; text-transform:uppercase; color:#B8624A; margin-bottom:16px;">The SAÏA Club</div>
+            <h2 style="font-family:'Cormorant Garamond',serif; font-weight:500; font-size:clamp(34px,4.6vw,58px); line-height:1.02; margin:0 0 22px; color:#2B2620;">We curate unforgettable experiences.</h2>
+            <p style="font-size:17px; line-height:1.8; color:#6B6358; margin:0 auto; max-width:520px;">Join us for a series of events in London for like-minded women — to support each other, feel inspired, and celebrate sisterhood. A female-led club built on fitness, community &amp; mindset.</p>
+          </div>
+        </div>
+
+        <!-- BAND 6 — PILATES WITH CRISTINA -->
+        <div data-band="0.72,0.86" style="position:absolute; inset:0; display:flex; align-items:center; justify-content:flex-start; padding:0 7vw; background:linear-gradient(90deg, rgba(245,241,232,.94) 0%, rgba(245,241,232,.78) 34%, rgba(245,241,232,0) 58%);">
+          <div class="band-inner" style="max-width:460px;">
+            <div style="font-size:12px; letter-spacing:.3em; text-transform:uppercase; color:#6B6358; margin-bottom:16px;">Fitness</div>
+            <h2 style="font-family:'Cormorant Garamond',serif; font-weight:500; font-size:clamp(34px,4.6vw,58px); line-height:1.0; margin:0 0 22px; color:#2B2620;">Move with Cristina.</h2>
+            <p style="font-size:16px; line-height:1.75; color:#6B6358; margin:0; max-width:400px;">Small, strong, slow Pilates — led by our founder, on the same mat you'll come to know by heart. Classical &amp; Reformer; 1-to-1 in NW3, or group classes in Hampstead. Breath-led, built for every body.</p>
+          </div>
+        </div>
+
+        <!-- BAND 7 — JOIN / GET ON THE GUEST LIST -->
+        <div data-band="0.86,1" style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; text-align:center; padding:0 7vw;">
+          <div class="band-inner" style="max-width:560px; background:radial-gradient(120% 110% at 50% 50%, rgba(245,241,232,.96) 0%, rgba(245,241,232,.88) 46%, rgba(245,241,232,0) 80%); padding:48px 40px;">
+            <div style="font-size:12px; letter-spacing:.3em; text-transform:uppercase; color:#B8624A; margin-bottom:18px;">Join the SAÏA Community</div>
+            <h2 style="font-family:'Cormorant Garamond',serif; font-weight:500; font-size:clamp(36px,5vw,62px); line-height:1.02; margin:0 0 20px; color:#2B2620;">Get on the guest list.</h2>
+            <p style="font-size:16px; line-height:1.7; color:#6B6358; margin:0 0 30px;">First word on upcoming events and mat-hire availability.</p>
+            <div style="pointer-events:auto; display:flex; flex-wrap:wrap; gap:12px; justify-content:center; max-width:480px; margin:0 auto;">
+              <input type="email" placeholder="Enter your email" aria-label="Email address" class="input-focus" style="flex:1 1 240px; font-family:'Libre Baskerville',serif; font-size:15px; padding:15px 18px; background:#fff; border-radius:2px; color:#2B2620;">
+              <button class="btn-ink" style="flex:0 0 auto; border:none; font-family:'Libre Baskerville',serif; font-size:12px; letter-spacing:.22em; text-transform:uppercase; padding:15px 34px; border-radius:2px; cursor:pointer;">Subscribe</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- progress rail + scroll hint -->
+      <div style="position:absolute; top:50%; right:4vw; transform:translateY(-50%); width:2px; height:190px; background:rgba(43,38,32,.16); z-index:4;"><span id="homeBar" style="position:absolute; top:0; left:0; width:100%; height:0%; background:#2B2620;"></span></div>
+      <div id="homeHint" style="position:absolute; bottom:4vh; right:4vw; font-size:11px; letter-spacing:.24em; text-transform:uppercase; color:#2B2620; z-index:4;">Scroll to unroll ↓</div>
+    </div>
+  </div>
+
+  <!-- ============ FLAT TAIL (pin released) ============ -->
+
+  <!-- ============ TESTIMONIALS ============ -->
+  <section id="events" style="background:#E9E6DF; padding:clamp(70px,9vw,130px) 6vw;">
+    <div style="max-width:1320px; margin:0 auto;">
+      <div style="text-align:center; margin-bottom:clamp(40px,5vw,64px);">
+        <div style="font-size:12px; letter-spacing:.3em; text-transform:uppercase; color:#B8624A; margin-bottom:16px;">SAÏA women</div>
+        <h2 style="font-family:'Cormorant Garamond',serif; font-weight:500; font-size:clamp(32px,4.4vw,52px); line-height:1.03; margin:0;">In their words.</h2>
+      </div>
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(290px,1fr)); gap:28px;">
+        <div style="background:#F5F1E8; border-radius:2px; padding:38px 34px;">
+          <div style="font-family:'Cormorant Garamond',serif; font-size:50px; line-height:.6; color:#B8624A;">“</div>
+          <p style="font-family:'Cormorant Garamond',serif; font-size:22px; line-height:1.42; margin:14px 0 26px; color:#2B2620;">I love attending SAÏA events, the locations are always beautiful and each event has a unique and thoughtful activity. Cristina has a special skill of gathering like minded girls and creating amazing space for connection.</p>
+          <div style="font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:#6B6358;">Diana</div>
+        </div>
+        <div style="background:#F5F1E8; border-radius:2px; padding:38px 34px;">
+          <div style="font-family:'Cormorant Garamond',serif; font-size:50px; line-height:.6; color:#B8624A;">“</div>
+          <p style="font-family:'Cormorant Garamond',serif; font-size:22px; line-height:1.42; margin:14px 0 26px; color:#2B2620;">A SAÏA Woman is not afraid to speak her truth, and is someone who inspires and lifts up other women around her.</p>
+          <div style="font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:#6B6358;">Georgina — Olympic Rhythmic Gymnast</div>
+        </div>
+        <div style="background:#F5F1E8; border-radius:2px; padding:38px 34px;">
+          <div style="font-family:'Cormorant Garamond',serif; font-size:50px; line-height:.6; color:#B8624A;">“</div>
+          <p style="font-family:'Cormorant Garamond',serif; font-size:22px; line-height:1.42; margin:14px 0 26px; color:#2B2620;">The SAÏA community is a celebration of women's empowerment and networking with determined women who share similar values.</p>
+          <div style="font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:#6B6358;">Tamta</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ IN THE PRESS ============ -->
+  <section style="background:#F5F1E8; padding:clamp(48px,6vw,80px) 6vw; border-top:1px solid #DAD4C8; border-bottom:1px solid #DAD4C8;">
+    <div style="max-width:1200px; margin:0 auto;">
+      <div style="text-align:center; font-size:11px; letter-spacing:.3em; text-transform:uppercase; color:#6B6358; margin-bottom:34px;">In the press</div>
+      <div style="display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:clamp(28px,6vw,72px); color:#6B6358;">
+        <span style="font-family:'Cormorant Garamond',serif; font-size:26px; letter-spacing:.12em;">VOGUE</span>
+        <span style="font-family:'Cormorant Garamond',serif; font-size:26px; letter-spacing:.18em;">STYLIST</span>
+        <span style="font-family:'Cormorant Garamond',serif; font-size:24px; letter-spacing:.04em; font-style:italic;">Harper’s Bazaar</span>
+        <span style="font-family:'Cormorant Garamond',serif; font-size:26px; letter-spacing:.16em;">ELLE</span>
+        <span style="font-family:'Cormorant Garamond',serif; font-size:22px; letter-spacing:.22em;">REFINERY29</span>
+        <span style="font-family:'Cormorant Garamond',serif; font-size:24px; letter-spacing:.18em;">COURIER</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ FOOTER ============ -->
+  <footer id="hire" style="background:#2B2620; color:#F5F1E8; padding:clamp(64px,8vw,100px) 6vw 40px;">
+    <div style="max-width:1320px; margin:0 auto;">
+      <div style="display:flex; flex-wrap:wrap; gap:48px; justify-content:space-between;">
+        <div style="flex:1 1 280px; max-width:360px;">
+          <div style="font-family:'Cormorant Garamond',serif; font-size:34px; letter-spacing:.2em; line-height:1;">SAÏA</div>
+          <div style="font-size:10px; letter-spacing:.5em; text-transform:uppercase; color:rgba(245,241,232,.55); margin:6px 0 22px;">London</div>
+          <p style="font-size:14px; line-height:1.75; color:rgba(245,241,232,.65); margin:0 0 24px; max-width:300px;">A female-led club empowering women through fitness, community &amp; mindset. Premium yoga-mat hire across London.</p>
+          <button data-hire-cta style="background:#B8624A; color:#F5F1E8; border:none; font-family:'Libre Baskerville',serif; font-size:11px; letter-spacing:.2em; text-transform:uppercase; padding:14px 26px; border-radius:2px; cursor:pointer;">Hire a mat</button>
+          <div style="display:flex; gap:18px; margin-top:24px;">
+            <a href="https://www.instagram.com/saialondon" aria-label="SAÏA on Instagram" style="color:rgba(245,241,232,.7); text-decoration:none;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="3" y="3" width="18" height="18" rx="5"></rect><circle cx="12" cy="12" r="4"></circle><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"></circle></svg></a>
+            <a href="https://www.facebook.com/saialondon" aria-label="SAÏA on Facebook" style="color:rgba(245,241,232,.7); text-decoration:none;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M15 8h-2a2 2 0 0 0-2 2v11"></path><path d="M8 13h6"></path><path d="M11 21V10a3 3 0 0 1 3-3h1"></path></svg></a>
+            <a href="https://www.pinterest.com/saialondon" aria-label="SAÏA on Pinterest" style="color:rgba(245,241,232,.7); text-decoration:none;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M9 19c-.5-2 .5-5 1-7"></path><circle cx="12" cy="10" r="7"></circle><path d="M9.5 13c.5 1 3 1.5 4.5-.5S15 8 13 8s-3 1.5-2.5 3"></path></svg></a>
+          </div>
+        </div>
+        <div style="flex:0 1 auto; display:flex; flex-wrap:wrap; gap:48px;">
+          <div>
+            <div style="font-size:11px; letter-spacing:.22em; text-transform:uppercase; color:rgba(245,241,232,.5); margin-bottom:18px;">Customer care</div>
+            <div style="display:flex; flex-direction:column; gap:12px; font-size:14px;"><a href="https://wa.me/447444611914" style="color:rgba(245,241,232,.78); text-decoration:none;">WhatsApp Cristina</a><a href="#" style="color:rgba(245,241,232,.78); text-decoration:none;">Terms &amp; conditions</a></div>
+          </div>
+          <div>
+            <div style="font-size:11px; letter-spacing:.22em; text-transform:uppercase; color:rgba(245,241,232,.5); margin-bottom:18px;">About us</div>
+            <div style="display:flex; flex-direction:column; gap:12px; font-size:14px;"><a href="#story" style="color:rgba(245,241,232,.78); text-decoration:none;">Our story</a><a href="#hire" style="color:rgba(245,241,232,.78); text-decoration:none;">Yoga mat hire</a><a href="#events" style="color:rgba(245,241,232,.78); text-decoration:none;">Events</a></div>
+          </div>
+          <div style="max-width:240px;">
+            <div style="font-size:11px; letter-spacing:.22em; text-transform:uppercase; color:rgba(245,241,232,.5); margin-bottom:18px;">Subscribe</div>
+            <p style="font-size:13px; line-height:1.6; color:rgba(245,241,232,.6); margin:0 0 14px;">Get on the guest list of our upcoming events.</p>
+            <div style="display:flex; border-bottom:1px solid rgba(245,241,232,.35);"><input type="email" placeholder="Email" aria-label="Email address" style="flex:1; background:none; border:none; color:#F5F1E8; font-family:'Libre Baskerville',serif; font-size:14px; padding:8px 0; outline:none;"><span style="font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:#B8624A; padding:8px 0; cursor:pointer;">Join</span></div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex; flex-wrap:wrap; gap:14px; justify-content:space-between; align-items:center; margin-top:56px; padding-top:26px; border-top:1px solid rgba(245,241,232,.16); font-size:12px; color:rgba(245,241,232,.5);">
+        <span>© 2026 SAÏA London</span>
+        <span style="letter-spacing:.16em; text-transform:uppercase;">A Woman Who Wins.</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ============ CONCIERGE CHATBOT (Option B) ============ -->
+  <div style="position:fixed; right:24px; bottom:24px; z-index:90; display:flex; flex-direction:column; align-items:flex-end; gap:14px;">
+    <div id="homeChatPanel" style="display:none; width:min(380px,calc(100vw - 32px)); height:min(560px,calc(100vh - 110px)); background:#F5F1E8; border-radius:6px; box-shadow:0 24px 60px rgba(43,38,32,.32); overflow:hidden; flex-direction:column; animation:saiaSlideIn .32s ease both;">
+      <div style="background:#2B2620; color:#F5F1E8; padding:20px 22px; display:flex; justify-content:space-between; align-items:center; flex:none;">
+        <div style="display:flex; gap:12px; align-items:center;">
+          <span style="width:36px; height:36px; border-radius:50%; border:1px solid rgba(245,241,232,.4); display:flex; align-items:center; justify-content:center; font-family:'Cormorant Garamond',serif; font-size:18px;">S</span>
+          <div><div style="font-size:12px; letter-spacing:.24em; text-transform:uppercase;">SAÏA Concierge</div><div style="font-size:11px; color:rgba(245,241,232,.6); margin-top:3px; display:flex; align-items:center; gap:6px;"><span style="width:6px; height:6px; border-radius:50%; background:#7FA67F;"></span>Online now</div></div>
+        </div>
+        <button id="homeChatClose" aria-label="Close concierge" style="background:none; border:none; cursor:pointer; padding:4px; display:flex;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(245,241,232,.75)" stroke-width="1.4"><line x1="5" y1="5" x2="19" y2="19"></line><line x1="19" y1="5" x2="5" y2="19"></line></svg></button>
+      </div>
+      <div id="homeThread" class="saia-thread" style="flex:1; overflow-y:auto; padding:22px; display:flex; flex-direction:column; gap:13px;"></div>
+      <div style="padding:2px 16px 14px; display:flex; flex-wrap:wrap; gap:8px; flex:none;">
+        <button data-q="Which mat is right for me?" class="home-chip" style="font-family:'Libre Baskerville',serif; font-size:12px; color:#B8624A; border:1px solid #B8624A; background:none; border-radius:30px; padding:8px 13px; cursor:pointer;">Which mat suits me?</button>
+        <button data-q="How does hire work?" class="home-chip" style="font-family:'Libre Baskerville',serif; font-size:12px; color:#B8624A; border:1px solid #B8624A; background:none; border-radius:30px; padding:8px 13px; cursor:pointer;">How does hire work?</button>
+        <button data-q="What's your return policy?" class="home-chip" style="font-family:'Libre Baskerville',serif; font-size:12px; color:#B8624A; border:1px solid #B8624A; background:none; border-radius:30px; padding:8px 13px; cursor:pointer;">Return policy</button>
+      </div>
+      <div style="padding:13px 16px; border-top:1px solid #DAD4C8; display:flex; gap:10px; align-items:center; flex:none;">
+        <input id="homeChatInput" type="text" placeholder="Type a message…" aria-label="Message the concierge" style="flex:1; border:none; background:transparent; font-family:'Libre Baskerville',serif; font-size:14px; color:#2B2620; outline:none;">
+        <button id="homeChatSend" style="background:none; border:none; cursor:pointer; font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:#B8624A;">Send</button>
+      </div>
+    </div>
+    <button id="homeChatLauncher" aria-label="Open the SAÏA concierge" class="launcher-lift" style="width:60px; height:60px; border-radius:50%; background:#2B2620; color:#F5F1E8; border:none; cursor:pointer; box-shadow:0 12px 28px rgba(43,38,32,.34); position:relative;"><span style="font-family:'Cormorant Garamond',serif; font-size:26px;">S</span><span style="position:absolute; top:7px; right:7px; width:9px; height:9px; border-radius:50%; background:#B8624A; outline:2px solid #F5F1E8;"></span></button>
+  </div>
+
+</div>
+
+<script src="vendor/three.min.js"></script>
+<script src="js/mat-core.js"></script>
+<script src="js/home.js"></script>
+<script src="js/home-hybrid.js"></script>
+</body>
+</html>

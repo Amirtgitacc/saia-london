@@ -1,0 +1,78 @@
+/* ============================================================
+   SAÏA London — shared design system
+   Tokens, resets, keyframes and helper classes distilled from the
+   four Claude Design prototypes (Direction Samples is the source of
+   truth for the palette + type scale).
+   ============================================================ */
+
+:root {
+  --saia-cream: #F5F1E8;
+  --saia-stone: #E9E6DF;
+  --saia-ink: #2B2620;
+  --saia-ink-soft: #6B6358;
+  --saia-line: #DAD4C8;
+  --saia-accent: #B8624A;
+  --saia-night: #16130f;
+  --serif: 'Cormorant Garamond', Georgia, serif;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+
+::selection { background: var(--saia-accent); color: var(--saia-cream); }
+
+/* ---------- keyframes (union of all four prototypes) ---------- */
+@keyframes saiaBreath { 0%,100%{opacity:.55; letter-spacing:.34em;} 50%{opacity:1; letter-spacing:.4em;} }
+@keyframes saiaOrbBreath { 0%,100%{transform:scale(1);} 50%{transform:scale(1.07);} }
+@keyframes saiaPulse { 0%{transform:scale(.6); opacity:.5;} 100%{transform:scale(2.1); opacity:0;} }
+@keyframes saiaScrollDot { 0%{transform:translateY(0); opacity:0;} 30%{opacity:1;} 100%{transform:translateY(18px); opacity:0;} }
+@keyframes saiaScroll { 0%{transform:translateY(0); opacity:0;} 30%{opacity:1;} 100%{transform:translateY(20px); opacity:0;} }
+@keyframes saiaAgentIn { from{opacity:0; transform:translateY(26px) scale(.98);} to{opacity:1; transform:none;} }
+@keyframes saiaMsgIn { from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:none;} }
+@keyframes saiaSlideIn { from{opacity:0; transform:translateX(20px);} to{opacity:1; transform:none;} }
+@keyframes saiaDot { 0%,60%,100%{opacity:.25; transform:translateY(0);} 30%{opacity:1; transform:translateY(-3px);} }
+@keyframes saiaFlash { 0%{background:#F0D9C9;} 100%{background:#F3EEE3;} }
+
+/* ---------- concierge thread scrollbar ---------- */
+.saia-thread::-webkit-scrollbar { width: 5px; }
+.saia-thread::-webkit-scrollbar-thumb { background: rgba(43,38,32,.18); border-radius: 3px; }
+
+/* ---------- underline-on-hover link ---------- */
+.saia-link { position: relative; text-decoration: none; }
+.saia-link::after {
+  content: ""; position: absolute; left: 0; bottom: -3px;
+  width: 0; height: 1px; background: currentColor; transition: width .4s ease;
+}
+.saia-link:hover::after { width: 100%; }
+
+/* ---------- button / card hover helpers (replace DC style-hover) ---------- */
+.btn-ink { background: var(--saia-ink); color: var(--saia-cream); transition: background .3s ease; }
+.btn-ink:hover { background: var(--saia-accent); }
+
+.btn-outline { background: transparent; color: var(--saia-ink); border: 1px solid var(--saia-ink); transition: all .3s ease; }
+.btn-outline:hover { background: var(--saia-ink); color: var(--saia-cream); }
+
+.card-lift { transition: transform .35s ease, box-shadow .35s ease; }
+.card-lift:hover { transform: translateY(-6px); box-shadow: 0 16px 34px rgba(43,38,32,.14); }
+
+/* base border lives here (not inline) so the focus colour can win */
+.input-focus { border: 1px solid var(--saia-line); transition: border-color .3s ease; }
+.input-focus:focus { border-color: var(--saia-accent); outline: none; }
+
+.launcher-lift { transition: transform .3s ease, background .3s ease; }
+.launcher-lift:hover { transform: translateY(-3px); background: var(--saia-accent); }
+
+/* image placeholder slot (drop-in style, mirrors the prototype empty state) */
+.saia-slot {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 8px; text-align: center; padding: 14px;
+  background: var(--saia-stone);
+  color: rgba(43,38,32,.5);
+  font: 500 12px/1.3 'Hanken Grotesk', system-ui, sans-serif;
+  border: 1.5px dashed rgba(43,38,32,.22);
+  letter-spacing: .04em;
+  overflow: hidden;
+}
+.saia-slot svg { opacity: .4; }
+.saia-slot.filled { border: none; padding: 0; }
+.saia-slot img { width: 100%; height: 100%; object-fit: cover; display: block; }
