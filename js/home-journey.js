@@ -115,7 +115,7 @@
   const FIG = FIG_LABELS.map((label, i, a) => ({ label, p: FIG_FROM + (FIG_TO - FIG_FROM) * i / (a.length - 1) }));
   const FIG_W = 0.026;  // dissolve half-window < frame spacing (0.027) → clean 2-way crossfade, no triple-ghost
   /* shared on-screen box for #matStage + every figure: the baked mat lands exactly here */
-  const FIG_BOX = { left: '56%', bottom: '3vh', width: '58vw' };
+  const FIG_BOX = { left: '65%', bottom: '44vh', width: '35vw' };
   function applyBox(el) {
     el.style.position = 'absolute'; el.style.left = FIG_BOX.left; el.style.bottom = FIG_BOX.bottom;
     el.style.width = FIG_BOX.width; el.style.height = 'auto';
@@ -248,6 +248,16 @@
         renderer.render(scene, camera);
         canvas.style.opacity = '1';
         bands(p); figures(p);
+      },
+      matRect() {                                  // mesh mat's screen-space bbox at current cam
+        const b = new THREE.Box3().setFromObject(group);
+        const pts = [], mn = b.min, mx = b.max;
+        for (const x of [mn.x, mx.x]) for (const y of [mn.y, mx.y]) for (const z of [mn.z, mx.z]) {
+          const v = new THREE.Vector3(x, y, z).project(camera);
+          pts.push([(v.x * 0.5 + 0.5) * canvas.clientWidth, (-v.y * 0.5 + 0.5) * canvas.clientHeight]);
+        }
+        const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]);
+        return { left: Math.min(...xs), right: Math.max(...xs), top: Math.min(...ys), bottom: Math.max(...ys) };
       },
     };
 
