@@ -115,7 +115,7 @@
   const FIG = FIG_LABELS.map((label, i, a) => ({ label, p: FIG_FROM + (FIG_TO - FIG_FROM) * i / (a.length - 1) }));
   const FIG_W = 0.026;  // dissolve half-window < frame spacing (0.027) → clean 2-way crossfade, no triple-ghost
   /* shared on-screen box for #matStage + every figure: the baked mat lands exactly here */
-  const FIG_BOX = { left: '65%', bottom: '44vh', width: '35vw' };
+  const FIG_BOX = { left: '53%', bottom: '28vh', width: '35vw' };
   function applyBox(el) {
     el.style.position = 'absolute'; el.style.left = FIG_BOX.left; el.style.bottom = FIG_BOX.bottom;
     el.style.width = FIG_BOX.width; el.style.height = 'auto';
