@@ -201,5 +201,56 @@
     return tex;
   }
 
-  NS.mat = { loadGlb, buildSpiralTable, spiralPoint, deform, makeEnv, makeNormalMap, buildGeometry, loadColorMap };
+  /* ---- one material that MORPHS photoreal -> flat watercolour in place.
+         Same mesh, same UVs: as uMorph 0->1 the lit PBR surface is replaced by the
+         flat, self-lit watercolour painting, so it reads as the SURFACE restyling,
+         not as object A fading into object B.
+         The reveal is NOISE-DRIVEN (a soft watercolour-paper threshold sweeping across
+         the UVs) rather than a flat dissolve, so it reads as paint BLOOMING over the mat.
+         setMorph also flattens the finish in JS: normalScale->0 (kills the rubber grain)
+         and envMapIntensity->0 (kills specular) as it becomes a flat painting. ---- */
+  function makeMatMaterial(photorealUrl, watercolourUrl, normalTex) {
+    const THREE = window.THREE;
+    const map = loadColorMap(photorealUrl);          // U-mirrored to un-reverse the brand
+    const wc = loadColorMap(watercolourUrl);         // SAME mirror => UVs coincide
+    const m = new THREE.MeshPhysicalMaterial({
+      map, color: new THREE.Color('#ffffff'), normalMap: normalTex,
+      normalScale: new THREE.Vector2(0.3, 0.3), roughness: 0.9, metalness: 0.0,
+      envMapIntensity: 0.22, side: THREE.DoubleSide,
+    });
+    const ENV0 = 0.22, NRM0 = 0.3;                   // baseline finish (restored at morph 0)
+    const u = { uMorph: { value: 0 }, uBloom: { value: 0 }, uWatercolour: { value: wc } };
+    m.onBeforeCompile = (shader) => {
+      shader.uniforms.uMorph = u.uMorph;
+      shader.uniforms.uBloom = u.uBloom;
+      shader.uniforms.uWatercolour = u.uWatercolour;
+      shader.fragmentShader =
+        'uniform float uMorph;\nuniform float uBloom;\nuniform sampler2D uWatercolour;\n' +
+        'float saiaNoise(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }\n' +
+        shader.fragmentShader.replace(
+          '#include <opaque_fragment>',
+          [
+            '#include <opaque_fragment>',
+            '  vec3 wcCol = texture2D( uWatercolour, vMapUv ).rgb;',     // flat painting, self-lit
+            // soft paper noise (low-freq blotches) gates the reveal so paint blooms unevenly
+            '  float n = saiaNoise( floor( vMapUv * 22.0 ) ) * 0.6 + saiaNoise( floor( vMapUv * 7.0 ) ) * 0.4;',
+            '  float reveal = smoothstep( n - 0.25, n + 0.25, clamp( uMorph, 0.0, 1.0 ) );',
+            // brief wet-bloom lift travelling with uBloom at the wavefront
+            '  float s = clamp( uBloom, 0.0, 1.0 ) * (1.0 - abs( reveal - 0.5 ) * 2.0);',
+            '  vec3 bloomed = mix( wcCol, clamp( wcCol * 1.18 + 0.05, 0.0, 1.0 ), s );',
+            '  gl_FragColor.rgb = mix( gl_FragColor.rgb, bloomed, reveal );',
+          ].join('\n')
+        );
+    };
+    m.userData.setMorph = function (morph, bloom) {
+      const k = Math.max(0, Math.min(1, morph));
+      u.uMorph.value = k; u.uBloom.value = bloom || 0;
+      m.envMapIntensity = ENV0 * (1 - k);            // flat painting = no specular
+      m.normalScale.set(NRM0 * (1 - k), NRM0 * (1 - k)); // flat painting = no rubber grain
+    };
+    m.userData.uniforms = u;
+    return m;
+  }
+
+  NS.mat = { loadGlb, buildSpiralTable, spiralPoint, deform, makeEnv, makeNormalMap, buildGeometry, loadColorMap, makeMatMaterial };
 })();
