@@ -61,22 +61,13 @@
     camera.position.set(L(lo.px, hi.px), L(lo.py, hi.py), L(lo.pz, hi.pz));
     camera.lookAt(L(lo.tx, hi.tx), L(lo.ty, hi.ty), L(lo.tz, hi.tz));
   }
-  function deformFor(p) { return Math.min(1, Math.max(0, p / UNROLL_END)); } // 0→1 then clamps at 1
-  /* 3D mat hands off to the flat 2D watercolour mat: the WebGL canvas fades out as
-     #matStage fades IN over p0.50→0.56 and then STAYS as the solid mat floor (Cristina's
-     pre-registered figures crossfade on top of it), so the mat never dims or shimmers. */
-  function matStageFor(p) { let t = (p - 0.50) / 0.06; t = Math.max(0, Math.min(1, t)); return t * t * (3 - 2 * t); }
-  /* subtle paint bloom on the incoming mat — a brief blur+saturate pulse that resolves crisp,
-     so the real mat reads as blooming into watercolour rather than hard-cutting */
+  function deformFor(p) { return Math.min(1, Math.max(0, p / UNROLL_END)); } // unchanged
+  /* The mat is ONE mesh the whole way. At the hand-off we MORPH its material from photoreal
+     to flat watercolour in place (R1) — the WebGL canvas stays fully visible; there is no
+     second PNG mat. morphFor: 0 until p0.50, 1 by p0.56, smoothstepped. */
+  function morphFor(p) { let t = (p - 0.50) / 0.06; t = Math.max(0, Math.min(1, t)); return t * t * (3 - 2 * t); }
+  /* brief paint-bloom pulse at the moment of change (finishes crisp) */
   function bloomFor(p) { const t = (p - 0.50) / 0.06; return (t <= 0 || t >= 1) ? 0 : Math.sin(t * Math.PI); }
-  function matStageStyle(p) {
-    if (!matStageEl) return;
-    matStageEl.style.opacity = matStageFor(p).toFixed(3);
-    const b = bloomFor(p);
-    matStageEl.style.filter = b > 0.001
-      ? MAT_SHADOW + ' blur(' + (b * 7).toFixed(2) + 'px) saturate(' + (1 + b * 0.5).toFixed(2) + ')'
-      : MAT_SHADOW;
-  }
 
   /* ---- mood track: the SAME mat, but the studio's light, exposure and
      background tone shift per chapter so each beat reads as its own scene.
@@ -132,7 +123,7 @@
   }
   const MAT_SHADOW = 'drop-shadow(0 26px 30px rgba(43,38,32,.16))';
   function initFigures() {
-    if (matStageEl) { applyBox(matStageEl); matStageEl.style.willChange = 'opacity, filter'; matStageEl.style.filter = MAT_SHADOW; }
+    if (matStageEl) { matStageEl.style.display = 'none'; }   // retired: the live mesh is the only mat now
     figEls.forEach(function (el, i) {
       if (!FIG[i]) return;
       applyBox(el);
@@ -179,9 +170,9 @@
     if (lastD == null || Math.abs(d - lastD) > 0.0015) { mat.deform(ctx, d); lastD = d; }
     camAt(p);
     applyMood(p);
+    if (meshMaterial.userData.setMorph) meshMaterial.userData.setMorph(morphFor(p), bloomFor(p));
     renderer.render(scene, camera);
-    canvas.style.opacity = (1 - matStageFor(p)).toFixed(3);
-    matStageStyle(p);
+    canvas.style.opacity = '1';   // the mesh IS the mat for the whole journey
     if (rail) rail.style.height = (p * 100).toFixed(1) + '%';
     if (hint) hint.style.opacity = (1 - Math.min(1, p / 0.04)).toFixed(3);
     bands(p);
@@ -217,12 +208,12 @@
     ctx.thickness = Math.max(ctx.length * 0.012, 0.04); ctx.R0 = ctx.thickness * 1.15;
 
     const normalTex = mat.makeNormalMap();
-    const colorMap = glb ? mat.loadColorMap(TEX_URL) : normalTex;
-    meshMaterial = new THREE.MeshPhysicalMaterial({
-      map: colorMap, color: new THREE.Color('#ffffff'), normalMap: normalTex,
-      normalScale: new THREE.Vector2(0.3, 0.3), roughness: 0.9, metalness: 0.0,
-      envMapIntensity: 0.22, side: THREE.DoubleSide,
-    });
+    const WC_URL = ASSETS.matWatercolour || 'assets/saia-mat-watercolour.png';
+    meshMaterial = glb
+      ? mat.makeMatMaterial(TEX_URL, WC_URL, normalTex)
+      : new THREE.MeshPhysicalMaterial({ map: normalTex, color: new THREE.Color('#ffffff'),
+          normalMap: normalTex, normalScale: new THREE.Vector2(0.3, 0.3),
+          roughness: 0.9, metalness: 0.0, envMapIntensity: 0.22, side: THREE.DoubleSide });
     const mesh = new THREE.Mesh(geo, meshMaterial);
     mesh.castShadow = true; mesh.receiveShadow = true; mesh.frustumCulled = false; group.add(mesh);
 
@@ -246,16 +237,16 @@
         renderer.render(scene, camera);
       },
       bbox() { const b = new THREE.Box3().setFromObject(group); return { min: b.min, max: b.max }; },
-      peek() { return { current, target, paused, visible, lastD, cam: camera.position.toArray() }; },
+      peek() { return { current, target, paused, visible, lastD, morph: morphFor(current), bloom: bloomFor(current), cam: camera.position.toArray() }; },
       /* render the EXACT frame a user sees at scroll-progress p, with the page at the top
          (so sticky is trivially satisfied — used for headless screenshots) */
       at(p) {
-        paused = true;
+        paused = true; current = p;
         const d = deformFor(p); mat.deform(ctx, d); lastD = d;
         camAt(p); applyMood(p);
+        if (meshMaterial.userData.setMorph) meshMaterial.userData.setMorph(morphFor(p), bloomFor(p));
         renderer.render(scene, camera);
-        canvas.style.opacity = (1 - matStageFor(p)).toFixed(3);
-        matStageStyle(p);
+        canvas.style.opacity = '1';
         bands(p); figures(p);
       },
     };
