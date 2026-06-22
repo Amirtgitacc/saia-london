@@ -1,3 +1,7 @@
 node_modules/
 .env
 .DS_Store
+
+# figbake debug overlays (tooling only)
+assets/figure/*.debug.png
+tools/figbaked/

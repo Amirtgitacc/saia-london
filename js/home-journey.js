@@ -104,10 +104,10 @@
      through poses. Each frame cross-dissolves with its neighbours (no cuts);
      gross motion (entrance slide, gentle rise) is done here for smoothness. ---- */
   const figEls = Array.prototype.slice.call(document.querySelectorAll('#figureLayer .saia-fig'));
-  /* 15 poses cross-dissolve in one continuous flow. Each figure PNG is pre-registered by
-     tools/figbake.mjs so its baked mat sits at ONE fixed on-screen rect; #matStage holds the
-     same mat steady underneath as a solid floor, so we only crossfade figure OPACITY. NO
-     per-frame transform — any translate/scale would move the baked mat and shimmer it. */
+  /* 15 poses cross-dissolve in one continuous flow over the live watercolour MESH mat
+     (the single source of truth — there is no PNG floor). Each figure PNG is a mat-free
+     cutout of Cristina, registered by tools/figbake.mjs to one canonical contact point,
+     so we only crossfade figure OPACITY; her contact lands on the mesh mat via FIG_BOX. */
   const FIG_FROM = 0.580, FIG_TO = 0.960;
   const FIG_LABELS = ['walk in', 'step on', 'stand', 'arms rise', 'reach up', 'heart open',
     'hinge', 'forward fold', 'downward dog', 'low lunge', 'lower to seat', 'seated cross',
