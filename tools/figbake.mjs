@@ -21,7 +21,7 @@ const OUT_DIR = 'assets/figure';
 
 /* canonical output frame — identical for all 15 poses. */
 const OUT_W = 1400, OUT_H = 1500;
-const TARGET = { cx: 700, bottomY: 1380, height: 1240 }; // contact centre + figure height in output
+const TARGET = { cx: 700, bottomY: 1380, area: 222238 }; // contact centre + figure area in output (tuned to median standing figArea)
 
 mkdirSync(OUT_DIR, { recursive: true });
 
@@ -192,10 +192,10 @@ for (const file of files) {
     cx.putImageData(sd, 0, 0);
 
     // --- STEP 3: scan figure silhouette (Cristina only, post-mat-removal) ---
-    let top = H, bottom = -1, minX = W, maxX = -1;
+    let top = H, bottom = -1, minX = W, maxX = -1, figArea = 0;
     for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
       const idx = y * W + x;
-      if (!outside[idx]) { if (y < top) top = y; if (y > bottom) bottom = y; if (x < minX) minX = x; if (x > maxX) maxX = x; }
+      if (!outside[idx]) { if (y < top) top = y; if (y > bottom) bottom = y; if (x < minX) minX = x; if (x > maxX) maxX = x; figArea++; }
     }
     if (bottom < 0) return { ok: false, bg };
     // contact anchor: bottom-centre of her lower 10% silhouette band
@@ -207,21 +207,26 @@ for (const file of files) {
     const conf = Math.max(0, Math.min(1, (figH / H - 0.45) / 0.5));
 
     // --- STEP 4: synthesize soft ground shadow + draw figure on top ---
-    const s = TARGET.height / figH;
+    const s = Math.sqrt(TARGET.area / figArea);
     const out = document.createElement('canvas'); out.width = OUT_W; out.height = OUT_H;
     const oc = out.getContext('2d'); oc.imageSmoothingQuality = 'high';
 
-    // recolour her silhouette to ink-dark for shadow
-    const sh = document.createElement('canvas'); sh.width = W; sh.height = H;
-    const shc = sh.getContext('2d');
-    shc.drawImage(c, 0, 0); shc.globalCompositeOperation = 'source-in';
-    shc.fillStyle = 'rgb(46,40,33)'; shc.fillRect(0, 0, W, H);
+    // contact shadow: clip to bottom 5% of silhouette (actual ground contact line only)
+    const contactBand = document.createElement('canvas'); contactBand.width = W; contactBand.height = H;
+    const cbc = contactBand.getContext('2d');
+    // draw only the contact band rows (bottom 5% of fig height)
+    const bandH5 = Math.max(4, Math.round((bottom - top) * 0.05));
+    const bandY5 = bottom - bandH5;
+    cbc.drawImage(c, 0, bandY5, W, bandH5, 0, bandY5, W, bandH5);
+    // recolor to ink-dark
+    cbc.globalCompositeOperation = 'source-in';
+    cbc.fillStyle = 'rgb(46,40,33)'; cbc.fillRect(0, 0, W, H);
 
-    // ground shadow: flattened (scaleY≈0.18) + blurred + faint, anchored at contact line
+    // draw shadow: squashed + blurred + faint, anchored at contact point
     oc.save();
-    oc.globalAlpha = 0.30; oc.filter = 'blur(16px)';
-    oc.translate(TARGET.cx, TARGET.bottomY); oc.scale(s, s * 0.18); oc.translate(-contactX, -contactY);
-    oc.drawImage(sh, 0, 0);
+    oc.globalAlpha = 0.16; oc.filter = 'blur(20px)';
+    oc.translate(TARGET.cx, TARGET.bottomY); oc.scale(s, s * 0.12); oc.translate(-contactX, -contactY);
+    oc.drawImage(contactBand, 0, 0);
     oc.restore();
 
     // Cristina on top
@@ -238,7 +243,7 @@ for (const file of files) {
     dc.strokeRect(minX * ds, top * ds, (maxX - minX) * ds, (bottom - top) * ds);
     dc.fillStyle = '#ff5a36'; dc.beginPath(); dc.arc(contactX * ds, contactY * ds, 7, 0, 7); dc.fill();
 
-    return { ok: true, conf, contactX, contactY, figH, matC, s, bg, H, W,
+    return { ok: true, conf, contactX, contactY, figH, figArea, matC, s, bg, H, W,
       png: out.toDataURL('image/png'), debug: dbg.toDataURL('image/png') };
   }, { src: dataURL(file), OUT_W, OUT_H, TARGET });
 
@@ -247,7 +252,7 @@ for (const file of files) {
   writeFileSync(path.join(OUT_DIR, `${name}.png`), b64(res.png));
   writeFileSync(path.join(OUT_DIR, `${name}.debug.png`), b64(res.debug));
   const flag = res.conf < 0.55 ? '  ⚠ LOW' : '';
-  console.log(`✓ ${name}  conf=${res.conf.toFixed(2)} figH=${res.figH|0} cx=${res.contactX|0} matC=${res.matC.map(n=>n|0)} s=${res.s.toFixed(3)}${flag}`);
+  console.log(`✓ ${name}  conf=${res.conf.toFixed(2)} figH=${res.figH|0} figArea=${res.figArea|0} cx=${res.contactX|0} matC=${res.matC.map(n=>n|0)} s=${res.s.toFixed(3)}${flag}`);
   summary.push({ name, conf: res.conf });
 }
 
