@@ -23,7 +23,8 @@
   const hint = document.getElementById('homeHint');
   const sticky = document.querySelector('.home-sticky');
   const matStageEl = document.getElementById('matStage');
-  const flowVideo = document.getElementById('flowVideo');
+  const flowCanvas = document.getElementById('flowCanvas');
+  const flow2d = flowCanvas ? flowCanvas.getContext('2d') : null;
 
   function goStatic() { if (root) root.classList.add('is-static'); }
 
@@ -73,19 +74,134 @@
   /* hand-off: once the mat is watercolour AND eased to C-gentle, the mesh fades out and the
      on-mat figure illustrations take over (they were drawn from this exact mat, so it's invisible).
      canvas opacity = 1 - handoffFor(p): full through the morph, gone by p0.585 as figure-1 fades in. */
-  function handoffFor(p) { let t = (p - 0.560) / 0.025; t = Math.max(0, Math.min(1, t)); return t * t * (3 - 2 * t); }
+  function handoffFor(p) { let t = (p - 0.560) / 0.020; t = Math.max(0, Math.min(1, t)); return t * t * (3 - 2 * t); }
 
-  /* ---- the scroll-scrubbed watercolour flow video (assets/flow.mp4) takes over from the mesh.
-     It fades in on the SAME curve the mesh canvas fades out (handoffFor), and scroll-progress maps
-     to video.currentTime so scrolling plays Cristina's continuous pose flow forward/back. ---- */
-  const FLOW_FROM = 0.560, FLOW_TO = 1.0;   // scrub window (starts as the mesh hands off)
+  /* ---- ALIGNMENT: as the mat morphs to watercolour it GLIDES from the showcase position down to
+     exactly where the flow frame's mat sits, so the unrolled 3D mat *becomes* the mat under
+     Cristina's feet. The mesh and the flow then crossfade IN PLACE (no cream gap) — a seamless
+     dissolve of one mat that simply gains Cristina. ALIGN maps the mesh mat rect @0.56 → the flow
+     frame-0 mat rect, measured live (transform-origin: 0 0 on #homeCanvas). ---- */
+  // The flow mat sits at this fraction of the #flowCanvas box (measured from frame 0). Placing the
+  // target from the live #flowCanvas rect makes the alignment correct at ANY viewport size.
+  const FLOWMAT = { fx: 0.489, fy: 0.822, fw: 0.401 };
+  let ALIGN = { scale: 0.914, tx: 17, ty: 465 };   // recomputed by computeAlign() for the live viewport
+  /* mesh mat screen-space bbox at the current camera (viewport px) */
+  function meshMatRect() {
+    group.updateMatrixWorld(true);
+    camera.updateMatrixWorld(); camera.matrixWorldInverse.copy(camera.matrixWorld).invert();
+    const b = new THREE.Box3().setFromObject(group), mn = b.min, mx = b.max;
+    let left = Infinity, right = -Infinity, top = Infinity, bottom = -Infinity;
+    for (const x of [mn.x, mx.x]) for (const y of [mn.y, mx.y]) for (const z of [mn.z, mx.z]) {
+      const v = new THREE.Vector3(x, y, z).project(camera);
+      const sx = (v.x * 0.5 + 0.5) * canvas.clientWidth, sy = (-v.y * 0.5 + 0.5) * canvas.clientHeight;
+      if (sx < left) left = sx; if (sx > right) right = sx; if (sy < top) top = sy; if (sy > bottom) bottom = sy;
+    }
+    return { left, right, top, bottom };
+  }
+  /* derive the glide transform (flat mesh mat @C-gentle → flow mat) for the CURRENT viewport size */
+  function computeAlign() {
+    if (!flowCanvas || !canvas || !group) return;
+    mat.deform(ctx, 1);                            // flat mat, as it is at the handoff
+    camAt(0.62);                                   // the held C-gentle pose the flow frame was drawn from
+    const m = meshMatRect();
+    const Scx = (m.left + m.right) / 2, Scy = (m.top + m.bottom) / 2, Sw = (m.right - m.left) || 1;
+    const r = flowCanvas.getBoundingClientRect();
+    const Tcx = r.left + FLOWMAT.fx * r.width, Tcy = r.top + FLOWMAT.fy * r.height, Tw = FLOWMAT.fw * r.width;
+    const s = Tw / Sw;
+    ALIGN = { scale: s, tx: Tcx - s * Scx, ty: Tcy - s * Scy };
+    const d = deformFor(current); mat.deform(ctx, d); lastD = d; camAt(current);   // restore the live frame
+  }
+  function alignFor(p) { let t = (p - 0.50) / 0.074; t = Math.max(0, Math.min(1, t)); return t * t * (3 - 2 * t); } // 0.50→0.574
+  function applyMatAlign(p) {
+    const a = alignFor(p);
+    const s = 1 + (ALIGN.scale - 1) * a;
+    canvas.style.transform = 'translate(' + (ALIGN.tx * a).toFixed(1) + 'px,' + (ALIGN.ty * a).toFixed(1) + 'px) scale(' + s.toFixed(4) + ')';
+  }
+
+  /* ---- the watercolour flow sequence takes over from the mesh. Scroll-progress maps to a decoded
+     still frame (no fragile <video> seeking; works on hosts without byte ranges). ---- */
+  const FLOW_FROM = 0.562, FLOW_TO = 1.0;   // frame 0 shows as the aligned crossfade begins
   function flowFor(p) { let t = (p - FLOW_FROM) / (FLOW_TO - FLOW_FROM); return Math.max(0, Math.min(1, t)); }
-  let _flowDur = 0;
-  if (flowVideo) flowVideo.addEventListener('loadedmetadata', () => { _flowDur = flowVideo.duration || 0; });
+  /* IN-PLACE CROSSFADE: mesh fades out [0.560,0.580] while the flow fades in [0.562,0.582]. Because
+     the mat is already aligned to the flow mat, the overlap is the SAME mat in the SAME place —
+     the empty watercolour mat simply gains Cristina. No cream beat needed. */
+  function videoFadeFor(p) { let t = (p - 0.562) / 0.020; t = Math.max(0, Math.min(1, t)); return t * t * (3 - 2 * t); }
+  const FLOW_DIR = ASSETS.flowFrameDir || 'assets/flow-frames/';
+  const FLOW_COUNT = ASSETS.flowFrameCount || 150;
+  const flowFrames = flowCanvas ? new Array(FLOW_COUNT) : [];
+  let flowLast = -1, flowCw = 0, flowCh = 0;
+  const padFrame = n => String(n).padStart(3, '0');
+
+  function loadFlowFrame(i) {
+    if (!flowFrames || i < 0 || i >= FLOW_COUNT || flowFrames[i]) return;
+    const img = new Image();
+    img.decoding = 'async';
+    img.src = FLOW_DIR + 'f' + padFrame(i + 1) + '.jpg';
+    flowFrames[i] = img;
+  }
+  function initFlowFrames() {
+    if (!flowCanvas) return;
+    loadFlowFrame(0);
+    const loadAll = () => {
+      let i = 1;
+      const batch = () => {
+        const end = Math.min(FLOW_COUNT, i + 8);
+        while (i < end) loadFlowFrame(i++);
+        if (i < FLOW_COUNT) setTimeout(batch, 35);
+      };
+      batch();
+    };
+    if ('requestIdleCallback' in window) window.requestIdleCallback(loadAll, { timeout: 1200 });
+    else setTimeout(loadAll, 300);
+  }
+  function resizeFlowCanvas() {
+    if (!flowCanvas || !flow2d) return;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    flowCw = flowCanvas.clientWidth || 1;
+    flowCh = flowCanvas.clientHeight || 1;
+    flowCanvas.width = Math.round(flowCw * dpr);
+    flowCanvas.height = Math.round(flowCh * dpr);
+    flow2d.setTransform(dpr, 0, 0, dpr, 0, 0);
+    flowLast = -1;
+  }
+  function drawFlowFrame(idx) {
+    if (!flowCanvas || !flow2d) return false;
+    let img = flowFrames[idx];
+    if (!img || !img.complete || !img.naturalWidth) {
+      for (let d = 1; d < 10; d++) {
+        const prev = flowFrames[idx - d], next = flowFrames[idx + d];
+        if (prev && prev.complete && prev.naturalWidth) { img = prev; break; }
+        if (next && next.complete && next.naturalWidth) { img = next; break; }
+      }
+      if (!img || !img.complete || !img.naturalWidth) return false;
+    }
+    const s = Math.min(flowCw / img.naturalWidth, flowCh / img.naturalHeight);
+    const w = img.naturalWidth * s, h = img.naturalHeight * s;
+    flow2d.clearRect(0, 0, flowCw, flowCh);
+    flow2d.drawImage(img, (flowCw - w) / 2, (flowCh - h) / 2, w, h);
+    flow2d.save();
+    flow2d.globalCompositeOperation = 'destination-in';
+    const fade = flow2d.createLinearGradient(0, 0, 0, flowCh);
+    fade.addColorStop(0, 'rgba(0,0,0,0)');
+    fade.addColorStop(0.065, 'rgba(0,0,0,1)');
+    fade.addColorStop(0.93, 'rgba(0,0,0,1)');
+    fade.addColorStop(1, 'rgba(0,0,0,0)');
+    flow2d.fillStyle = fade;
+    flow2d.fillRect(0, 0, flowCw, flowCh);
+    flow2d.restore();
+    return true;
+  }
+  function flowFrameFor(p) { return Math.max(0, Math.min(FLOW_COUNT - 1, Math.round(flowFor(p) * (FLOW_COUNT - 1)))); }
+  function warmFlowAround(idx) {
+    for (let d = -3; d <= 6; d++) loadFlowFrame(idx + d);
+  }
   function scrubFlow(p) {
-    if (!flowVideo) return;
-    flowVideo.style.opacity = handoffFor(p).toFixed(3);   // fades in as the mesh canvas fades out
-    if (_flowDur && flowVideo.readyState >= 1) flowVideo.currentTime = flowFor(p) * _flowDur;
+    if (!flowCanvas) return;
+    const fade = videoFadeFor(p);
+    flowCanvas.style.opacity = fade.toFixed(3);
+    const idx = flowFrameFor(p);
+    warmFlowAround(idx);
+    if (idx !== flowLast && drawFlowFrame(idx)) flowLast = idx;
   }
 
   /* ---- mood track: the SAME mat, but the studio's light, exposure and
@@ -117,9 +233,10 @@
     // halos read as part of the room, not a foreign cream panel
     const h = _scrim.copy(_bg).lerp(_WHITE, 0.62).getHexString();
     if (root) root.style.setProperty('--scrim', parseInt(h.slice(0, 2), 16) + ',' + parseInt(h.slice(2, 4), 16) + ',' + parseInt(h.slice(4, 6), 16));
-    // once the flow video is showing, hold a constant cream that matches its background
-    // (#f2ede4, scrim lifted 0.62→white) so the video's cream edges blend into the page
-    if (p >= 0.585 && sticky) { sticky.style.backgroundColor = '#f2ede4'; if (root) root.style.setProperty('--scrim', '250,248,245'); }
+    // from the handoff onward, hold a constant cream that matches the flow background
+    // (#eee8dc, scrim lifted 0.62->white). Starting before the wash beat (p0.556) means the
+    // cream-only moment between mesh-out and flow-in is this same cream.
+    if (p >= 0.556 && sticky) { sticky.style.backgroundColor = '#eee8dc'; if (root) root.style.setProperty('--scrim', '249,247,243'); }
   }
 
   /* ---- Cristina figure sequence: she walks in once the mat is open and flows
@@ -146,7 +263,7 @@
   const MAT_SHADOW = 'drop-shadow(0 26px 30px rgba(43,38,32,.16))';
   function initFigures() {
     if (matStageEl) { matStageEl.style.display = 'none'; }   // retired: the live mesh is the only mat now
-    // retired on the WebGL path: the scroll-scrubbed flow video replaces the 15-PNG crossfade.
+    // retired on the WebGL path: the scroll-scrubbed flow sequence replaces the 15-PNG crossfade.
     // Kept in the DOM (not deleted) so the .is-static mobile poster can still use the first frame.
     const fl = document.getElementById('figureLayer'); if (fl) fl.style.display = 'none';
   }
@@ -160,6 +277,8 @@
     if (!renderer) return;
     const w = canvas.clientWidth || window.innerWidth, h = canvas.clientHeight || window.innerHeight;
     renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix();
+    resizeFlowCanvas();
+    computeAlign();   // re-derive the mat glide for the new viewport size
   }
 
   function bands(p) {
@@ -185,6 +304,7 @@
     if (meshMaterial.userData.setMorph) meshMaterial.userData.setMorph(morphFor(p), bloomFor(p));
     renderer.render(scene, camera);
     canvas.style.opacity = (1 - handoffFor(p)).toFixed(3);
+    applyMatAlign(p);
     if (rail) rail.style.height = (p * 100).toFixed(1) + '%';
     if (hint) hint.style.opacity = (1 - Math.min(1, p / 0.04)).toFixed(3);
     bands(p);
@@ -235,7 +355,9 @@
 
     buildMoods();
     initFigures();
+    initFlowFrames();
     mat.deform(ctx, 0); lastD = 0; onResize(); updateTarget(); paint(0);
+    canvas.style.transformOrigin = '0 0';   // alignment glide maps from the top-left origin
     canvas.style.transition = 'opacity .8s ease'; canvas.style.opacity = '1';
     setTimeout(function () { canvas.style.transition = 'none'; }, 850); // per-frame handoff fade must be instant, not lagged
 
@@ -266,18 +388,10 @@
         if (meshMaterial.userData.setMorph) meshMaterial.userData.setMorph(morphFor(p), bloomFor(p));
         renderer.render(scene, camera);
         canvas.style.opacity = (1 - handoffFor(p)).toFixed(3);
+        applyMatAlign(p);
         bands(p); scrubFlow(p);
       },
-      matRect() {                                  // mesh mat's screen-space bbox at current cam
-        const b = new THREE.Box3().setFromObject(group);
-        const pts = [], mn = b.min, mx = b.max;
-        for (const x of [mn.x, mx.x]) for (const y of [mn.y, mx.y]) for (const z of [mn.z, mx.z]) {
-          const v = new THREE.Vector3(x, y, z).project(camera);
-          pts.push([(v.x * 0.5 + 0.5) * canvas.clientWidth, (-v.y * 0.5 + 0.5) * canvas.clientHeight]);
-        }
-        const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]);
-        return { left: Math.min(...xs), right: Math.max(...xs), top: Math.min(...ys), bottom: Math.max(...ys) };
-      },
+      matRect() { return meshMatRect(); },         // mesh mat's screen-space bbox at current cam
     };
 
     clock = new THREE.Clock();
