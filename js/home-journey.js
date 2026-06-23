@@ -48,10 +48,11 @@
     { p: 0.00, px: 3.00, py: 2.00, pz: 3.60, tx: -0.80, ty: 0.20, tz: 0.20 }, // 1 hero — coil on the right
     { p: 0.20, px: 3.45, py: 2.70, pz: 5.70, tx: -1.15, ty: 0.00, tz: 1.85 }, // 2 present the open mat (3/4)
     { p: 0.38, px: 2.60, py: 4.20, pz: 5.40, tx: -1.00, ty: 0.00, tz: 2.30 }, // 3 elevated plan view
-    { p: 0.50, px: 2.30, py: 3.78, pz: 8.00, tx: -0.66, ty: 0.12, tz: 2.16 }, // 4 settle so the 3D mat lands on
-    { p: 0.66, px: 2.30, py: 3.78, pz: 8.00, tx: -0.66, ty: 0.12, tz: 2.16 }, //   the hero-mat PNG's rect (the
-    { p: 0.80, px: 2.30, py: 3.78, pz: 8.00, tx: -0.66, ty: 0.12, tz: 2.16 }, //   3D mat is hidden past ~0.56,
-    { p: 1.00, px: 2.30, py: 3.78, pz: 8.00, tx: -0.66, ty: 0.12, tz: 2.16 }, //   so these just hold it steady)
+    { p: 0.50, px: 2.30, py: 3.78, pz: 8.00, tx: -0.66, ty: 0.12, tz: 2.16 }, // morph begins — steep showcase angle
+    { p: 0.56, px: 2.30, py: 2.15, pz: 9.20, tx: -0.66, ty: 0.12, tz: 2.16 }, // eased to C-gentle (figures' angle)
+    { p: 0.66, px: 2.30, py: 2.15, pz: 9.20, tx: -0.66, ty: 0.12, tz: 2.16 }, // hold C-gentle for the pose flow
+    { p: 0.80, px: 2.30, py: 2.15, pz: 9.20, tx: -0.66, ty: 0.12, tz: 2.16 },
+    { p: 1.00, px: 2.30, py: 2.15, pz: 9.20, tx: -0.66, ty: 0.12, tz: 2.16 },
   ];
   function camAt(p) {
     let lo = frames[0], hi = frames[frames.length - 1];
@@ -68,6 +69,10 @@
   function morphFor(p) { let t = (p - 0.50) / 0.06; t = Math.max(0, Math.min(1, t)); return t * t * (3 - 2 * t); }
   /* brief paint-bloom pulse at the moment of change (finishes crisp) */
   function bloomFor(p) { const t = (p - 0.50) / 0.06; return (t <= 0 || t >= 1) ? 0 : Math.sin(t * Math.PI); }
+  /* hand-off: once the mat is watercolour AND eased to C-gentle, the mesh fades out and the
+     on-mat figure illustrations take over (they were drawn from this exact mat, so it's invisible).
+     canvas opacity = 1 - handoffFor(p): full through the morph, gone by p0.585 as figure-1 fades in. */
+  function handoffFor(p) { let t = (p - 0.560) / 0.025; t = Math.max(0, Math.min(1, t)); return t * t * (3 - 2 * t); }
 
   /* ---- mood track: the SAME mat, but the studio's light, exposure and
      background tone shift per chapter so each beat reads as its own scene.
@@ -172,7 +177,7 @@
     applyMood(p);
     if (meshMaterial.userData.setMorph) meshMaterial.userData.setMorph(morphFor(p), bloomFor(p));
     renderer.render(scene, camera);
-    canvas.style.opacity = '1';   // the mesh IS the mat for the whole journey
+    canvas.style.opacity = (1 - handoffFor(p)).toFixed(3);
     if (rail) rail.style.height = (p * 100).toFixed(1) + '%';
     if (hint) hint.style.opacity = (1 - Math.min(1, p / 0.04)).toFixed(3);
     bands(p);
@@ -253,7 +258,7 @@
         camAt(p); applyMood(p);
         if (meshMaterial.userData.setMorph) meshMaterial.userData.setMorph(morphFor(p), bloomFor(p));
         renderer.render(scene, camera);
-        canvas.style.opacity = '1';
+        canvas.style.opacity = (1 - handoffFor(p)).toFixed(3);
         bands(p); figures(p);
       },
       matRect() {                                  // mesh mat's screen-space bbox at current cam
