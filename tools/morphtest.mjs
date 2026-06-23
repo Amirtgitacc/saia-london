@@ -5,8 +5,9 @@ const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
 const errs = [];
 page.on('console', m => { if (m.type() === 'error') errs.push(m.text()); });
-await page.goto('http://localhost:8000/home.html', { waitUntil: 'networkidle' });
-await page.waitForFunction(() => window.SAIA && window.SAIA._rig, { timeout: 8000 });
+// not 'networkidle': flow.mp4 (preload=auto) keeps the network busy; the rig appearing is the real ready signal
+await page.goto('http://localhost:8000/home.html', { waitUntil: 'domcontentloaded' });
+await page.waitForFunction(() => window.SAIA && window.SAIA._rig, { timeout: 15000 });
 const probe = async (p) => page.evaluate((p) => {
   window.SAIA._rig.at(p);
   const c = document.getElementById('homeCanvas');

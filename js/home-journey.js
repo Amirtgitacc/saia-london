@@ -23,6 +23,7 @@
   const hint = document.getElementById('homeHint');
   const sticky = document.querySelector('.home-sticky');
   const matStageEl = document.getElementById('matStage');
+  const flowVideo = document.getElementById('flowVideo');
 
   function goStatic() { if (root) root.classList.add('is-static'); }
 
@@ -74,6 +75,19 @@
      canvas opacity = 1 - handoffFor(p): full through the morph, gone by p0.585 as figure-1 fades in. */
   function handoffFor(p) { let t = (p - 0.560) / 0.025; t = Math.max(0, Math.min(1, t)); return t * t * (3 - 2 * t); }
 
+  /* ---- the scroll-scrubbed watercolour flow video (assets/flow.mp4) takes over from the mesh.
+     It fades in on the SAME curve the mesh canvas fades out (handoffFor), and scroll-progress maps
+     to video.currentTime so scrolling plays Cristina's continuous pose flow forward/back. ---- */
+  const FLOW_FROM = 0.560, FLOW_TO = 1.0;   // scrub window (starts as the mesh hands off)
+  function flowFor(p) { let t = (p - FLOW_FROM) / (FLOW_TO - FLOW_FROM); return Math.max(0, Math.min(1, t)); }
+  let _flowDur = 0;
+  if (flowVideo) flowVideo.addEventListener('loadedmetadata', () => { _flowDur = flowVideo.duration || 0; });
+  function scrubFlow(p) {
+    if (!flowVideo) return;
+    flowVideo.style.opacity = handoffFor(p).toFixed(3);   // fades in as the mesh canvas fades out
+    if (_flowDur && flowVideo.readyState >= 1) flowVideo.currentTime = flowFor(p) * _flowDur;
+  }
+
   /* ---- mood track: the SAME mat, but the studio's light, exposure and
      background tone shift per chapter so each beat reads as its own scene.
      Aligned to the seven [data-band] ranges. ---- */
@@ -103,6 +117,9 @@
     // halos read as part of the room, not a foreign cream panel
     const h = _scrim.copy(_bg).lerp(_WHITE, 0.62).getHexString();
     if (root) root.style.setProperty('--scrim', parseInt(h.slice(0, 2), 16) + ',' + parseInt(h.slice(2, 4), 16) + ',' + parseInt(h.slice(4, 6), 16));
+    // once the flow video is showing, hold a constant cream that matches its background
+    // (#f2ede4, scrim lifted 0.62→white) so the video's cream edges blend into the page
+    if (p >= 0.585 && sticky) { sticky.style.backgroundColor = '#f2ede4'; if (root) root.style.setProperty('--scrim', '250,248,245'); }
   }
 
   /* ---- Cristina figure sequence: she walks in once the mat is open and flows
@@ -129,19 +146,9 @@
   const MAT_SHADOW = 'drop-shadow(0 26px 30px rgba(43,38,32,.16))';
   function initFigures() {
     if (matStageEl) { matStageEl.style.display = 'none'; }   // retired: the live mesh is the only mat now
-    figEls.forEach(function (el, i) {
-      if (!FIG[i]) return;
-      applyBox(el);
-      el.style.opacity = '0';
-      el.style.willChange = 'opacity';   // mat is baked-in & pre-registered → pure crossfade
-    });
-  }
-  function figures(p) {
-    for (let i = 0; i < figEls.length; i++) {
-      const f = FIG[i], el = figEls[i]; if (!f) continue;
-      let k = 1 - Math.abs(p - f.p) / FIG_W; k = Math.max(0, Math.min(1, k)); k = k * k * (3 - 2 * k);
-      el.style.opacity = k.toFixed(3);
-    }
+    // retired on the WebGL path: the scroll-scrubbed flow video replaces the 15-PNG crossfade.
+    // Kept in the DOM (not deleted) so the .is-static mobile poster can still use the first frame.
+    const fl = document.getElementById('figureLayer'); if (fl) fl.style.display = 'none';
   }
 
   function updateTarget() {
@@ -181,7 +188,7 @@
     if (rail) rail.style.height = (p * 100).toFixed(1) + '%';
     if (hint) hint.style.opacity = (1 - Math.min(1, p / 0.04)).toFixed(3);
     bands(p);
-    figures(p);
+    scrubFlow(p);
   }
 
   function init(glb) {
@@ -259,7 +266,7 @@
         if (meshMaterial.userData.setMorph) meshMaterial.userData.setMorph(morphFor(p), bloomFor(p));
         renderer.render(scene, camera);
         canvas.style.opacity = (1 - handoffFor(p)).toFixed(3);
-        bands(p); figures(p);
+        bands(p); scrubFlow(p);
       },
       matRect() {                                  // mesh mat's screen-space bbox at current cam
         const b = new THREE.Box3().setFromObject(group);
