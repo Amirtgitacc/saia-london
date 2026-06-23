@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SAÏA — Cristina-on-mat lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500&family=Hanken+Grotesk:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root { --cream:#F5F1E8; --ink:#2B2620; --terra:#B8624A; --line:#d8cfbe; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--cream); color:var(--ink);
+         font-family:'Hanken Grotesk',system-ui,sans-serif; line-height:1.5; }
+  header { padding:48px 6vw 8px; }
+  .kicker { letter-spacing:.18em; text-transform:uppercase; font-size:12px; color:var(--terra); }
+  h1 { font-family:'Cormorant Garamond',serif; font-weight:500; font-size:44px; margin:.1em 0 .2em; }
+  h2 { font-family:'Cormorant Garamond',serif; font-weight:500; font-size:30px;
+       margin:0 0 4px; }
+  p.lede { max-width:760px; color:#5b5346; }
+  section { padding:28px 6vw 8px; }
+  .note { font-size:14px; color:#6b6356; max-width:820px; margin:2px 0 18px; }
+  .grid { display:grid; gap:22px; }
+  .two { grid-template-columns:1fr 1fr; }
+  .four { grid-template-columns:repeat(4,1fr); }
+  figure { margin:0; }
+  .card { background:#fff; border:1px solid var(--line); border-radius:10px; overflow:hidden;
+          box-shadow:0 14px 30px rgba(43,38,32,.06); }
+  .card img { display:block; width:100%; height:auto; background:var(--cream); }
+  figcaption { padding:10px 14px; font-size:13px; color:#5b5346; display:flex; justify-content:space-between; align-items:center; }
+  .tag { font-size:11px; letter-spacing:.08em; text-transform:uppercase; padding:3px 8px; border-radius:99px; }
+  .bad { background:#f6e2dc; color:#9a4631; }
+  .good { background:#e3ecdd; color:#3f6b3a; }
+  .pick { background:#efe7d4; color:#6b5a2e; }
+  .divider { height:1px; background:var(--line); margin:34px 6vw 0; }
+  .legend { font-size:13px; color:#6b6356; padding:0 6vw 60px; max-width:900px; }
+  @media (max-width:880px){ .two,.four{ grid-template-columns:1fr; } h1{font-size:34px;} }
+</style>
+</head>
+<body>
+<header>
+  <div class="kicker">SAÏA · Design lab</div>
+  <h1>Cristina on the mat — perspective test</h1>
+  <p class="lede">The core fix: instead of pasting a flat, eye-level drawing of Cristina onto a steeply-angled
+  3D mat (two different cameras → she floats), we render the real mat at a gentle angle and draw her
+  <em>in that same perspective</em>, on the mat. Below: the old broken composite vs. the new test renders.</p>
+</header>
+
+<section>
+  <h2>1 · Before → after</h2>
+  <p class="note">Left = what's live now (flat figure, steep mat, wrong scale, white foot artifacts).
+  Right = new test, drawn to the mat's perspective at a gentle angle. Same two poses.</p>
+  <div class="grid two">
+    <figure class="card"><img src="assets/before-stand.png" alt="before standing">
+      <figcaption>Standing — current (broken) <span class="tag bad">before</span></figcaption></figure>
+    <figure class="card"><img src="assets/test-stand-onmat.png" alt="after standing">
+      <figcaption>Standing — perspective-matched <span class="tag good">after</span></figcaption></figure>
+    <figure class="card"><img src="assets/before-dog.png" alt="before dog">
+      <figcaption>Downward dog — current (broken) <span class="tag bad">before</span></figcaption></figure>
+    <figure class="card"><img src="assets/test-dog-onmat.png" alt="after dog">
+      <figcaption>Downward dog — perspective-matched <span class="tag good">after</span></figcaption></figure>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<section>
+  <h2>2 · Which mat angle?</h2>
+  <p class="note">The figures above used angle <strong>C (gentle)</strong>. Here are the candidate angles of your
+  real watercolour mat — the mat eases from today's steep angle (A) toward a flatter floor view. Pick the one
+  that should host the figures; I'll regenerate all 15 poses to whichever we lock.</p>
+  <div class="grid four">
+    <figure class="card"><img src="assets/mat-A-current.png" alt="angle A">
+      <figcaption>A · current steep <span class="tag bad">too top-down</span></figcaption></figure>
+    <figure class="card"><img src="assets/mat-B-medium.png" alt="angle B">
+      <figcaption>B · medium <span class="tag pick">option</span></figcaption></figure>
+    <figure class="card"><img src="assets/mat-C-gentle.png" alt="angle C">
+      <figcaption>C · gentle <span class="tag good">used above</span></figcaption></figure>
+    <figure class="card"><img src="assets/mat-D-gentler.png" alt="angle D">
+      <figcaption>D · gentler <span class="tag pick">option</span></figcaption></figure>
+  </div>
+</section>
+
+<p class="legend">
+  Notes · The test images still have the mat <em>baked in</em> — that's fine: because every pose is drawn from
+  the same mat render, the mats are consistent (this is what fixes the old doubling). The 3D mat would morph,
+  ease to this angle, then hand off to these illustrations. Open questions for you: (1) which angle, A–D;
+  (2) is the figure scale-on-mat right, or should she be larger/smaller; (3) do the contact + grounding read as believable?
+</p>
+</body>
+</html>

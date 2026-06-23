@@ -236,6 +236,13 @@
         camera.position.set(px, py, pz); camera.lookAt(tx, ty, tz);
         renderer.render(scene, camera);
       },
+      /* like shot() but also applies the watercolour morph — for design-exploration renders */
+      shotMorph(d, morph, px, py, pz, tx, ty, tz) {
+        paused = true; mat.deform(ctx, d); lastD = d;
+        if (meshMaterial.userData.setMorph) meshMaterial.userData.setMorph(morph, 0);
+        camera.position.set(px, py, pz); camera.lookAt(tx, ty, tz);
+        renderer.render(scene, camera);
+      },
       bbox() { const b = new THREE.Box3().setFromObject(group); return { min: b.min, max: b.max }; },
       peek() { return { current, target, paused, visible, lastD, morph: morphFor(current), bloom: bloomFor(current), cam: camera.position.toArray() }; },
       /* render the EXACT frame a user sees at scroll-progress p, with the page at the top
