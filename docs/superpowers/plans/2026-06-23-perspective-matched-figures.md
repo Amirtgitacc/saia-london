@@ -22,6 +22,8 @@
 
 **Environment (every verification step):** static server already runs on `http://localhost:8000` (start with `cd "/Users/at/Projects/site 2" && python3 -m http.server 8000` if down).
 
+**Commits:** per-task commits follow this session's approved feature-branch workflow (`mat-transform-single-mat`). Each commit step uses a **scoped `git add <specific files>`** (never `git add -A`) so untracked scratch (e.g. `tools/angleshot/`, `tools/lab/`) is never swept in. If the workflow changes, treat the commit steps as "commit when approved."
+
 **Higgsfield identity refs (role `image`, this order), mat reference last:**
 - portrait `0029c54c-354d-47f8-a79f-95bb8c49cfd9`
 - stand `765be296-a4f1-4ac4-95c6-f755f236ebaa`
@@ -178,9 +180,16 @@ git add tools/figbake.mjs && git commit -m "feat(figbake): restore mat-detection
 **Interfaces:**
 - Produces: 15 source frames of Cristina drawn in the C-gentle perspective, on her matching mat, plain cream background.
 
-- [ ] **Step 1: Back up the current mat-free figures**
+> **Tooling dependency:** this task requires the **Higgsfield MCP** (`generate_image`, `job_status`) with model `nano_banana_pro`. It is connected in this session (the two lab test poses were generated with it). If executed where that MCP is absent, the task is blocked — supply the 15 `onmat-*.png` by hand or run it in this session.
+
+- [ ] **Step 1: Back up the current mat-free figures AND move the old `free-*` sources out of `tools/figsrc`**
+
+The old `free-01..15.png` sources currently live in `tools/figsrc/` and would be picked up by figbake (it globs the whole dir), colliding with the new `onmat-*` on the `figure-N` naming. Move them out, and back up the baked figures:
 ```bash
-cd "/Users/at/Projects/site 2" && mkdir -p tools/figsrc/onmat-backup-matfree && cp assets/figure/figure-*.png tools/figsrc/onmat-backup-matfree/ 2>/dev/null; ls tools/figsrc/onmat-backup-matfree | wc -l
+cd "/Users/at/Projects/site 2" && mkdir -p tools/figsrc/onmat-backup-matfree
+cp assets/figure/figure-*.png tools/figsrc/onmat-backup-matfree/ 2>/dev/null
+mv tools/figsrc/free-*.png tools/figsrc/onmat-backup-matfree/ 2>/dev/null
+echo "figsrc top-level pngs remaining (should be ONLY onmat-03, onmat-09 from Task 2 so far):"; ls tools/figsrc/*.png 2>/dev/null | xargs -n1 basename
 ```
 
 - [ ] **Step 2: Generate the 13 remaining poses (Higgsfield `nano_banana_pro`, aspect `3:2`)**
@@ -227,11 +236,14 @@ cd "/Users/at/Projects/site 2" && git add tools/figsrc/onmat-*.png && git commit
 **Interfaces:**
 - Consumes: `tools/figsrc/onmat-01..15.png` (Task 3) + the restored `figbake` (Task 2).
 
-- [ ] **Step 1: Bake all 15**
+- [ ] **Step 1: Bake exactly the 15 `onmat-*` frames**
+
+Pass the `onmat-*` sources explicitly so figbake processes ONLY them (never the backups or any stray file), and assert the input count first:
 ```bash
-cd "/Users/at/Projects/site 2" && node tools/figbake.mjs
+cd "/Users/at/Projects/site 2" && N=$(ls tools/figsrc/onmat-*.png | wc -l | tr -d ' '); echo "onmat inputs: $N"; [ "$N" = "15" ] || { echo "EXPECTED 15 — stop and fix"; exit 1; }
+node tools/figbake.mjs tools/figsrc/onmat-*.png
 ```
-Expected: 15 `✓` lines (mat detected on each), `assets/figure/figure-1..15.png` + `.debug.png` written. Note any `⚠ LOW` confidence frames.
+Expected: input count `15`, then 15 `✓` lines (mat detected on each), `assets/figure/figure-1..15.png` + `.debug.png` written. Note any `⚠ LOW` confidence frames.
 
 - [ ] **Step 2: Visual gate — mats land on ONE rect**
 
@@ -253,9 +265,26 @@ cd "/Users/at/Projects/site 2" && git add assets/figure/figure-*.png && git comm
 - Consumes: registered figures (Task 4), eased camera + handoff (Task 1).
 - Produces: `FIG_BOX` placing the figures' (registered) mat exactly over the live mesh mat at the handoff → seamless.
 
-- [ ] **Step 1: Find where the live mesh mat sits at the handoff**
+- [ ] **Step 1: Add a pixel-accurate mat-silhouette measurement, then measure the mesh mat**
 
-The figures' mats must overlay the mesh mat at `p≈0.56` so the handoff is invisible. Measure the mesh mat's screen rect at the C-gentle camera:
+`matRect()` (Box3 projection) does NOT measure the same thing figbake registers — figbake aligns the mat's **rendered silhouette** (full horizontal extent + frontmost row). Measure the mesh mat the SAME way so the two coincide. Add a rig method that reads the mat's silhouette from the canvas pixels (the renderer uses `preserveDrawingBuffer:true`, so the canvas is readable). Add it to the `_rig` object in `js/home-journey.js` (next to `matRect`):
+
+```js
+      /* pixel-accurate mat silhouette in CSS px (matches figbake's silhouette registration):
+         cx = horizontal-extent centre, width = full extent, bottom = frontmost row */
+      matSilhouette() {
+        const cw = canvas.clientWidth, ch = canvas.clientHeight;
+        const c2 = document.createElement('canvas'); c2.width = cw; c2.height = ch;
+        const x2 = c2.getContext('2d'); x2.drawImage(canvas, 0, 0, cw, ch);
+        const d = x2.getImageData(0, 0, cw, ch).data;
+        let minX = cw, maxX = -1, minY = ch, maxY = -1;
+        for (let y = 0; y < ch; y++) for (let x = 0; x < cw; x++) {
+          if (d[(y * cw + x) * 4 + 3] > 16) { if (x < minX) minX = x; if (x > maxX) maxX = x; if (y < minY) minY = y; if (y > maxY) maxY = y; }
+        }
+        return { cx: (minX + maxX) / 2, width: maxX - minX, frontY: maxY, top: minY, left: minX, right: maxX };
+      },
+```
+Measure the mesh mat at the handoff progress (mat fully watercolour + gentle, canvas still fully visible — use `p=0.555`, before `handoffFor` starts fading it):
 ```bash
 cd "/Users/at/Projects/site 2" && node -e '
 const { chromium } = require("playwright");
@@ -264,33 +293,44 @@ const { chromium } = require("playwright");
   const p = await b.newPage({ viewport: { width: 1440, height: 900 } });
   await p.goto("http://localhost:8000/home.html", { waitUntil: "networkidle" });
   await p.waitForFunction(() => window.SAIA && window.SAIA._rig);
-  const r = await p.evaluate(() => { window.SAIA._rig.at(0.558); return window.SAIA._rig.matRect(); });
-  console.log("mesh mat rect @0.558 (gentle):", r);
+  const r = await p.evaluate(() => { window.SAIA._rig.at(0.555); return window.SAIA._rig.matSilhouette(); });
+  console.log("mesh mat silhouette @0.555:", r, "(viewport 1440x900)");
   await b.close();
 })();'
 ```
-Record the rect (left/right/top/bottom px @ 1440×900).
+Record `cx`, `width`, `frontY` (px @ 1440×900).
 
-- [ ] **Step 2: Tune `FIG_BOX` to overlay the figures' mat on that rect**
+- [ ] **Step 2: Compute `FIG_BOX` with the CORRECT baked-image geometry**
 
-`FIG_BOX` at `js/home-journey.js:127` positions the figure canvas (whose mat is registered to `TARGET.cx=700, bottomY=1380, width=1120` inside a 1400×1500 image). Set `FIG_BOX` so the figures' mat front-centre + width line up with the mesh mat rect from Step 1:
-- `width` (vw) ≈ `(rect.right - rect.left) / 1440 * 100` — match the mesh mat's screen width.
-- `left` (%) ≈ horizontal centre of the rect `/1440*100`.
-- `bottom` (vh) ≈ `(900 - rect.bottom)/900*100` so the mat's front edge sits where the mesh mat's front edge is.
-Edit:
+`FIG_BOX` (`js/home-journey.js`, the `FIG_BOX` const) sizes the **whole 1400×1500 figure image** via `width` + `height:auto`. But figbake puts the mat at only `width 1120` of the 1400 image (**80%**) with its front edge at `bottomY 1380` of 1500 (**120px** up from the image bottom). So the element must be bigger than the mat, and its bottom sits *below* the mat front edge:
+
+Let `W = mat width px`, `Cx = mat extent-centre px`, `Fy = mat frontY px` (from Step 1). Then:
+```
+W_css_px   = W * (1400 / 1120)         // = W * 1.25   (element wider than the mat)
+FIG_BOX.width  (vw) = W_css_px / 1440 * 100
+FIG_BOX.left   (%)  = Cx / 1440 * 100                       // canvas centre ↔ mat extent-centre
+FIG_BOX.bottom (vh) = (900 - Fy - (120/1400) * W_css_px) / 900 * 100   // element bottom is 120/1400·W_css below the mat front
+```
+The `(120/1400)*W_css_px` term is the displayed image-bottom-to-mat-front offset Codex flagged (`120/1500` of the displayed image height equals `120/1400·W_css`). Compute the three values and set:
 ```js
   const FIG_BOX = { left: '<computed>%', bottom: '<computed>vh', width: '<computed>vw' };
 ```
 
-- [ ] **Step 3: Verify handoff seam + run morphtest**
+- [ ] **Step 3: Add a seam frame at the real handoff progress, then verify the seam**
+
+The mesh→figure crossover is ~`p0.575–0.585` (at `p0.56` the mesh is still fully opaque and figure-1 is faint). Add a seam frame to `tools/matshot.mjs` — in its `ps` array, after the `['c-0.56-walkin', 0.56]` entry add:
+```js
+  ['c2-0.578-handoff', 0.578],
+```
+Then:
 ```bash
 cd "/Users/at/Projects/site 2" && node --check js/home-journey.js && node tools/morphtest.mjs && node tools/matshot.mjs
 ```
-Read `tools/matshot/c-0.56-walkin.png` (the handoff): the mesh mat and figure-1's mat must coincide — no jump, no doubled edge as one fades into the other. Tune `FIG_BOX` and repeat until the seam is invisible.
+Read `tools/matshot/c2-0.578-handoff.png` (mesh ~half-faded, figure-1 ~active): the mesh mat and figure-1's mat must **coincide** — no jump, no doubled edge, no size/position pop as one fades into the other. Tune `FIG_BOX` (Step 2) and re-run until the seam is invisible. (The Step 2 formula gets you close; the eye finalises.)
 
 - [ ] **Step 4: Full acceptance gate (R1 + R2 + grounding)**
 
-Read `tools/matshot/` frames `b-0.52` (morph+ease), `c-0.56` (handoff), `d-0.634-stand`, `g-0.797-dog`, `h-0.824-lunge`, `i-0.878-seated`, `j-0.960`. Confirm:
+Read `tools/matshot/` frames `b-0.52` (morph+ease), `c2-0.578-handoff` (the seam), `d-0.634-stand`, `g-0.797-dog`, `h-0.824-lunge`, `i-0.878-seated`, `j-0.960`. Confirm:
 - **R1:** mat transforms in place (photoreal→watercolour) and eases to gentle; no flat cross-fade of two different mats.
 - **R2:** exactly ONE mat per frame; no second mat, no doubled edge; no shimmer between adjacent poses (registration holds).
 - **Grounding:** Cristina sits ON the mat in correct perspective, contact believable, contained within the mat, no foot artifacts.
