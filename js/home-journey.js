@@ -74,18 +74,9 @@
   /* hand-off: once the mat is watercolour AND eased to C-gentle, the mesh fades out and the
      on-mat figure illustrations take over (they were drawn from this exact mat, so it's invisible).
      canvas opacity = 1 - handoffFor(p): full through the morph, gone by p0.585 as figure-1 fades in. */
-  function handoffFor(p) { let t = (p - 0.560) / 0.020; t = Math.max(0, Math.min(1, t)); return t * t * (3 - 2 * t); }
+  function handoffFor(p) { let t = (p - 0.556) / 0.014; t = Math.max(0, Math.min(1, t)); return t * t * (3 - 2 * t); }
 
-  /* ---- ALIGNMENT: as the mat morphs to watercolour it GLIDES from the showcase position down to
-     exactly where the flow frame's mat sits, so the unrolled 3D mat *becomes* the mat under
-     Cristina's feet. The mesh and the flow then crossfade IN PLACE (no cream gap) — a seamless
-     dissolve of one mat that simply gains Cristina. ALIGN maps the mesh mat rect @0.56 → the flow
-     frame-0 mat rect, measured live (transform-origin: 0 0 on #homeCanvas). ---- */
-  // The flow mat sits at this fraction of the #flowCanvas box (measured from frame 0). Placing the
-  // target from the live #flowCanvas rect makes the alignment correct at ANY viewport size.
-  const FLOWMAT = { fx: 0.489, fy: 0.822, fw: 0.401 };
-  let ALIGN = { scale: 0.914, tx: 17, ty: 465 };   // recomputed by computeAlign() for the live viewport
-  /* mesh mat screen-space bbox at the current camera (viewport px) */
+  /* mesh mat screen-space bbox at the current camera (viewport px) — used by the debug rig */
   function meshMatRect() {
     group.updateMatrixWorld(true);
     camera.updateMatrixWorld(); camera.matrixWorldInverse.copy(camera.matrixWorld).invert();
@@ -98,36 +89,35 @@
     }
     return { left, right, top, bottom };
   }
-  /* derive the glide transform (flat mesh mat @C-gentle → flow mat) for the CURRENT viewport size */
-  function computeAlign() {
-    if (!flowCanvas || !canvas || !group) return;
-    mat.deform(ctx, 1);                            // flat mat, as it is at the handoff
-    camAt(0.62);                                   // the held C-gentle pose the flow frame was drawn from
-    const m = meshMatRect();
-    const Scx = (m.left + m.right) / 2, Scy = (m.top + m.bottom) / 2, Sw = (m.right - m.left) || 1;
-    const r = flowCanvas.getBoundingClientRect();
-    const Tcx = r.left + FLOWMAT.fx * r.width, Tcy = r.top + FLOWMAT.fy * r.height, Tw = FLOWMAT.fw * r.width;
-    const s = Tw / Sw;
-    ALIGN = { scale: s, tx: Tcx - s * Scx, ty: Tcy - s * Scy };
-    const d = deformFor(current); mat.deform(ctx, d); lastD = d; camAt(current);   // restore the live frame
-  }
-  function alignFor(p) { let t = (p - 0.50) / 0.074; t = Math.max(0, Math.min(1, t)); return t * t * (3 - 2 * t); } // 0.50→0.574
-  function applyMatAlign(p) {
-    const a = alignFor(p);
-    const s = 1 + (ALIGN.scale - 1) * a;
-    canvas.style.transform = 'translate(' + (ALIGN.tx * a).toFixed(1) + 'px,' + (ALIGN.ty * a).toFixed(1) + 'px) scale(' + s.toFixed(4) + ')';
-  }
 
-  /* ---- the watercolour flow sequence takes over from the mesh. Scroll-progress maps to a decoded
-     still frame (no fragile <video> seeking; works on hosts without byte ranges). ---- */
-  const FLOW_FROM = 0.562, FLOW_TO = 1.0;   // frame 0 shows as the aligned crossfade begins
-  function flowFor(p) { let t = (p - FLOW_FROM) / (FLOW_TO - FLOW_FROM); return Math.max(0, Math.min(1, t)); }
-  /* IN-PLACE CROSSFADE: mesh fades out [0.560,0.580] while the flow fades in [0.562,0.582]. Because
-     the mat is already aligned to the flow mat, the overlap is the SAME mat in the SAME place —
-     the empty watercolour mat simply gains Cristina. No cream beat needed. */
-  function videoFadeFor(p) { let t = (p - 0.562) / 0.020; t = Math.max(0, Math.min(1, t)); return t * t * (3 - 2 * t); }
+  /* ---- SEQUENTIAL HANDOFF (no overlap): the opened mat fades fully OUT in place
+     (handoffFor → 1 by p0.570), then after a brief cream-only beat the watercolour flow fades IN
+     (videoFadeFor from p0.576). The two mats are never on screen together → no double-mat.
+     Scroll-progress then maps to a decoded still frame. ---- */
+  const FLOW_FROM = 0.576, FLOW_TO = 1.0;   // frame 0 shows as the flow fades up (after the mat is gone)
+  function videoFadeFor(p) { let t = (p - 0.576) / 0.016; t = Math.max(0, Math.min(1, t)); return t * t * (3 - 2 * t); }
+  /* ---- 5-LEVEL STEPPED SCRUB (seam-free rebuild) ----
+     Scroll → frame index as alternating MOVE (Cristina flows to the next pose) and
+     HOLD (pose freezes; that level's text reads) zones. fp = normalised progress
+     through the flow range [FLOW_FROM, FLOW_TO]; each segment maps [a,b] of fp to
+     frame range [f0,f1] — a HOLD is f0==f1. Each MOVE is ONE continuous Seedance
+     keyframe-tween clip (no internal seam); the HOLDs sit on the shared boundary
+     anchors so there is no scrub across a clip seam. Anchor frame indices below are
+     emitted by tools/seam/assemble.mjs — update them + FLOW_COUNT when frames change. */
+  const A_STAND = 0, A_REACH = 69, A_DOG = 156, A_LUNGE = 235, A_SEATED = 302;
+  const FLOW_STOPS = [
+    { a: 0.00, b: 0.22, f0: A_STAND,  f1: A_STAND  }, // entrance fade-up + HOLD · L1 stands tall
+    { a: 0.22, b: 0.34, f0: A_STAND,  f1: A_REACH  }, // MOVE → reach up / heart opens
+    { a: 0.34, b: 0.48, f0: A_REACH,  f1: A_REACH  }, // HOLD · L2 reaches up
+    { a: 0.48, b: 0.58, f0: A_REACH,  f1: A_DOG    }, // MOVE → forward fold / downward dog
+    { a: 0.58, b: 0.70, f0: A_DOG,    f1: A_DOG    }, // HOLD · L3 fold → dog
+    { a: 0.70, b: 0.76, f0: A_DOG,    f1: A_LUNGE  }, // MOVE → low lunge
+    { a: 0.76, b: 0.86, f0: A_LUNGE,  f1: A_LUNGE  }, // HOLD · L4 low lunge
+    { a: 0.86, b: 0.94, f0: A_LUNGE,  f1: A_SEATED }, // MOVE → lower to seat → hands to heart
+    { a: 0.94, b: 1.00, f0: A_SEATED, f1: A_SEATED }, // HOLD · L5 seated, hands to heart
+  ];
   const FLOW_DIR = ASSETS.flowFrameDir || 'assets/flow-frames/';
-  const FLOW_COUNT = ASSETS.flowFrameCount || 150;
+  const FLOW_COUNT = ASSETS.flowFrameCount || 303;
   const flowFrames = flowCanvas ? new Array(FLOW_COUNT) : [];
   let flowLast = -1, flowCw = 0, flowCh = 0;
   const padFrame = n => String(n).padStart(3, '0');
@@ -141,7 +131,7 @@
   }
   function initFlowFrames() {
     if (!flowCanvas) return;
-    loadFlowFrame(0);
+    for (let i = 0; i <= 24; i++) loadFlowFrame(i);   // eager: entrance + Level-1 hold (P2 — no nearest-frame fallback on first reach)
     const loadAll = () => {
       let i = 1;
       const batch = () => {
@@ -191,7 +181,19 @@
     flow2d.restore();
     return true;
   }
-  function flowFrameFor(p) { return Math.max(0, Math.min(FLOW_COUNT - 1, Math.round(flowFor(p) * (FLOW_COUNT - 1)))); }
+  function flowFrameFor(p) {
+    let fp = (p - FLOW_FROM) / (FLOW_TO - FLOW_FROM);
+    fp = Math.max(0, Math.min(1, fp));
+    for (const s of FLOW_STOPS) {
+      if (fp <= s.b || s === FLOW_STOPS[FLOW_STOPS.length - 1]) {
+        let t = (fp - s.a) / ((s.b - s.a) || 1); t = Math.max(0, Math.min(1, t));
+        t = t * t * (3 - 2 * t);                      // ease each pose-to-pose transition
+        const f = Math.round(s.f0 + (s.f1 - s.f0) * t);
+        return Math.max(0, Math.min(FLOW_COUNT - 1, f));
+      }
+    }
+    return FLOW_COUNT - 1;
+  }
   function warmFlowAround(idx) {
     for (let d = -3; d <= 6; d++) loadFlowFrame(idx + d);
   }
@@ -218,6 +220,7 @@
   ];
   const _bg = new THREE.Color(), _sky = new THREE.Color(), _ground = new THREE.Color(), _key = new THREE.Color();
   const _scrim = new THREE.Color(), _WHITE = new THREE.Color('#ffffff');
+  const _CREAM = new THREE.Color('#ece8dc');   // the flow frames' baked background — page eases to this
   function buildMoods() { for (const m of MOODS) { m._bg = new THREE.Color(m.bg); m._sky = new THREE.Color(m.sky); m._ground = new THREE.Color(m.ground); m._key = new THREE.Color(m.key); } }
   function applyMood(p) {
     let lo = MOODS[0], hi = MOODS[MOODS.length - 1];
@@ -228,15 +231,15 @@
     hemi.groundColor.copy(_ground.copy(lo._ground).lerp(hi._ground, t));
     renderer.toneMappingExposure = lo.exp + (hi.exp - lo.exp) * t;
     _bg.copy(lo._bg).lerp(hi._bg, t);
+    // P1 fix: ease the warm room → the flow's baked cream SMOOTHLY across the morph
+    // (p0.50 → p0.576), then hold cream for the whole Cristina flow. No hard snap.
+    let cr = (p - 0.50) / 0.076; cr = Math.max(0, Math.min(1, cr)); cr = cr * cr * (3 - 2 * cr);
+    if (cr > 0) _bg.lerp(_CREAM, cr);
     if (sticky) sticky.style.backgroundColor = '#' + _bg.getHexString();
     // a scrim tone tied to the scene (the bg lifted toward white) so the text
     // halos read as part of the room, not a foreign cream panel
     const h = _scrim.copy(_bg).lerp(_WHITE, 0.62).getHexString();
     if (root) root.style.setProperty('--scrim', parseInt(h.slice(0, 2), 16) + ',' + parseInt(h.slice(2, 4), 16) + ',' + parseInt(h.slice(4, 6), 16));
-    // from the handoff onward, hold a constant cream that matches the flow background
-    // (#eee8dc, scrim lifted 0.62->white). Starting before the wash beat (p0.556) means the
-    // cream-only moment between mesh-out and flow-in is this same cream.
-    if (p >= 0.556 && sticky) { sticky.style.backgroundColor = '#eee8dc'; if (root) root.style.setProperty('--scrim', '249,247,243'); }
   }
 
   /* ---- Cristina figure sequence: she walks in once the mat is open and flows
@@ -278,14 +281,13 @@
     const w = canvas.clientWidth || window.innerWidth, h = canvas.clientHeight || window.innerHeight;
     renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix();
     resizeFlowCanvas();
-    computeAlign();   // re-derive the mat glide for the new viewport size
   }
 
   function bands(p) {
     for (const e of bandEls) {
       const parts = (e.getAttribute('data-band') || '0,1').split(',').map(Number);
       const a = parts[0], b = parts[1];
-      const f = Math.min(0.055, (b - a) * 0.4);
+      const f = Math.min(0.04, (b - a) * 0.3);
       const kin = a <= 0.001 ? 1 : Math.min(1, Math.max(0, (p - a) / f));
       const kout = b >= 0.999 ? 1 : Math.min(1, Math.max(0, (b - p) / f));
       let k = Math.min(kin, kout); if (p < a - 0.001 || p > b + 0.001) k = 0;
@@ -304,7 +306,6 @@
     if (meshMaterial.userData.setMorph) meshMaterial.userData.setMorph(morphFor(p), bloomFor(p));
     renderer.render(scene, camera);
     canvas.style.opacity = (1 - handoffFor(p)).toFixed(3);
-    applyMatAlign(p);
     if (rail) rail.style.height = (p * 100).toFixed(1) + '%';
     if (hint) hint.style.opacity = (1 - Math.min(1, p / 0.04)).toFixed(3);
     bands(p);
@@ -357,7 +358,6 @@
     initFigures();
     initFlowFrames();
     mat.deform(ctx, 0); lastD = 0; onResize(); updateTarget(); paint(0);
-    canvas.style.transformOrigin = '0 0';   // alignment glide maps from the top-left origin
     canvas.style.transition = 'opacity .8s ease'; canvas.style.opacity = '1';
     setTimeout(function () { canvas.style.transition = 'none'; }, 850); // per-frame handoff fade must be instant, not lagged
 
@@ -388,7 +388,6 @@
         if (meshMaterial.userData.setMorph) meshMaterial.userData.setMorph(morphFor(p), bloomFor(p));
         renderer.render(scene, camera);
         canvas.style.opacity = (1 - handoffFor(p)).toFixed(3);
-        applyMatAlign(p);
         bands(p); scrubFlow(p);
       },
       matRect() { return meshMatRect(); },         // mesh mat's screen-space bbox at current cam
