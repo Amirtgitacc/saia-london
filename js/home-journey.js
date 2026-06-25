@@ -105,16 +105,19 @@
      anchors so there is no scrub across a clip seam. Anchor frame indices below are
      emitted by tools/seam/assemble.mjs — update them + FLOW_COUNT when frames change. */
   const A_STAND = 0, A_REACH = 69, A_DOG = 156, A_LUNGE = 235, A_SEATED = 302;
+  /* MOVES dominate the scroll budget (~0.17 fp each) so the pose-to-pose motion plays
+     slowly and is clearly visible at any scroll speed; HOLDs are short (~0.07) — just
+     long enough to read the level text. #top is lengthened so each MOVE ≈ one screen. */
   const FLOW_STOPS = [
-    { a: 0.00, b: 0.22, f0: A_STAND,  f1: A_STAND  }, // entrance fade-up + HOLD · L1 stands tall
-    { a: 0.22, b: 0.34, f0: A_STAND,  f1: A_REACH  }, // MOVE → reach up / heart opens
-    { a: 0.34, b: 0.48, f0: A_REACH,  f1: A_REACH  }, // HOLD · L2 reaches up
-    { a: 0.48, b: 0.58, f0: A_REACH,  f1: A_DOG    }, // MOVE → forward fold / downward dog
-    { a: 0.58, b: 0.70, f0: A_DOG,    f1: A_DOG    }, // HOLD · L3 fold → dog
-    { a: 0.70, b: 0.76, f0: A_DOG,    f1: A_LUNGE  }, // MOVE → low lunge
-    { a: 0.76, b: 0.86, f0: A_LUNGE,  f1: A_LUNGE  }, // HOLD · L4 low lunge
-    { a: 0.86, b: 0.94, f0: A_LUNGE,  f1: A_SEATED }, // MOVE → lower to seat → hands to heart
-    { a: 0.94, b: 1.00, f0: A_SEATED, f1: A_SEATED }, // HOLD · L5 seated, hands to heart
+    { a: 0.00, b: 0.07, f0: A_STAND,  f1: A_STAND  }, // entrance fade-up + HOLD · L1 stands tall
+    { a: 0.07, b: 0.24, f0: A_STAND,  f1: A_REACH  }, // MOVE → reach up / heart opens   (slow)
+    { a: 0.24, b: 0.31, f0: A_REACH,  f1: A_REACH  }, // HOLD · L2 reaches up
+    { a: 0.31, b: 0.49, f0: A_REACH,  f1: A_DOG    }, // MOVE → forward fold / downward dog (slow)
+    { a: 0.49, b: 0.56, f0: A_DOG,    f1: A_DOG    }, // HOLD · L3 fold → dog
+    { a: 0.56, b: 0.73, f0: A_DOG,    f1: A_LUNGE  }, // MOVE → low lunge                 (slow)
+    { a: 0.73, b: 0.80, f0: A_LUNGE,  f1: A_LUNGE  }, // HOLD · L4 low lunge
+    { a: 0.80, b: 0.95, f0: A_LUNGE,  f1: A_SEATED }, // MOVE → lower to seat → hands to heart (slow)
+    { a: 0.95, b: 1.00, f0: A_SEATED, f1: A_SEATED }, // HOLD · L5 seated, hands to heart
   ];
   const FLOW_DIR = ASSETS.flowFrameDir || 'assets/flow-frames/';
   const FLOW_COUNT = ASSETS.flowFrameCount || 303;
