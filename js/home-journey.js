@@ -129,7 +129,7 @@
     if (!flowFrames || i < 0 || i >= FLOW_COUNT || flowFrames[i]) return;
     const img = new Image();
     img.decoding = 'async';
-    img.src = FLOW_DIR + 'f' + padFrame(i + 1) + '.jpg';
+    img.src = FLOW_DIR + 'f' + padFrame(i + 1) + '.webp';   // transparent cutout (figure+mat, no bg)
     flowFrames[i] = img;
   }
   function initFlowFrames() {
@@ -171,17 +171,7 @@
     const s = Math.min(flowCw / img.naturalWidth, flowCh / img.naturalHeight);
     const w = img.naturalWidth * s, h = img.naturalHeight * s;
     flow2d.clearRect(0, 0, flowCw, flowCh);
-    flow2d.drawImage(img, (flowCw - w) / 2, (flowCh - h) / 2, w, h);
-    flow2d.save();
-    flow2d.globalCompositeOperation = 'destination-in';
-    const fade = flow2d.createLinearGradient(0, 0, 0, flowCh);
-    fade.addColorStop(0, 'rgba(0,0,0,0)');
-    fade.addColorStop(0.065, 'rgba(0,0,0,1)');
-    fade.addColorStop(0.93, 'rgba(0,0,0,1)');
-    fade.addColorStop(1, 'rgba(0,0,0,0)');
-    flow2d.fillStyle = fade;
-    flow2d.fillRect(0, 0, flowCw, flowCh);
-    flow2d.restore();
+    flow2d.drawImage(img, (flowCw - w) / 2, (flowCh - h) / 2, w, h);   // transparent cutout composites straight onto the page
     return true;
   }
   function flowFrameFor(p) {
@@ -400,7 +390,7 @@
     const loop = () => {
       if (!paused && visible) {
         updateTarget();
-        current = THREE.MathUtils.damp(current, target, 4.5, clock.getDelta());
+        current = THREE.MathUtils.damp(current, target, 3.0, clock.getDelta());
         if (Math.abs(current - target) < 0.0002) current = target;
         paint(current);
       } else { clock.getDelta(); }
