@@ -76,3 +76,23 @@ they can never disagree. **Change a fact once, here, and both brains update.** D
 
 Tier-2 assist uses `claude-haiku-4-5` (fast, fires only on the long tail). Override with
 `SAIA_MODEL` in `.env`. Key stays server-side; it never reaches the browser.
+
+## Delivery (Addison Lee) — placeholder now, live API later
+
+Delivery is by **Addison Lee** courier (NW3 warehouse → event; pickup from NW3 is free). Verified
+hire facts from saialondon.com: £8.50/mat, 2-day base, **+£1.50/mat per extra day**, min 10,
+**60+ mats → reduced quote**; courier ≈ **£35–55 each way** to central London.
+
+- **NOW — Route C (placeholder):** `tools/lab/delivery-estimator.html`, a dependency-free zone
+  estimator (embeddable `.saia-estimator` component). Maps the event postcode to a London zone —
+  Zone 1/Central ≈ £80, Zone 2/Greater London from £110, outside London → WhatsApp quote — and
+  totals it with the mat-hire math. **Estimate only**; Cristina confirms the real courier price.
+- **LATER — Route B (the plan):** swap the estimate for **live quotes via the Addison Lee
+  "Quickbook" API** (Anypoint/MuleSoft). Has quote + booking endpoints (`POST /booking/create`,
+  plus a price-quote call); auth = `AL client_id:client_secret`. Wire the quote into `server.js`
+  and feed the hire panel. Requires SAÏA to open an **Addison Lee business account + API
+  credentials** — no public API fee (you pay per delivery, not per call); confirm account minimums
+  with AL. No-code alternative on the real Shopify store: the official **Addison Lee Shopify app**
+  (live same-day rates at checkout; free to install, bills in USD).
+
+Pending copy fix when the redesign lands: top-bar/meta says "same-week" — the site says **same-day**.

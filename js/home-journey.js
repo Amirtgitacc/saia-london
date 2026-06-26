@@ -320,7 +320,12 @@
       let k = Math.min(kin, kout); if (p < a - 0.001 || p > b + 0.001) k = 0;
       e.style.opacity = k.toFixed(3);
       const inner = e.firstElementChild;
-      if (inner) inner.style.transform = 'translateY(' + ((1 - k) * 24).toFixed(1) + 'px)';
+      if (inner) {
+        // blur-settle: as k goes 0→1 the content focuses in from soft blur, lifts and settles
+        const inv = 1 - k;
+        inner.style.transform = 'translateY(' + (inv * 10).toFixed(1) + 'px) scale(' + (1 + inv * 0.02).toFixed(4) + ')';
+        inner.style.filter = inv > 0.002 ? 'blur(' + (inv * 7).toFixed(2) + 'px)' : 'none';
+      }
       e.style.pointerEvents = k > 0.5 ? 'auto' : 'none';
     }
   }

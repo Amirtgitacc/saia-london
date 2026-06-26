@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SAÏA · Content-on-mat lab — Round 1: placement</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cream:#F5F1E8; --ink:#2B2620; --muted:#6B6358; --terra:#B8624A; --line:#DAD4C8;
+    --scrim:245,241,232;
+    --frame:'Libre Baskerville',Georgia,serif; --display:'Cormorant Garamond',serif;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:#E7E1D4;color:var(--ink);font-family:var(--frame);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;}
+
+  /* ---- page chrome ---- */
+  .lab-head{padding:34px clamp(20px,5vw,64px) 8px;}
+  .lab-head .kick{font-size:11px;letter-spacing:.34em;text-transform:uppercase;color:var(--terra);}
+  .lab-head h1{font-family:var(--display);font-weight:500;font-size:clamp(28px,4vw,46px);margin:10px 0 6px;line-height:1;}
+  .lab-head p{max-width:680px;font-size:14px;line-height:1.7;color:var(--muted);margin:0;}
+  .lab-bar{position:sticky;top:0;z-index:20;display:flex;flex-wrap:wrap;gap:12px;align-items:center;
+           padding:14px clamp(20px,5vw,64px);background:rgba(231,225,212,.86);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);}
+  .lab-bar .note{font-size:12px;color:var(--muted);margin-right:auto;}
+  button.act{font-family:var(--frame);font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+             background:var(--ink);color:var(--cream);border:none;padding:11px 20px;border-radius:2px;cursor:pointer;}
+  button.act.ghost{background:transparent;color:var(--ink);border:1px solid var(--ink);}
+  button.act:focus-visible,.cell .replay:focus-visible{outline:2px solid var(--terra);outline-offset:2px;}
+
+  /* ---- grid of stages ---- */
+  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:26px;padding:26px clamp(20px,5vw,64px) 80px;}
+  @media (max-width:900px){.grid{grid-template-columns:1fr;}}
+
+  .cell{background:var(--cream);border:1px solid var(--line);border-radius:8px;overflow:hidden;box-shadow:0 18px 40px rgba(43,38,32,.10);}
+  .cell .meta{display:flex;align-items:baseline;gap:12px;padding:14px 18px 12px;border-bottom:1px solid var(--line);}
+  .cell .meta .tag{font-family:var(--display);font-size:22px;color:var(--terra);line-height:1;}
+  .cell .meta .name{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink);}
+  .cell .meta .desc{font-size:12px;color:var(--muted);margin-left:auto;text-align:right;max-width:50%;line-height:1.4;}
+  .cell .replaywrap{display:flex;justify-content:flex-end;padding:10px 14px;background:#FBF9F4;border-top:1px solid var(--line);}
+  .cell .replay{font-family:var(--frame);font-size:10px;letter-spacing:.18em;text-transform:uppercase;
+                background:transparent;color:var(--muted);border:1px solid var(--line);padding:8px 14px;border-radius:2px;cursor:pointer;}
+  .cell .replay:hover{color:var(--ink);border-color:var(--ink);}
+
+  /* ---- the stage: figure on the right, content on the left (mirrors live home.html) ---- */
+  .stage{position:relative;aspect-ratio:16/10;overflow:hidden;background:
+          radial-gradient(120% 120% at 30% 40%, #FAF7F0 0%, #F2ECE0 60%, #EAE3D5 100%);}
+  .stage .fig{position:absolute;right:-4%;top:50%;transform:translateY(-50%);height:96%;width:auto;
+              filter:drop-shadow(0 26px 30px rgba(43,38,32,.16));pointer-events:none;user-select:none;}
+  /* a faint mat shadow oval under the figure to ground it */
+  .stage .matshadow{position:absolute;right:8%;bottom:7%;width:46%;height:5%;border-radius:50%;
+                    background:radial-gradient(closest-side, rgba(43,38,32,.18), transparent);}
+
+  /* the content panel — base type styles shared by all variants */
+  .panel{position:absolute;z-index:3;}
+  .panel .eyebrow{font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;}
+  .panel h2{font-family:var(--display);font-weight:500;line-height:1.02;margin:0 0 12px;color:var(--ink);font-size:30px;}
+  .panel p{font-size:13px;line-height:1.65;color:var(--muted);margin:0;}
+  .panel .cta{display:inline-block;margin-top:18px;font-family:var(--frame);font-size:10px;letter-spacing:.18em;
+              text-transform:uppercase;background:var(--ink);color:var(--cream);padding:11px 22px;border-radius:2px;text-decoration:none;}
+
+  /* ===== VARIANT A — contained glass card, left third ===== */
+  .vA .panel{left:5%;top:50%;transform:translateY(-50%);width:44%;max-width:400px;
+             background:rgba(251,249,244,.72);backdrop-filter:blur(7px);
+             border:1px solid rgba(218,212,200,.9);border-radius:6px;padding:24px 24px 26px;
+             box-shadow:0 20px 40px rgba(43,38,32,.12);}
+  .vA .panel h2{font-size:27px;}
+  .vA .panel .cta{margin-top:14px;}
+
+  /* ===== VARIANT B — lower-third caption, bottom-left, upper area clear ===== */
+  .vB .panel{left:6%;bottom:9%;width:42%;max-width:380px;}
+  .vB .panel h2{font-size:28px;}
+  .vB .panel::before{content:"";position:absolute;left:-6%;top:-10%;width:130%;height:150%;z-index:-1;
+                     background:radial-gradient(80% 100% at 25% 70%, rgba(var(--scrim),.96) 0%, rgba(var(--scrim),.55) 55%, rgba(var(--scrim),0) 80%);}
+
+  /* ===== VARIANT C — full-width subtitle band along the bottom ===== */
+  .vC .stage .fig{height:84%;top:40%;}
+  .vC .panel{left:0;right:0;bottom:0;width:100%;max-width:none;
+             display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:24px;
+             padding:22px clamp(18px,4vw,38px) 26px;
+             background:linear-gradient(0deg, rgba(var(--scrim),.98) 0%, rgba(var(--scrim),.92) 60%, rgba(var(--scrim),0) 100%);}
+  .vC .bandtext{max-width:58%;}
+  .vC .panel h2{margin:0 0 8px;font-size:26px;}
+  .vC .panel p{max-width:100%;}
+  .vC .panel .cta{margin:0 0 4px;white-space:nowrap;}
+
+  /* ===== VARIANT D — margin rail, scrim-free, thin terracotta rule ===== */
+  .vD .panel{left:6%;top:50%;transform:translateY(-50%);width:40%;max-width:340px;padding-left:20px;
+             border-left:2px solid var(--terra);}
+  .vD .panel .eyebrow{color:var(--terra);}
+  .vD .stage::after{content:"";position:absolute;inset:0;pointer-events:none;
+                    background:radial-gradient(60% 90% at 22% 50%, rgba(250,247,240,.6) 0%, rgba(250,247,240,0) 60%);}
+
+  /* ---- neutral reveal (Round 1 holds animation constant; Round 2 will vary it) ---- */
+  .panel{opacity:0;transform:translateY(18px) var(--basetf,);transition:opacity .7s ease,transform .7s cubic-bezier(.2,.7,.2,1);}
+  /* variants that vertically-center need the translate preserved on reveal */
+  .vA .panel,.vD .panel{transform:translate(0,calc(-50% + 18px));}
+  .stage.show .panel{opacity:1;transform:translateY(0);}
+  .vA .stage.show .panel,.vD .stage.show .panel{transform:translateY(-50%);}
+  .stage.noanim .panel{transition:none !important;}
+</style>
+</head>
+<body>
+
+<div class="lab-head">
+  <div class="kick">Content-on-mat lab · Round 1 of 3</div>
+  <h1>Where should the words sit?</h1>
+  <p>Four ways to place the scroll-flow content beside Cristina so it reads clearly and never fights the figure/video. Same copy, same neutral fade in every cell — <strong>judge placement &amp; layout only</strong>. We'll tune the reveal animation in Round 2 and polish each section in Round 3. Hit <em>Replay</em> on any cell, or <em>Replay all</em> up top.</p>
+</div>
+
+<div class="lab-bar">
+  <span class="note">Pick the placement that feels best (you can mix — e.g. "A for tall bands, C for the range grid").</span>
+  <button class="act" id="replayAll">Replay all reveals</button>
+  <button class="act ghost" id="toggleFig">Hide figure</button>
+</div>
+
+<div class="grid" id="grid">
+
+  <!-- A -->
+  <section class="cell vA">
+    <div class="meta"><span class="tag">A</span><span class="name">Glass card</span>
+      <span class="desc">Contained frosted card in the left third. Hard boundary, figure stays 100% clear.</span></div>
+    <div class="stage">
+      <img class="fig" alt="" data-fig>
+      <div class="matshadow"></div>
+      <div class="panel">
+        <div class="eyebrow">A women's club in London</div>
+        <h2>Yoga mat hire,<br>across London.</h2>
+        <p>Rent our signature mats for £8.50 each, with same-week delivery from our Central London warehouse.</p>
+        <a class="cta" href="#">Hire a mat</a>
+      </div>
+    </div>
+    <div class="replaywrap"><button class="replay">↻ Replay</button></div>
+  </section>
+
+  <!-- B -->
+  <section class="cell vB">
+    <div class="meta"><span class="tag">B</span><span class="name">Lower-third caption</span>
+      <span class="desc">Compact, bottom-left, soft halo. Upper area clears so the figure stands tall.</span></div>
+    <div class="stage">
+      <img class="fig" alt="" data-fig>
+      <div class="matshadow"></div>
+      <div class="panel">
+        <div class="eyebrow">A women's club in London</div>
+        <h2>Yoga mat hire,<br>across London.</h2>
+        <p>Rent our signature mats for £8.50 each, with same-week delivery from our Central London warehouse.</p>
+        <a class="cta" href="#">Hire a mat</a>
+      </div>
+    </div>
+    <div class="replaywrap"><button class="replay">↻ Replay</button></div>
+  </section>
+
+  <!-- C -->
+  <section class="cell vC">
+    <div class="meta"><span class="tag">C</span><span class="name">Subtitle band</span>
+      <span class="desc">Full-width strip along the bottom. Cinematic; never overlaps the figure's body.</span></div>
+    <div class="stage">
+      <img class="fig" alt="" data-fig>
+      <div class="matshadow"></div>
+      <div class="panel">
+        <div class="bandtext">
+          <div class="eyebrow">Mat hire</div>
+          <h2>Yoga mat hire, across London.</h2>
+          <p>£8.50 each, 2-day hire, minimum of ten — delivered, set out and collected.</p>
+        </div>
+        <a class="cta" href="#">Hire a mat</a>
+      </div>
+    </div>
+    <div class="replaywrap"><button class="replay">↻ Replay</button></div>
+  </section>
+
+  <!-- D -->
+  <section class="cell vD">
+    <div class="meta"><span class="tag">D</span><span class="name">Margin rail · scrim-free</span>
+      <span class="desc">Narrow text on the hard-left margin with a thin rule. No gradient — figure dominates.</span></div>
+    <div class="stage">
+      <img class="fig" alt="" data-fig>
+      <div class="matshadow"></div>
+      <div class="panel">
+        <div class="eyebrow">A women's club in London</div>
+        <h2>Yoga mat hire,<br>across London.</h2>
+        <p>£8.50 a mat, same-week delivery across London.</p>
+        <a class="cta" href="#">Hire a mat</a>
+      </div>
+    </div>
+    <div class="replaywrap"><button class="replay">↻ Replay</button></div>
+  </section>
+
+</div>
+
+<script>
+  // Use a representative mid-flow frame as the figure backdrop (true to the live #flowCanvas).
+  var FIG = '../../assets/flow-frames/f150.webp';
+  document.querySelectorAll('[data-fig]').forEach(function(img){ img.src = FIG; });
+
+  function reveal(stage){
+    stage.classList.add('noanim');     // transitions off
+    stage.classList.remove('show');    // snap to hidden state instantly
+    void stage.offsetWidth;
+    stage.classList.remove('noanim');  // transitions back on
+    void stage.offsetWidth;
+    requestAnimationFrame(function(){ stage.classList.add('show'); });
+  }
+  function revealAll(){ document.querySelectorAll('.stage').forEach(reveal); }
+
+  document.querySelectorAll('.cell').forEach(function(cell){
+    var stage = cell.querySelector('.stage');
+    cell.querySelector('.replay').addEventListener('click', function(){ reveal(stage); });
+  });
+  document.getElementById('replayAll').addEventListener('click', revealAll);
+
+  var figHidden = false;
+  document.getElementById('toggleFig').addEventListener('click', function(){
+    figHidden = !figHidden;
+    document.querySelectorAll('.fig,.matshadow').forEach(function(el){ el.style.display = figHidden ? 'none' : ''; });
+    this.textContent = figHidden ? 'Show figure' : 'Hide figure';
+  });
+
+  // reveal every cell on load, lightly staggered so you see the motion
+  window.addEventListener('load', function(){
+    document.querySelectorAll('.stage').forEach(function(s,i){ setTimeout(function(){ reveal(s); }, 120 + i*140); });
+  });
+</script>
+</body>
+</html>

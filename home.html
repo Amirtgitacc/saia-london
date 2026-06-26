@@ -19,7 +19,11 @@
   }
 </style>
 <style>
-  .band-inner { will-change: transform, opacity; }
+  .band-inner { transform-origin: left center; will-change: transform, opacity, filter; }
+  /* D layout — the 5 flow bands over Cristina: narrow margin rail, terracotta rule, no scrim */
+  .flow-rail .band-inner { max-width: 380px !important; padding-left: 22px; border-left: 2px solid #B8624A; }
+  .flow-rail .band-inner > div:first-child { color: #B8624A; }
+  .flow-rail[data-band="0.972,1"] .band-inner { max-width: 430px !important; } /* Join band needs room for the email form */
   /* static fallback: mobile / prefers-reduced-motion / WebGL failure */
   .is-static #top { height: auto !important; }
   .is-static .home-sticky { position: static !important; height: auto !important; overflow: visible !important; }
@@ -29,7 +33,7 @@
   .is-static #stage { position: static !important; inset: auto !important; pointer-events: auto !important; }
   .is-static [data-band] { position: static !important; inset: auto !important; opacity: 1 !important; display: block !important; padding: 48px 7vw !important; background: none !important; }
   .is-static .band-inner { background: none !important; padding: 0 !important; max-width: 640px !important; margin: 0 auto; }
-  .is-static .band-inner { transform: none !important; }
+  .is-static .band-inner { transform: none !important; filter: none !important; }
   .is-static #homeBar, .is-static #homeHint { display: none !important; }
 </style>
 <style>
@@ -253,7 +257,7 @@
         </div>
 
         <!-- FLOW LEVEL 1 — CRISTINA STANDS · MAT HIRE -->
-        <div data-band="0.576,0.66" style="position:absolute; inset:0; display:flex; align-items:center; justify-content:flex-start; padding:0 7vw; background:linear-gradient(90deg, rgba(var(--scrim),.94) 0%, rgba(var(--scrim),.74) 32%, rgba(var(--scrim),0) 56%);">
+        <div class="flow-rail" data-band="0.576,0.66" style="position:absolute; inset:0; display:flex; align-items:center; justify-content:flex-start; padding:0 7vw;">
           <div class="band-inner" style="max-width:460px;">
             <div style="font-size:12px; letter-spacing:.3em; text-transform:uppercase; color:#B8624A; margin-bottom:16px;">Mat hire</div>
             <h2 style="font-family:'Cormorant Garamond',serif; font-weight:500; font-size:clamp(34px,4.6vw,58px); line-height:1.0; margin:0 0 22px; color:#2B2620;">Roll it out<br>anywhere.</h2>
@@ -263,7 +267,7 @@
         </div>
 
         <!-- FLOW LEVEL 2 — CRISTINA REACHES UP · THE SAÏA CLUB -->
-        <div data-band="0.675,0.755" style="position:absolute; inset:0; display:flex; align-items:center; justify-content:flex-start; padding:0 7vw; background:linear-gradient(90deg, rgba(var(--scrim),.94) 0%, rgba(var(--scrim),.72) 32%, rgba(var(--scrim),0) 56%);">
+        <div class="flow-rail" data-band="0.675,0.755" style="position:absolute; inset:0; display:flex; align-items:center; justify-content:flex-start; padding:0 7vw;">
           <div class="band-inner" style="max-width:460px;">
             <div style="font-size:12px; letter-spacing:.3em; text-transform:uppercase; color:#B8624A; margin-bottom:16px;">The SAÏA Club</div>
             <h2 style="font-family:'Cormorant Garamond',serif; font-weight:500; font-size:clamp(34px,4.6vw,58px); line-height:1.02; margin:0 0 22px; color:#2B2620;">We curate unforgettable experiences.</h2>
@@ -272,7 +276,7 @@
         </div>
 
         <!-- FLOW LEVEL 3 — CRISTINA FOLDS → DOWNWARD DOG · PILATES -->
-        <div data-band="0.778,0.86" style="position:absolute; inset:0; display:flex; align-items:center; justify-content:flex-start; padding:0 7vw; background:linear-gradient(90deg, rgba(var(--scrim),.94) 0%, rgba(var(--scrim),.78) 34%, rgba(var(--scrim),0) 58%);">
+        <div class="flow-rail" data-band="0.778,0.86" style="position:absolute; inset:0; display:flex; align-items:center; justify-content:flex-start; padding:0 7vw;">
           <div class="band-inner" style="max-width:460px;">
             <div style="font-size:12px; letter-spacing:.3em; text-transform:uppercase; color:#6B6358; margin-bottom:16px;">Fitness</div>
             <h2 style="font-family:'Cormorant Garamond',serif; font-weight:500; font-size:clamp(34px,4.6vw,58px); line-height:1.0; margin:0 0 22px; color:#2B2620;">Move with Cristina.</h2>
@@ -281,7 +285,7 @@
         </div>
 
         <!-- FLOW LEVEL 4 — CRISTINA LOW LUNGE · COMMUNITY -->
-        <div data-band="0.882,0.955" style="position:absolute; inset:0; display:flex; align-items:center; justify-content:flex-start; padding:0 7vw; background:linear-gradient(90deg, rgba(var(--scrim),.94) 0%, rgba(var(--scrim),.78) 34%, rgba(var(--scrim),0) 58%);">
+        <div class="flow-rail" data-band="0.882,0.955" style="position:absolute; inset:0; display:flex; align-items:center; justify-content:flex-start; padding:0 7vw;">
           <div class="band-inner" style="max-width:460px;">
             <div style="font-size:12px; letter-spacing:.3em; text-transform:uppercase; color:#B8624A; margin-bottom:16px;">Community</div>
             <h2 style="font-family:'Cormorant Garamond',serif; font-weight:500; font-size:clamp(34px,4.6vw,58px); line-height:1.0; margin:0 0 22px; color:#2B2620;">Stronger,<br>together.</h2>
@@ -290,7 +294,7 @@
         </div>
 
         <!-- FLOW LEVEL 5 — CRISTINA SEATED, HANDS TO HEART · JOIN -->
-        <div data-band="0.972,1" style="position:absolute; inset:0; display:flex; align-items:center; justify-content:flex-start; padding:0 7vw; background:linear-gradient(90deg, rgba(var(--scrim),.94) 0%, rgba(var(--scrim),.72) 34%, rgba(var(--scrim),0) 58%);">
+        <div class="flow-rail" data-band="0.972,1" style="position:absolute; inset:0; display:flex; align-items:center; justify-content:flex-start; padding:0 7vw;">
           <div class="band-inner" style="max-width:500px;">
             <div style="font-size:12px; letter-spacing:.3em; text-transform:uppercase; color:#B8624A; margin-bottom:18px;">Join the SAÏA Community</div>
             <h2 style="font-family:'Cormorant Garamond',serif; font-weight:500; font-size:clamp(36px,5vw,62px); line-height:1.02; margin:0 0 20px; color:#2B2620;">Get on the guest list.</h2>
@@ -326,17 +330,54 @@
     </div>
   </section>
 
+  <!-- ============ OUR STORY ============ -->
+  <section id="story" style="background:linear-gradient(180deg,#EFEADF,#F5F1E8); padding:clamp(72px,9vw,128px) 6vw;">
+    <div style="max-width:760px; margin:0 auto; text-align:center;">
+      <div style="font-size:12px; letter-spacing:.3em; text-transform:uppercase; color:#B8624A; margin-bottom:18px;">Our story</div>
+      <h2 style="font-family:'Cormorant Garamond',serif; font-weight:500; font-size:clamp(34px,5vw,60px); line-height:1.02; margin:0 0 36px; color:#2B2620;">A Woman Who Wins.</h2>
+      <div style="font-size:clamp(16px,1.5vw,18px); line-height:1.85; color:#4A443B; text-align:left; display:flex; flex-direction:column; gap:22px;">
+        <p style="margin:0;">SAÏA started in 2020, when our founder Cristina began making her own yoga mats and bags. To bring her customers together, she ran a monthly Brunch Club: a morning of movement and good food in a beautiful London venue.</p>
+        <p style="margin:0;">Women began travelling in from outside the city just to be in the room, and a community formed around it. That community is now the heart of SAÏA. Cristina is English-Mexican, lives in London, and still welcomes every guest herself.</p>
+        <p style="margin:0;">The name comes from her great-grandmother, Calandita, who worked a small farm in Mexico and sold a cow to fund her move to the city. SAÏA means 'a woman who wins,' and Calandita is who it is named for.</p>
+      </div>
+      <div style="font-family:'Cormorant Garamond',serif; font-style:italic; font-size:20px; color:#2B2620; margin-top:32px;">Cristina, founder of SAÏA</div>
+    </div>
+  </section>
+
+  <!-- ============ PILATES WITH CRISTINA ============ -->
+  <section id="pilates" style="background:#F5F1E8; padding:clamp(72px,9vw,120px) 6vw; border-top:1px solid #DAD4C8;">
+    <div style="max-width:820px; margin:0 auto;">
+      <div style="text-align:center; margin-bottom:clamp(36px,4vw,52px);">
+        <div style="font-size:12px; letter-spacing:.3em; text-transform:uppercase; color:#B8624A; margin-bottom:18px;">Fitness</div>
+        <h2 style="font-family:'Cormorant Garamond',serif; font-weight:500; font-size:clamp(34px,4.6vw,56px); line-height:1.02; margin:0 0 24px; color:#2B2620;">Pilates with Cristina.</h2>
+        <p style="font-size:clamp(16px,1.5vw,18px); line-height:1.8; color:#4A443B; max-width:560px; margin:0 auto;">Cristina teaches Pilates for women in London: one-to-one in NW3 and group classes in Hampstead. She trained in the Classical method and teaches Reformer Pilates, working from Joseph Pilates' own system, Contrology, to build strength and control from the inside out. It suits every level, and she meets you where you are.</p>
+      </div>
+      <div style="font-size:11px; letter-spacing:.3em; text-transform:uppercase; color:#6B6358; text-align:center; margin-bottom:28px;">Five simple rules</div>
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:24px 36px; max-width:680px; margin:0 auto;">
+        <div style="display:flex; gap:16px; align-items:baseline;"><span style="font-family:'Cormorant Garamond',serif; font-size:24px; color:#B8624A;">01</span><div><div style="font-family:'Cormorant Garamond',serif; font-size:21px; color:#2B2620;">It has to be fun</div><div style="font-size:14px; line-height:1.6; color:#6B6358; margin-top:4px;">If you enjoy it, you keep doing it.</div></div></div>
+        <div style="display:flex; gap:16px; align-items:baseline;"><span style="font-family:'Cormorant Garamond',serif; font-size:24px; color:#B8624A;">02</span><div><div style="font-family:'Cormorant Garamond',serif; font-size:21px; color:#2B2620;">It has to be rewarding</div><div style="font-size:14px; line-height:1.6; color:#6B6358; margin-top:4px;">Every session should leave you feeling better than you started.</div></div></div>
+        <div style="display:flex; gap:16px; align-items:baseline;"><span style="font-family:'Cormorant Garamond',serif; font-size:24px; color:#B8624A;">03</span><div><div style="font-family:'Cormorant Garamond',serif; font-size:21px; color:#2B2620;">Keep it balanced</div><div style="font-size:14px; line-height:1.6; color:#6B6358; margin-top:4px;">Eat well in the week, then enjoy your weekend.</div></div></div>
+        <div style="display:flex; gap:16px; align-items:baseline;"><span style="font-family:'Cormorant Garamond',serif; font-size:24px; color:#B8624A;">04</span><div><div style="font-family:'Cormorant Garamond',serif; font-size:21px; color:#2B2620;">Do it for the right reasons</div><div style="font-size:14px; line-height:1.6; color:#6B6358; margin-top:4px;">Train for how you feel, not just how you look.</div></div></div>
+        <div style="display:flex; gap:16px; align-items:baseline;"><span style="font-family:'Cormorant Garamond',serif; font-size:24px; color:#B8624A;">05</span><div><div style="font-family:'Cormorant Garamond',serif; font-size:21px; color:#2B2620;">Always show up</div><div style="font-size:14px; line-height:1.6; color:#6B6358; margin-top:4px;">If you miss one session, do not miss two.</div></div></div>
+      </div>
+      <div style="text-align:center; margin-top:clamp(40px,5vw,56px);">
+        <a href="https://wa.me/447444611914" style="display:inline-flex; align-items:center; gap:10px; background:#2B2620; color:#F5F1E8; font-family:'Libre Baskerville',serif; font-size:11px; letter-spacing:.2em; text-transform:uppercase; padding:15px 32px; border-radius:2px; text-decoration:none;">Train with Cristina</a>
+      </div>
+    </div>
+  </section>
+
   <!-- ============ IN THE PRESS ============ -->
   <section style="background:#F5F1E8; padding:clamp(48px,6vw,80px) 6vw; border-top:1px solid #DAD4C8; border-bottom:1px solid #DAD4C8;">
     <div style="max-width:1200px; margin:0 auto;">
       <div style="text-align:center; font-size:11px; letter-spacing:.3em; text-transform:uppercase; color:#6B6358; margin-bottom:34px;">In the press</div>
       <div style="display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:clamp(28px,6vw,72px); color:#6B6358;">
-        <span style="font-family:'Cormorant Garamond',serif; font-size:26px; letter-spacing:.12em;">VOGUE</span>
-        <span style="font-family:'Cormorant Garamond',serif; font-size:26px; letter-spacing:.18em;">STYLIST</span>
-        <span style="font-family:'Cormorant Garamond',serif; font-size:24px; letter-spacing:.04em; font-style:italic;">Harper’s Bazaar</span>
-        <span style="font-family:'Cormorant Garamond',serif; font-size:26px; letter-spacing:.16em;">ELLE</span>
-        <span style="font-family:'Cormorant Garamond',serif; font-size:22px; letter-spacing:.22em;">REFINERY29</span>
-        <span style="font-family:'Cormorant Garamond',serif; font-size:24px; letter-spacing:.18em;">COURIER</span>
+        <span style="font-family:'Cormorant Garamond',serif; font-size:26px; letter-spacing:.16em;">GRAZIA</span>
+        <span style="font-family:'Cormorant Garamond',serif; font-size:26px; letter-spacing:.04em;">Forbes</span>
+        <span style="font-family:'Cormorant Garamond',serif; font-size:22px; letter-spacing:.06em; line-height:1; text-align:center;">London Evening Standard</span>
+        <span style="font-family:'Cormorant Garamond',serif; font-size:26px; letter-spacing:.14em;">SHAPE</span>
+        <span style="font-family:'Cormorant Garamond',serif; font-size:24px; letter-spacing:.04em;">Daily Mail</span>
+        <span style="font-family:'Cormorant Garamond',serif; font-size:24px; letter-spacing:.04em;">OM Yoga &amp; Lifestyle</span>
+        <span style="font-family:'Cormorant Garamond',serif; font-size:24px; letter-spacing:.02em; font-style:italic;">The Telegraph</span>
       </div>
     </div>
   </section>
@@ -359,7 +400,7 @@
         <div style="flex:0 1 auto; display:flex; flex-wrap:wrap; gap:48px;">
           <div>
             <div style="font-size:11px; letter-spacing:.22em; text-transform:uppercase; color:rgba(245,241,232,.5); margin-bottom:18px;">Customer care</div>
-            <div style="display:flex; flex-direction:column; gap:12px; font-size:14px;"><a href="https://wa.me/447444611914" style="color:rgba(245,241,232,.78); text-decoration:none;">WhatsApp Cristina</a><a href="#" style="color:rgba(245,241,232,.78); text-decoration:none;">Terms &amp; conditions</a></div>
+            <div style="display:flex; flex-direction:column; gap:12px; font-size:14px;"><a href="https://wa.me/447444611914" style="color:rgba(245,241,232,.78); text-decoration:none;">WhatsApp Cristina</a><a href="https://www.saialondon.com/pages/contact-us" style="color:rgba(245,241,232,.78); text-decoration:none;">Contact us</a><a href="https://www.saialondon.com/pages/terms-and-conditions" style="color:rgba(245,241,232,.78); text-decoration:none;">Terms &amp; conditions</a></div>
           </div>
           <div>
             <div style="font-size:11px; letter-spacing:.22em; text-transform:uppercase; color:rgba(245,241,232,.5); margin-bottom:18px;">About us</div>
@@ -427,7 +468,7 @@
     "Snapinsta.app_274042141_476998050588663_3300805879876636614_n_1080.jpg",
     "IMG_2392.jpg"
   ].map(function(f){ return "photos/" + f; });
-  var WORDS = ["A Woman Who Wins.","She speaks her truth.","Community over competition.","Beautiful spaces, real connection.","Strong, together."];
+  var WORDS = ["A Woman Who Wins.","Fitness, community and mindset.","She speaks her truth.","Beautiful venues, real connection.","Sisterhood, celebrated."];
   var VALUES = ["Community","Movement","Strength","Stillness","Together","Mindset"];
 
   var clamp = function(v,a,b){ return Math.min(b,Math.max(a,v)); };
