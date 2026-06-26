@@ -65,12 +65,12 @@
     camera.lookAt(L(lo.tx, hi.tx), L(lo.ty, hi.ty), L(lo.tz, hi.tz));
   }
   function deformFor(p) { return Math.min(1, Math.max(0, p / UNROLL_END)); } // unchanged
-  /* The mat is ONE mesh the whole way. At the hand-off we MORPH its material from photoreal
-     to flat watercolour in place (R1) — the WebGL canvas stays fully visible; there is no
-     second PNG mat. morphFor: 0 until p0.50, 1 by p0.56, smoothstepped. */
-  function morphFor(p) { let t = (p - 0.50) / 0.06; t = Math.max(0, Math.min(1, t)); return t * t * (3 - 2 * t); }
-  /* brief paint-bloom pulse at the moment of change (finishes crisp) */
-  function bloomFor(p) { const t = (p - 0.50) / 0.06; return (t <= 0 || t >= 1) ? 0 : Math.sin(t * Math.PI); }
+  /* The mat is ONE mesh the whole way. The watercolour MORPH is now DISABLED: the photoreal
+     mat simply fades out at the hand-off (handoffFor) and the watercolour flow sequence — which
+     already shows a watercolour mat under Cristina — fades in. Morphing the empty mat to
+     watercolour first was redundant. (makeMatMaterial/setMorph kept in place, just driven at 0.) */
+  function morphFor(p) { return 0; }
+  function bloomFor(p) { return 0; }
   /* hand-off: once the mat is watercolour AND eased to C-gentle, the mesh fades out and the
      on-mat figure illustrations take over (they were drawn from this exact mat, so it's invisible).
      canvas opacity = 1 - handoffFor(p): full through the morph, gone by p0.585 as figure-1 fades in. */
@@ -122,7 +122,7 @@
   const FLOW_DIR = ASSETS.flowFrameDir || 'assets/flow-frames/';
   const FLOW_COUNT = ASSETS.flowFrameCount || 303;
   const flowFrames = flowCanvas ? new Array(FLOW_COUNT) : [];
-  let flowLast = -1, flowCw = 0, flowCh = 0;
+  let flowLast = -1, flowLastF = -1, flowCw = 0, flowCh = 0;
   const padFrame = n => String(n).padStart(3, '0');
 
   function loadFlowFrame(i) {
@@ -155,7 +155,7 @@
     flowCanvas.width = Math.round(flowCw * dpr);
     flowCanvas.height = Math.round(flowCh * dpr);
     flow2d.setTransform(dpr, 0, 0, dpr, 0, 0);
-    flowLast = -1;
+    flowLast = -1; flowLastF = -1;
   }
   function drawFlowFrame(idx) {
     if (!flowCanvas || !flow2d) return false;
@@ -174,6 +174,36 @@
     flow2d.drawImage(img, (flowCw - w) / 2, (flowCh - h) / 2, w, h);   // transparent cutout composites straight onto the page
     return true;
   }
+  /* resolve a usable (decoded) frame, walking to a nearby neighbour if idx isn't ready yet */
+  function resolveFlowImg(idx) {
+    let img = flowFrames[idx];
+    if (img && img.complete && img.naturalWidth) return img;
+    for (let d = 1; d < 10; d++) {
+      const prev = flowFrames[idx - d], next = flowFrames[idx + d];
+      if (prev && prev.complete && prev.naturalWidth) return prev;
+      if (next && next.complete && next.naturalWidth) return next;
+    }
+    return null;
+  }
+  /* P2 — fractional blending: draw floor(frame) then ceil(frame) at opacity=frac so the
+     pose-to-pose motion cross-dissolves between the discrete frames instead of stepping. */
+  function drawFlowBlended(i0, i1, frac) {
+    if (!flowCanvas || !flow2d) return false;
+    const a = resolveFlowImg(i0);
+    if (!a) return false;
+    const b = (i1 !== i0 && frac > 0.001) ? resolveFlowImg(i1) : null;
+    const put = (img, alpha) => {
+      const s = Math.min(flowCw / img.naturalWidth, flowCh / img.naturalHeight);
+      const w = img.naturalWidth * s, h = img.naturalHeight * s;
+      flow2d.globalAlpha = alpha;
+      flow2d.drawImage(img, (flowCw - w) / 2, (flowCh - h) / 2, w, h);
+    };
+    flow2d.clearRect(0, 0, flowCw, flowCh);
+    put(a, 1);
+    if (b && b !== a) put(b, frac);
+    flow2d.globalAlpha = 1;
+    return true;
+  }
   function flowFrameFor(p) {
     let fp = (p - FLOW_FROM) / (FLOW_TO - FLOW_FROM);
     fp = Math.max(0, Math.min(1, fp));
@@ -181,7 +211,7 @@
       if (fp <= s.b || s === FLOW_STOPS[FLOW_STOPS.length - 1]) {
         let t = (fp - s.a) / ((s.b - s.a) || 1); t = Math.max(0, Math.min(1, t));
         t = t * t * (3 - 2 * t);                      // ease each pose-to-pose transition
-        const f = Math.round(s.f0 + (s.f1 - s.f0) * t);
+        const f = s.f0 + (s.f1 - s.f0) * t;           // P2 — float frame (blended downstream), not rounded
         return Math.max(0, Math.min(FLOW_COUNT - 1, f));
       }
     }
@@ -194,9 +224,13 @@
     if (!flowCanvas) return;
     const fade = videoFadeFor(p);
     flowCanvas.style.opacity = fade.toFixed(3);
-    const idx = flowFrameFor(p);
-    warmFlowAround(idx);
-    if (idx !== flowLast && drawFlowFrame(idx)) flowLast = idx;
+    const f = flowFrameFor(p);                          // float frame position
+    const i0 = Math.max(0, Math.min(FLOW_COUNT - 1, Math.floor(f)));
+    const i1 = Math.min(FLOW_COUNT - 1, i0 + 1);
+    const frac = f - i0;
+    warmFlowAround(i0);
+    // redraw whenever the float frame moves (every RAF during motion) → no integer stepping
+    if (Math.abs(f - flowLastF) > 0.0008 && drawFlowBlended(i0, i1, frac)) { flowLastF = f; flowLast = i0; }
   }
 
   /* ---- mood track: the SAME mat, but the studio's light, exposure and
