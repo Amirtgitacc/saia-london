@@ -1,0 +1,30 @@
+/* SAÏA — structural assertions for the mat hand-off.
+   The watercolour morph is now DISABLED (the photoreal mat just fades out, then the
+   watercolour flow fades in). Confirms uMorph stays 0 throughout, the mat is opaque
+   before the hand-off and faded out during the pose flow, and no console errors. */
+import { chromium } from 'playwright';
+const browser = await chromium.launch();
+const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+const errs = [];
+page.on('console', m => { if (m.type() === 'error') errs.push(m.text()); });
+// not 'networkidle': flow.mp4 (preload=auto) keeps the network busy; the rig appearing is the real ready signal
+await page.goto('http://localhost:8000/home.html', { waitUntil: 'domcontentloaded' });
+await page.waitForFunction(() => window.SAIA && window.SAIA._rig, { timeout: 15000 });
+const probe = async (p) => page.evaluate((p) => {
+  window.SAIA._rig.at(p);
+  const c = document.getElementById('homeCanvas');
+  return { ...window.SAIA._rig.peek(), canvasOpacity: c.style.opacity };
+}, p);
+const checks = [];
+const a = await probe(0.49); checks.push(['morph@0.49==0', Math.abs(a.morph) < 0.001]);
+const b = await probe(0.56); checks.push(['morph@0.56==0 (disabled)', Math.abs(b.morph) < 0.001]);
+const c = await probe(0.80); checks.push(['morph@0.80==0 (disabled)', Math.abs(c.morph) < 0.001]);
+// canvas is opaque through the morph, faded out during the pose flow (handoff)
+const mid = await probe(0.55); checks.push(['canvasOpaque@0.55', mid.canvasOpacity === '1' || mid.canvasOpacity === '']);
+checks.push(['canvasFadedOut@0.80', parseFloat(c.canvasOpacity || '1') < 0.02]);
+checks.push(['noConsoleErrors', errs.length === 0]);
+await browser.close();
+let ok = true;
+for (const [name, pass] of checks) { console.log(pass ? '✓' : '✗', name); if (!pass) ok = false; }
+if (errs.length) console.log('ERRORS:', errs.join(' | '));
+process.exit(ok ? 0 : 1);

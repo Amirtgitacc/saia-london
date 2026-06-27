@@ -4,13 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SAÏA London — Yoga Mat Hire Across London</title>
-<meta name="description" content="Yoga mat hire across London — same-week delivery from £8.50 a mat. A female-led club: fitness, community & mindset.">
+<meta name="description" content="Yoga mat hire across London — same-day delivery from £8.50 a mat. A female-led club: fitness, community & mindset.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/base.css">
 <style>
-  body { background: #F5F1E8; color: #2B2620; font-family: 'Libre Baskerville', Georgia, serif; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+  body { background: #F5F1E8; color: #2B2620; font-family: 'Inter', system-ui, sans-serif; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
   .home-desktop-nav { display: block; }
   .home-mobile-nav { display: none; }
   @media (max-width: 767px) {
@@ -19,17 +19,223 @@
   }
 </style>
 <style>
-  .band-inner { will-change: transform, opacity; }
+  .band-inner { transform-origin: left center; will-change: transform, opacity, filter; }
+  /* D layout — the 5 flow bands over Cristina: narrow margin rail, terracotta rule, no scrim */
+  .flow-rail .band-inner { max-width: 380px !important; padding-left: 22px; border-left: 2px solid #B8624A; }
+  .flow-rail .band-inner > div:first-child { color: #B8624A; }
+  .flow-rail[data-band="0.972,1"] .band-inner { max-width: 430px !important; } /* Join band needs room for the email form */
   /* static fallback: mobile / prefers-reduced-motion / WebGL failure */
   .is-static #top { height: auto !important; }
   .is-static .home-sticky { position: static !important; height: auto !important; overflow: visible !important; }
   .is-static #homeCanvas { display: none !important; }
+  .is-static #flowCanvas { display: none !important; }
   .is-static #homeMat { display: block !important; position: static !important; transform: none !important; height: auto; width: auto; max-width: 86%; max-height: 44vh; margin: 32px auto; }
   .is-static #stage { position: static !important; inset: auto !important; pointer-events: auto !important; }
   .is-static [data-band] { position: static !important; inset: auto !important; opacity: 1 !important; display: block !important; padding: 48px 7vw !important; background: none !important; }
   .is-static .band-inner { background: none !important; padding: 0 !important; max-width: 640px !important; margin: 0 auto; }
-  .is-static .band-inner { transform: none !important; }
+  .is-static .band-inner { transform: none !important; filter: none !important; }
   .is-static #homeBar, .is-static #homeHint { display: none !important; }
+</style>
+<style>
+  /* ===== Gallery photo reel — film-strip, minimal rails ===== */
+  #events.reel-section{ background:linear-gradient(180deg,#F5F1E8,#EFEADF); }
+  #events .rl-scroll{ height:460vh; position:relative; }
+  #events .rl-sticky{ position:sticky; top:0; height:100vh; overflow:hidden; display:flex; align-items:center; }
+  #events .rl-bg{ position:absolute; inset:0; z-index:0; }
+  #events .rl-head{ position:absolute; top:7vh; left:0; right:0; z-index:6; text-align:center; pointer-events:none; }
+  #events .rl-head .t{ font-size:12px; letter-spacing:.3em; text-transform:uppercase; color:#B8624A; }
+  #events .rl-head h2{ font-family:'Playfair Display',serif; font-weight:500; font-size:clamp(30px,4.4vw,52px); line-height:1; margin:8px 0 0; }
+  #events .caps{ position:absolute; left:0; right:0; bottom:6.5vh; z-index:6; text-align:center; pointer-events:none; height:1px; }
+  #events .caps .w{ position:absolute; left:0; right:0; bottom:0; padding:0 8vw; opacity:0; transform:translateY(18px);
+    transition:opacity .9s cubic-bezier(.16,1,.3,1), transform .9s cubic-bezier(.16,1,.3,1);
+    font-family:'Playfair Display',serif; font-style:italic; font-weight:500; font-size:clamp(22px,3vw,38px); line-height:1.05; color:#2B2620; }
+  #events .caps .w.on{ opacity:1; transform:none; }
+  #events .film-rails{ position:absolute; inset:0; z-index:1; overflow:hidden; pointer-events:none; }
+  #events .perf-row{ position:absolute; left:0; height:15px; will-change:transform; background:rgba(43,38,32,.82);
+    -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='15'%3E%3Crect x='4' y='2' width='17' height='11' rx='3.5' fill='white'/%3E%3C/svg%3E") repeat-x;
+    mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='15'%3E%3Crect x='4' y='2' width='17' height='11' rx='3.5' fill='white'/%3E%3C/svg%3E") repeat-x;
+    -webkit-mask-size:28px 15px; mask-size:28px 15px; }
+  #events .perf-row.top{ top:19.5vh; } #events .perf-row.bottom{ bottom:19.5vh; }
+  #events .rl-track{ position:relative; z-index:3; display:flex; align-items:center; gap:3vw; padding:0 42vw; will-change:transform; }
+  #events .rl-track figure{ position:relative; flex:0 0 auto; width:28vw; height:56vh; border-radius:3px; overflow:hidden; margin:0; will-change:transform,opacity,filter; }
+  #events .rl-track .ken{ position:absolute; inset:0; }
+  #events .rl-track .ken img{ width:100%; height:100%; object-fit:cover; transform:scale(1.16); animation:reelKen 15s ease-in-out infinite alternate; }
+  #events .rl-track figure:nth-child(even) .ken img{ animation-duration:19s; }
+  @keyframes reelKen{ from{ transform:scale(1.07) translate(-1%,-1%); } to{ transform:scale(1.2) translate(1.5%,1.5%); } }
+  #events .rl-track .chip{ position:absolute; left:12px; bottom:12px; z-index:4; font-size:10px; letter-spacing:.18em;
+    text-transform:uppercase; color:#fff; background:rgba(43,38,32,.55); -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px);
+    padding:5px 10px; border-radius:30px; opacity:0; transform:translateY(8px); transition:opacity .4s,transform .4s; }
+  #events .rl-track figure.hot .chip{ opacity:1; transform:none; }
+  #events .rl-hint{ position:absolute; bottom:2.6vh; left:0; right:0; text-align:center; z-index:6; color:#6B6358;
+    font-size:10px; letter-spacing:.24em; text-transform:uppercase; }
+  .hire-chip{ font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:#6B6358; border:1px solid #C9C2B4; border-radius:30px; padding:7px 15px; }
+  .input-focus:focus{ outline:2px solid #B8624A; outline-offset:1px; }
+  @media (max-width:767px){
+    #events .rl-scroll{ height:380vh; }
+    #events .rl-track{ gap:5vw; padding:0 18vw; }
+    #events .rl-track figure{ width:64vw; height:52vh; }
+    #events .perf-row.top{ top:22vh; } #events .perf-row.bottom{ bottom:22vh; }
+  }
+  @media (prefers-reduced-motion: reduce){
+    #events .rl-scroll{ height:auto; }
+    #events .rl-sticky{ position:static; height:auto; display:block; padding:64px 0 72px; }
+    #events .rl-bg, #events .film-rails, #events .caps, #events .rl-hint{ display:none; }
+    #events .rl-head{ position:static; margin-bottom:36px; }
+    #events .rl-track{ position:static; transform:none !important; flex-wrap:wrap; justify-content:center; gap:14px; padding:0 6vw; }
+    #events .rl-track figure{ width:min(300px,42vw); height:300px; transform:none !important; opacity:1 !important; filter:none !important; }
+    #events .rl-track .ken img{ animation:none; transform:none; }
+    #events .rl-track .chip{ opacity:1; transform:none; }
+  }
+</style>
+<style>
+  /* ===== Section 4 — "Hire the range": featured tier (locked: B) ===== */
+  .s4grid{ display:grid; grid-template-columns:repeat(3,minmax(200px,1fr)); gap:20px; align-items:start; }
+  .s4card{ position:relative; display:flex; flex-direction:column; pointer-events:auto;
+    background:rgba(var(--scrim),.94); border:1px solid #E2DCCF; border-radius:12px; padding:24px;
+    transition:transform .25s, box-shadow .25s; }
+  .s4card:hover{ transform:translateY(-4px); box-shadow:0 20px 40px rgba(43,38,32,.12); }
+  .s4card .s4ic{ color:#B8624A; }
+  .s4card .s4ic svg{ width:28px; height:28px; display:block; margin-bottom:12px; }
+  .s4card .s4nm{ font-family:'Playfair Display',serif; font-weight:500; font-size:22px; color:#2B2620; }
+  .s4card .s4who{ font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:#6B6358; margin-top:3px; }
+  .s4card .s4ds{ font-size:14px; line-height:1.6; color:#6B6358; margin:12px 0 14px; }
+  .s4card .s4pr{ font-family:'Playfair Display',serif; font-size:18px; color:#2B2620; margin-top:auto; padding-top:12px; border-top:1px solid #E2DCCF; }
+  .s4card .s4pr small{ font-family:'Inter',sans-serif; font-size:11px; color:#6B6358; }
+  .s4card button{ margin-top:14px; width:100%; font-family:'Inter',sans-serif; font-size:11px; letter-spacing:.2em;
+    text-transform:uppercase; padding:13px; border-radius:2px; cursor:pointer; }
+  .s4card .btn-solid{ background:#2B2620; color:#F5F1E8; border:none; }
+  .s4card .btn-line{ background:transparent; color:#2B2620; border:1px solid #2B2620; }
+  .s4card.feat{ border-color:#B8624A; transform:translateY(-14px); box-shadow:0 22px 46px rgba(184,98,74,.2); padding-top:30px; }
+  .s4card.feat:hover{ transform:translateY(-18px); }
+  .s4card.feat .badge{ position:absolute; top:-11px; left:50%; transform:translateX(-50%); background:#B8624A; color:#fff;
+    font-size:9px; letter-spacing:.16em; text-transform:uppercase; padding:5px 13px; border-radius:30px; white-space:nowrap; }
+  .s4card.feat .btn-solid{ background:#B8624A; }
+  @media (max-width:767px){ .s4grid{ grid-template-columns:1fr; } .s4card.feat{ transform:none; } .s4card.feat:hover{ transform:translateY(-4px); } }
+
+  /* ===== Band 3 — "Hiring is effortless": van-on-a-road (scroll-scrubbed) ===== */
+  .hire-road{ position:relative; height:46px; margin-top:32px; max-width:430px; }
+  .hire-road .hr-line{ position:absolute; left:0; right:0; top:13px; height:2px;
+    background:repeating-linear-gradient(90deg,#DAD4C8 0 8px,transparent 8px 16px); }
+  .hire-road .hr-prog{ position:absolute; left:0; top:13px; height:2px; width:0; background:#B8624A; transition:width .12s linear; }
+  .hire-road .hr-pin{ position:absolute; top:13px; width:9px; height:9px; border-radius:50%; background:#F5F1E8;
+    border:2px solid #DAD4C8; transform:translate(-50%,-50%); transition:border-color .3s, background .3s; }
+  .hire-road .hr-pin.on{ border-color:#B8624A; background:#B8624A; }
+  .hire-road .hr-pin b{ position:absolute; left:50%; top:13px; transform:translateX(-50%); white-space:nowrap;
+    font-family:'Inter',sans-serif; font-size:9px; font-weight:400; letter-spacing:.1em; text-transform:uppercase; color:#6B6358; }
+  .hire-road .hr-pin.on b{ color:#B8624A; }
+  .hire-road .hr-van{ position:absolute; top:13px; left:0; transform:translate(-50%,-50%); color:#B8624A; z-index:2; transition:left .12s linear; }
+  .hire-road .hr-van svg{ width:28px; height:28px; display:block; filter:drop-shadow(0 4px 6px rgba(43,38,32,.2)); }
+</style>
+
+<!-- ============ Estimate-your-hire spotlight stage (Phase 4) ============ -->
+<style>
+.saia-est-stage{ --cream:#F5F1E8; --paper:#FBF8F1; --ink:#2B2620; --muted:#6B6358; --terra:#B8624A;
+  --terra-dk:#A9573F; --line:#E2DBCC; --line-soft:#DAD4C8;
+  --display:'Playfair Display',serif; --body:'Inter',system-ui,sans-serif; }
+.saia-est-stage *{ box-sizing:border-box; }
+
+/* shared engine */
+.saia-est-stage .est{ --van:var(--terra); }
+.saia-est-stage .eyebrow{ font-family:var(--body); font-size:11px; letter-spacing:.32em; text-transform:uppercase; color:var(--terra); display:flex; align-items:center; gap:9px; margin:0; }
+.saia-est-stage .eyebrow::before{ content:""; width:18px; height:1px; background:currentColor; display:inline-block; }
+.saia-est-stage .est .lead{ font-size:13px; line-height:1.55; color:var(--muted); }
+.saia-est-stage .est label{ display:block; font-family:var(--body); font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:var(--muted); margin-bottom:7px; }
+.saia-est-stage .est input{ width:100%; font-family:var(--body); font-size:15px; color:var(--ink); background:#fff; border:1px solid var(--line);
+  border-radius:9px; padding:12px 13px; transition:border-color .2s,box-shadow .2s; }
+.saia-est-stage .est input::placeholder{ color:#c3bba9; }
+.saia-est-stage .est input:focus{ outline:none; border-color:var(--terra); box-shadow:0 0 0 3px rgba(184,98,74,.14); }
+.saia-est-stage .est .grid2{ display:flex; gap:12px; }
+.saia-est-stage .est .field{ flex:1; margin-bottom:13px; }
+.saia-est-stage .est .field.full{ flex-basis:100%; }
+.saia-est-stage .est .note{ font-size:11px; color:var(--terra); min-height:14px; margin:-4px 0 8px; }
+.saia-est-stage .est .seg{ display:flex; background:#fff; border:1px solid var(--line); border-radius:10px; padding:4px; position:relative; }
+.saia-est-stage .est .seg .thumb{ position:absolute; top:4px; bottom:4px; left:4px; width:calc(50% - 4px); background:var(--ink); border-radius:7px;
+  opacity:0; transition:transform .32s cubic-bezier(.4,0,.15,1),opacity .2s; }
+.saia-est-stage .est .seg[data-m="deliver"] .thumb{ opacity:1; transform:translateX(0); }
+.saia-est-stage .est .seg[data-m="pickup"] .thumb{ opacity:1; transform:translateX(100%); }
+.saia-est-stage .est .seg button{ flex:1; position:relative; z-index:1; background:none; border:none; cursor:pointer; font-family:var(--body);
+  font-size:12px; padding:11px 6px; color:var(--muted); transition:color .25s; }
+.saia-est-stage .est .seg button.on{ color:var(--cream); }
+.saia-est-stage .est .pcwrap{ overflow:hidden; max-height:0; opacity:0; transition:max-height .4s ease,opacity .35s,margin .4s; }
+.saia-est-stage .est .pcwrap.show{ max-height:110px; opacity:1; margin-top:2px; }
+
+/* route svg */
+.saia-est-stage .bigroute svg{ display:block; width:100%; height:100%; overflow:visible; }
+.saia-est-stage .track{ fill:none; stroke:var(--line-soft); stroke-width:2; stroke-dasharray:2 7; stroke-linecap:round; }
+.saia-est-stage .rfill{ fill:none; stroke:var(--terra); stroke-width:2.6; stroke-linecap:round; }
+.saia-est-stage .mile circle{ transition:fill .4s,stroke .4s; }
+.saia-est-stage .mile .ring{ fill:none; stroke:var(--terra); stroke-width:2; opacity:0; transform-box:fill-box; transform-origin:center; }
+.saia-est-stage .mile.live .ring{ animation:saiaPing 1.6s ease-out infinite; }
+@keyframes saiaPing{ 0%{opacity:.5;transform:scale(.5)} 100%{opacity:0;transform:scale(2.4)} }
+.saia-est-stage .mile text{ font-family:var(--body); font-size:9px; letter-spacing:.08em; fill:#a59c8d; text-transform:uppercase; transition:fill .4s; }
+.saia-est-stage .mile.done text,.saia-est-stage .mile.live text{ fill:var(--terra); }
+.saia-est-stage .mile .big{ font-family:var(--display); font-size:13px; letter-spacing:0; fill:var(--ink); text-transform:none; }
+.saia-est-stage .van{ fill:var(--van,var(--terra)); }
+.saia-est-stage .van .win{ fill:var(--paper); opacity:.9; }
+.saia-est-stage .van .wheel{ fill:var(--ink); }
+
+/* result */
+.saia-est-stage .est .result{ overflow:hidden; max-height:0; opacity:0; transform:translateY(8px);
+  transition:max-height .55s ease,opacity .5s,transform .5s; }
+.saia-est-stage .est .result.show{ max-height:560px; opacity:1; transform:none; }
+.saia-est-stage .est .zone{ display:inline-flex; align-items:center; gap:7px; font-size:10px; letter-spacing:.1em; text-transform:uppercase;
+  color:var(--terra); background:rgba(184,98,74,.1); border-radius:30px; padding:4px 11px; margin-bottom:13px; }
+.saia-est-stage .est .zone .dot{ width:6px; height:6px; border-radius:50%; background:var(--terra); }
+.saia-est-stage .est .line{ display:flex; justify-content:space-between; align-items:baseline; gap:16px; margin-bottom:10px; }
+.saia-est-stage .est .line .kk{ font-size:12.5px; color:var(--muted); }
+.saia-est-stage .est .line .kk small{ display:block; font-size:10px; color:#a59c8d; margin-top:1px; }
+.saia-est-stage .est .line .vv{ font-family:var(--display); font-size:19px; color:var(--ink); white-space:nowrap; }
+.saia-est-stage .est .total{ display:flex; justify-content:space-between; align-items:center; gap:16px; border-top:1px solid var(--line); padding-top:14px; margin-top:4px; }
+.saia-est-stage .est .total .kk{ font-size:11px; letter-spacing:.06em; text-transform:uppercase; }
+.saia-est-stage .est .total .vv{ font-family:var(--display); font-weight:500; line-height:1; color:var(--terra); font-size:clamp(30px,4.6vw,40px); }
+.saia-est-stage .est .total .vv .pre{ font-size:14px; color:var(--muted); font-style:italic; margin-right:6px; }
+.saia-est-stage .est .cta{ display:flex; align-items:center; justify-content:center; gap:10px; width:100%; background:var(--terra); color:#fff;
+  font-family:var(--body); font-size:11px; letter-spacing:.2em; text-transform:uppercase; padding:15px; border-radius:9px;
+  text-decoration:none; border:none; cursor:pointer; margin-top:16px; transition:transform .2s,box-shadow .2s,background .2s; }
+.saia-est-stage .est .cta:hover{ transform:translateY(-2px); background:var(--terra-dk); box-shadow:0 14px 28px -10px rgba(184,98,74,.7); }
+.saia-est-stage .est .cta svg{ width:15px; height:15px; }
+.saia-est-stage .est .disc{ font-size:10px; line-height:1.55; color:var(--muted); margin-top:11px; }
+.saia-est-stage .est .disc b{ color:var(--ink); }
+
+/* B — spotlight stage */
+.saia-est-stage .vb{ position:relative; background:var(--ink); padding:clamp(54px,7vw,78px) 6vw; overflow:hidden; }
+.saia-est-stage .vb::before{ content:""; position:absolute; left:50%; top:-10%; width:80vw; height:70vh; transform:translateX(-50%);
+  background:radial-gradient(closest-side,rgba(184,98,74,.34),transparent 70%); pointer-events:none; }
+.saia-est-stage .stagewrap{ position:relative; max-width:1080px; margin:0 auto; display:grid; grid-template-columns:1fr 1fr; gap:48px; align-items:center; }
+.saia-est-stage .pitch{ color:var(--cream); }
+.saia-est-stage .pitch h2{ font-family:var(--display); font-weight:500; font-size:clamp(40px,5.6vw,68px); line-height:.98; color:var(--cream); margin:.2em 0 .25em; }
+.saia-est-stage .pitch .word{ display:inline-block; opacity:0; transform:translateY(18px); }
+.saia-est-stage .vb.play .pitch .word{ animation:saiaWordUp .6s cubic-bezier(.2,.9,.3,1) both; }
+.saia-est-stage .vb.play .pitch .word:nth-child(2){ animation-delay:.08s; }
+.saia-est-stage .vb.play .pitch .word:nth-child(3){ animation-delay:.16s; }
+@keyframes saiaWordUp{ to{ opacity:1; transform:none; } }
+.saia-est-stage .pitch .lead{ color:rgba(245,241,232,.66); max-width:340px; font-size:14px; }
+.saia-est-stage .pitch .bigroute{ height:130px; margin-top:22px; }
+.saia-est-stage .pitch .bigroute .track{ stroke:rgba(245,241,232,.18); }
+.saia-est-stage .pitch .bigroute .mile text{ fill:rgba(245,241,232,.5); }
+.saia-est-stage .pitch .bigroute .mile .big{ fill:var(--cream); }
+.saia-est-stage .pitch .bigroute .van{ --van:var(--terra); }
+.saia-est-stage .pitch .bigroute .van .win{ fill:var(--ink); }
+.saia-est-stage .pitch .bigroute .van .wheel{ fill:var(--cream); }
+.saia-est-stage .est.b{ background:#34302a; border:1px solid rgba(245,241,232,.1); border-radius:16px; padding:26px;
+  box-shadow:0 40px 90px -34px rgba(0,0,0,.7); }
+.saia-est-stage .est.b label{ color:rgba(245,241,232,.55); }
+.saia-est-stage .est.b input{ background:#403b34; border-color:rgba(245,241,232,.14); color:var(--cream); }
+.saia-est-stage .est.b input::placeholder{ color:rgba(245,241,232,.32); }
+.saia-est-stage .est.b .seg{ background:#403b34; border-color:rgba(245,241,232,.14); }
+.saia-est-stage .est.b .seg .thumb{ background:var(--terra); }
+.saia-est-stage .est.b .seg button{ color:rgba(245,241,232,.6); }
+.saia-est-stage .est.b .seg button.on{ color:#fff; }
+.saia-est-stage .est.b .line .kk{ color:rgba(245,241,232,.6); }
+.saia-est-stage .est.b .line .vv{ color:var(--cream); }
+.saia-est-stage .est.b .total{ border-top-color:rgba(245,241,232,.16); }
+.saia-est-stage .est.b .total .kk{ color:rgba(245,241,232,.7); }
+.saia-est-stage .est.b .disc{ color:rgba(245,241,232,.5); }
+.saia-est-stage .est.b .disc b{ color:var(--cream); }
+.saia-est-stage .vb.play .est.b{ animation:saiaCardIn .7s cubic-bezier(.2,.9,.3,1) .15s both; }
+@keyframes saiaCardIn{ 0%{opacity:0;transform:translateY(24px) scale(.97)} 100%{opacity:1;transform:none} }
+@media(max-width:820px){ .saia-est-stage .stagewrap{ grid-template-columns:1fr; gap:30px; } }
+@media (prefers-reduced-motion: reduce){ .saia-est-stage *{ animation:none!important; transition:none!important; } }
 </style>
 </head>
 <body>
@@ -39,25 +245,28 @@
   window.SAIA_ASSETS = {
     matGlb:     'assets/saia-mat.glb',
     matTexture: 'assets/saia-mat-texture.png',
-    matFlatPng: 'assets/mat-flat.png'
+    matFlatPng: 'assets/mat-flat.png',
+    flowFrameDir: 'assets/flow-frames/',
+    flowFrameCount: 303
   };
   window.SAIA_CONFIG = { conciergeEndpoint: 'http://localhost:8787/api/concierge' };
 </script>
 
-<div id="homeRoot" style="--scrim:245,241,232; background:#F5F1E8; color:#2B2620; font-family:'Libre Baskerville',Georgia,serif; overflow-x:clip; position:relative;">
+<div id="homeRoot" style="--scrim:245,241,232; background:#F5F1E8; color:#2B2620; font-family:'Inter',system-ui,sans-serif; overflow-x:clip; position:relative;">
 
   <!-- announcement -->
-  <div style="background:#2B2620; color:#F5F1E8; text-align:center; font-size:11px; letter-spacing:.24em; text-transform:uppercase; padding:11px 16px;">Yoga mat hire across London — same-week delivery from £8.50 a mat</div>
+  <div style="background:#2B2620; color:#F5F1E8; text-align:center; font-size:11px; letter-spacing:.24em; text-transform:uppercase; padding:11px 16px;">Yoga mat hire across London — same-day delivery from £8.50 a mat</div>
 
   <!-- ============ HEADER (desktop) ============ -->
   <header class="home-desktop-nav" style="position:sticky; top:0; z-index:50; background:rgba(245,241,232,.92); backdrop-filter:blur(10px); border-bottom:1px solid #DAD4C8;">
     <div style="display:grid; grid-template-columns:1fr auto 1fr; align-items:center; padding:22px 48px; max-width:1480px; margin:0 auto;">
       <nav style="display:flex; gap:32px; font-size:12px; letter-spacing:.18em; text-transform:uppercase; white-space:nowrap;">
-        <a href="#hire" class="saia-link" style="color:#2B2620; text-decoration:none;">Mat Hire</a>
-        <a href="#events" class="saia-link" style="color:#2B2620; text-decoration:none;">Events</a>
-        <a href="#story" class="saia-link" style="color:#2B2620; text-decoration:none;">Our Story</a>
+        <a href="#mat-hire" class="saia-link" style="color:#2B2620; text-decoration:none;">Mat Hire</a>
+        <a href="#pilates" class="saia-link" style="color:#2B2620; text-decoration:none;">Pilates</a>
+        <a href="#events" class="saia-link" style="color:#2B2620; text-decoration:none;">Gallery</a>
+        <a href="story.html" class="saia-link" style="color:#2B2620; text-decoration:none;">Our Story</a>
       </nav>
-      <a href="#top" style="text-align:center; text-decoration:none; color:#2B2620;"><div style="font-family:'Cormorant Garamond',serif; font-size:30px; letter-spacing:.2em; line-height:1;">SAÏA</div><div style="font-size:9px; letter-spacing:.52em; text-transform:uppercase; color:#6B6358; margin-top:3px;">London</div></a>
+      <a href="#top" style="text-align:center; text-decoration:none; color:#2B2620;"><div style="font-family:'Playfair Display',serif; font-size:30px; letter-spacing:.2em; line-height:1;">SAÏA</div><div style="font-size:9px; letter-spacing:.52em; text-transform:uppercase; color:#6B6358; margin-top:3px;">London</div></a>
       <div style="display:flex; gap:24px; justify-content:flex-end; align-items:center;">
         <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#2B2620" stroke-width="1.3"><circle cx="11" cy="11" r="7"></circle><line x1="16.5" y1="16.5" x2="21" y2="21"></line></svg>
         <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#2B2620" stroke-width="1.3"><circle cx="12" cy="8" r="4"></circle><path d="M4.5 20.5c0-4 3.5-6 7.5-6s7.5 2 7.5 6"></path></svg>
@@ -70,24 +279,25 @@
   <header class="home-mobile-nav" style="position:sticky; top:0; z-index:50; background:rgba(245,241,232,.94); backdrop-filter:blur(10px); border-bottom:1px solid #DAD4C8;">
     <div style="display:flex; align-items:center; justify-content:space-between; padding:16px 20px;">
       <button id="navToggle" aria-label="Open menu" style="background:none; border:none; padding:6px; cursor:pointer; display:flex;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2B2620" stroke-width="1.3"><line x1="3" y1="7" x2="21" y2="7"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="17" x2="21" y2="17"></line></svg></button>
-      <a href="#top" style="text-align:center; text-decoration:none; color:#2B2620;"><div style="font-family:'Cormorant Garamond',serif; font-size:25px; letter-spacing:.2em; line-height:1;">SAÏA</div></a>
+      <a href="#top" style="text-align:center; text-decoration:none; color:#2B2620;"><div style="font-family:'Playfair Display',serif; font-size:25px; letter-spacing:.2em; line-height:1;">SAÏA</div></a>
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2B2620" stroke-width="1.3"><path d="M6 8h12l-1 12H7L6 8z"></path><path d="M9 8V6.2a3 3 0 0 1 6 0V8"></path></svg>
     </div>
   </header>
   <div id="mobileDrawer" style="display:none; position:fixed; inset:0; z-index:60; background:#F5F1E8; padding:24px 28px;">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:48px;">
-      <div style="font-family:'Cormorant Garamond',serif; font-size:26px; letter-spacing:.2em;">SAÏA</div>
+      <div style="font-family:'Playfair Display',serif; font-size:26px; letter-spacing:.2em;">SAÏA</div>
       <button id="navClose" aria-label="Close menu" style="background:none; border:none; cursor:pointer; display:flex;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2B2620" stroke-width="1.3"><line x1="5" y1="5" x2="19" y2="19"></line><line x1="19" y1="5" x2="5" y2="19"></line></svg></button>
     </div>
     <nav style="display:flex; flex-direction:column; gap:6px;">
-      <a href="#hire" data-drawer-link style="font-family:'Cormorant Garamond',serif; font-size:38px; color:#2B2620; text-decoration:none; padding:10px 0; border-bottom:1px solid #DAD4C8;">Mat Hire</a>
-      <a href="#events" data-drawer-link style="font-family:'Cormorant Garamond',serif; font-size:38px; color:#2B2620; text-decoration:none; padding:10px 0; border-bottom:1px solid #DAD4C8;">Events</a>
-      <a href="#story" data-drawer-link style="font-family:'Cormorant Garamond',serif; font-size:38px; color:#2B2620; text-decoration:none; padding:10px 0; border-bottom:1px solid #DAD4C8;">Our Story</a>
+      <a href="#mat-hire" data-drawer-link style="font-family:'Playfair Display',serif; font-size:38px; color:#2B2620; text-decoration:none; padding:10px 0; border-bottom:1px solid #DAD4C8;">Mat Hire</a>
+      <a href="#pilates" data-drawer-link style="font-family:'Playfair Display',serif; font-size:38px; color:#2B2620; text-decoration:none; padding:10px 0; border-bottom:1px solid #DAD4C8;">Pilates</a>
+      <a href="#events" data-drawer-link style="font-family:'Playfair Display',serif; font-size:38px; color:#2B2620; text-decoration:none; padding:10px 0; border-bottom:1px solid #DAD4C8;">Gallery</a>
+      <a href="story.html" data-drawer-link style="font-family:'Playfair Display',serif; font-size:38px; color:#2B2620; text-decoration:none; padding:10px 0; border-bottom:1px solid #DAD4C8;">Our Story</a>
     </nav>
   </div>
 
   <!-- ============ THE PINNED 3D JOURNEY ============ -->
-  <div id="top" style="position:relative; height:700vh; background:#F5F1E8;">
+  <div id="top" style="position:relative; height:2000vh; background:#F5F1E8;">
     <div class="home-sticky" style="position:sticky; top:0; height:100vh; overflow:hidden; background:#F5F1E8;">
       <canvas id="homeCanvas" aria-hidden="true" style="position:absolute; inset:0; width:100%; height:100%; z-index:1; opacity:0;"></canvas>
       <img id="homeMat" src="assets/mat-flat.png" alt="The SAÏA signature yoga mat, unrolled" style="display:none; position:absolute; right:6%; top:50%; height:80vh; width:auto; transform:translateY(-50%); filter:drop-shadow(0 40px 60px rgba(43,38,32,.22)); z-index:1;">
@@ -99,6 +309,14 @@
                   width:46vw; height:auto; transform-origin:bottom center; z-index:2;
                   opacity:0; pointer-events:none; will-change:opacity;
                   filter:drop-shadow(0 30px 36px rgba(43,38,32,.18));">
+
+      <!-- Cristina watercolour flow — frame sequence scrubbed by scroll (replaces the
+           #figureLayer PNG crossfade). First frame = pose-1 on the gentle mat, so the 3D mesh
+           hands off into it invisibly. Mobile/.is-static hides it (static poster instead). -->
+      <canvas id="flowCanvas" aria-hidden="true"
+        style="position:absolute; left:57%; top:53%; transform:translate(-50%,-50%);
+               height:80vh; width:auto; aspect-ratio:1104/756; object-fit:contain;
+               z-index:2; opacity:0; pointer-events:none;"></canvas>
 
       <!-- Cristina — watercolour figure sequence, composited on the mat (walks in, flows through poses) -->
       <div id="figureLayer" aria-hidden="true" style="position:absolute; inset:0; z-index:2; pointer-events:none;">
@@ -122,20 +340,20 @@
       <div id="stage" style="position:absolute; inset:0; z-index:3; pointer-events:none;">
 
         <!-- BAND 1 — HERO -->
-        <div data-band="0,0.10" style="position:absolute; inset:0; display:flex; align-items:center; justify-content:flex-start; padding:0 7vw;">
+        <div data-band="0,0.14" style="position:absolute; inset:0; display:flex; align-items:center; justify-content:flex-start; padding:0 7vw;">
           <div class="band-inner" style="max-width:620px;">
             <div style="font-size:12px; letter-spacing:.3em; text-transform:uppercase; color:#2B2620; opacity:.7; margin-bottom:18px;">A women's club in London</div>
-            <h1 style="font-family:'Cormorant Garamond',serif; font-weight:500; font-size:clamp(3.4rem,8.5vw,6.4rem); line-height:.96; margin:0; color:#2B2620;">Yoga mat hire,<br>across London.</h1>
+            <h1 style="font-family:'Playfair Display',serif; font-weight:500; font-size:clamp(3.4rem,8.5vw,6.4rem); line-height:.96; margin:0; color:#2B2620;">Yoga mat hire,<br>across London.</h1>
             <p style="font-size:clamp(15px,1.5vw,18px); line-height:1.6; color:#2B2620; max-width:460px; margin:26px 0 0;">If you're organising a wellness event, you've landed in the right place — rent our mats for £8.50 each, with same-day delivery from our Central London warehouse.</p>
             <div style="margin-top:26px; font-size:12px; letter-spacing:.36em; text-transform:uppercase; color:#6B6358;">Fitness · Community · Mindset</div>
           </div>
         </div>
 
         <!-- BAND 2 — THE OPEN MAT + SPECS -->
-        <div data-band="0.10,0.28" style="position:absolute; inset:0; display:flex; align-items:center; justify-content:flex-start; padding:0 7vw;">
+        <div data-band="0.14,0.30" style="position:absolute; inset:0; display:flex; align-items:center; justify-content:flex-start; padding:0 7vw;">
           <div class="band-inner" style="max-width:440px;">
             <div style="font-size:12px; letter-spacing:.3em; text-transform:uppercase; color:#6B6358; margin-bottom:18px;">The signature mat</div>
-            <h2 style="font-family:'Cormorant Garamond',serif; font-weight:500; font-size:clamp(34px,4.4vw,54px); line-height:1.04; margin:0 0 22px; color:#2B2620;">Made for grip,<br>made to last.</h2>
+            <h2 style="font-family:'Playfair Display',serif; font-weight:500; font-size:clamp(34px,4.4vw,54px); line-height:1.04; margin:0 0 22px; color:#2B2620;">Made for grip,<br>made to last.</h2>
             <p style="font-size:16px; line-height:1.75; color:#6B6358; margin:0 0 26px; max-width:400px;">One mat, exceptionally made — an ethically sourced natural-rubber base with a non-slip, anti-odour PU surface. Weighted to fall open and lie flat the moment you unroll it.</p>
             <div style="display:flex; flex-wrap:wrap; gap:8px;">
               <span style="font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:#6B6358; border:1px solid #C9C2B4; border-radius:30px; padding:6px 13px;">68 × 185 cm</span>
@@ -148,77 +366,113 @@
         </div>
 
         <!-- BAND 3 — HOW HIRE WORKS -->
-        <div data-band="0.28,0.44" style="position:absolute; inset:0; display:flex; align-items:center; justify-content:flex-start; padding:0 7vw;">
+        <div data-band="0.30,0.44" style="position:absolute; inset:0; display:flex; align-items:center; justify-content:flex-start; padding:0 7vw;">
           <div class="band-inner" style="max-width:480px;">
             <div style="font-size:12px; letter-spacing:.3em; text-transform:uppercase; color:#B8624A; margin-bottom:16px;">Mat hire</div>
-            <h2 style="font-family:'Cormorant Garamond',serif; font-weight:500; font-size:clamp(32px,4.4vw,52px); line-height:1.04; margin:0 0 14px; color:#2B2620;">Hiring is effortless.</h2>
+            <h2 style="font-family:'Playfair Display',serif; font-weight:500; font-size:clamp(32px,4.4vw,52px); line-height:1.04; margin:0 0 14px; color:#2B2620;">Hiring is effortless.</h2>
             <p style="font-size:15px; line-height:1.7; color:#6B6358; margin:0 0 28px; max-width:420px;">From a 10-mat morning class to a 200-person retreat — we handle delivery, set-up time and collection. £8.50 a mat, 2-day hire, minimum of ten.</p>
             <div style="display:flex; flex-direction:column; gap:18px;">
-              <div style="display:flex; gap:16px; align-items:baseline;"><span style="font-family:'Cormorant Garamond',serif; font-size:22px; color:#B8624A;">01</span><div><div style="font-family:'Cormorant Garamond',serif; font-size:20px; color:#2B2620;">Tell us your event</div><div style="font-size:14px; line-height:1.6; color:#6B6358;">Date, location and how many mats. Minimum of ten.</div></div></div>
-              <div style="display:flex; gap:16px; align-items:baseline;"><span style="font-family:'Cormorant Garamond',serif; font-size:22px; color:#B8624A;">02</span><div><div style="font-family:'Cormorant Garamond',serif; font-size:20px; color:#2B2620;">We deliver early</div><div style="font-size:14px; line-height:1.6; color:#6B6358;">Mats arrive the day before by London courier — or collect from our NW3 studio.</div></div></div>
-              <div style="display:flex; gap:16px; align-items:baseline;"><span style="font-family:'Cormorant Garamond',serif; font-size:22px; color:#B8624A;">03</span><div><div style="font-family:'Cormorant Garamond',serif; font-size:20px; color:#2B2620;">You practise</div><div style="font-size:14px; line-height:1.6; color:#6B6358;">A clean, grippy mat under every guest. Nothing to set up, nothing to launder.</div></div></div>
-              <div style="display:flex; gap:16px; align-items:baseline;"><span style="font-family:'Cormorant Garamond',serif; font-size:22px; color:#B8624A;">04</span><div><div style="font-family:'Cormorant Garamond',serif; font-size:20px; color:#2B2620;">We collect after</div><div style="font-size:14px; line-height:1.6; color:#6B6358;">We pick everything up the day after. A 2-day hire from £8.50 a mat.</div></div></div>
+              <div style="display:flex; gap:16px; align-items:baseline;"><span style="font-family:'Playfair Display',serif; font-size:22px; color:#B8624A;">01</span><div><div style="font-family:'Playfair Display',serif; font-size:20px; color:#2B2620;">Tell us your event</div><div style="font-size:14px; line-height:1.6; color:#6B6358;">Date, location and how many mats. Minimum of ten.</div></div></div>
+              <div style="display:flex; gap:16px; align-items:baseline;"><span style="font-family:'Playfair Display',serif; font-size:22px; color:#B8624A;">02</span><div><div style="font-family:'Playfair Display',serif; font-size:20px; color:#2B2620;">We deliver early</div><div style="font-size:14px; line-height:1.6; color:#6B6358;">Mats arrive the day before by London courier — or collect from our NW3 studio.</div></div></div>
+              <div style="display:flex; gap:16px; align-items:baseline;"><span style="font-family:'Playfair Display',serif; font-size:22px; color:#B8624A;">03</span><div><div style="font-family:'Playfair Display',serif; font-size:20px; color:#2B2620;">You practise</div><div style="font-size:14px; line-height:1.6; color:#6B6358;">A clean, grippy mat under every guest. Nothing to set up, nothing to launder.</div></div></div>
+              <div style="display:flex; gap:16px; align-items:baseline;"><span style="font-family:'Playfair Display',serif; font-size:22px; color:#B8624A;">04</span><div><div style="font-family:'Playfair Display',serif; font-size:20px; color:#2B2620;">We collect after</div><div style="font-size:14px; line-height:1.6; color:#6B6358;">We pick everything up the day after. A 2-day hire from £8.50 a mat.</div></div></div>
+            </div>
+            <div class="hire-road" aria-hidden="true">
+              <span class="hr-line"></span><span class="hr-prog"></span>
+              <span class="hr-pin" style="left:4%"><b>Order</b></span>
+              <span class="hr-pin" style="left:36%"><b>Deliver</b></span>
+              <span class="hr-pin" style="left:68%"><b>Practise</b></span>
+              <span class="hr-pin" style="left:96%"><b>Collect</b></span>
+              <span class="hr-van"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7.5h11v7H2z"/><path d="M13 10h4l3 3v1.5h-7z"/><circle cx="7" cy="16.5" r="1.6"/><circle cx="17" cy="16.5" r="1.6"/></svg></span>
             </div>
           </div>
         </div>
 
         <!-- BAND 4 — FOR EVERY GATHERING -->
-        <div data-band="0.44,0.58" style="position:absolute; inset:0; display:flex; align-items:flex-start; justify-content:center; padding:13vh 6vw 0;">
+        <div data-band="0.44,0.556" style="position:absolute; inset:0; display:flex; align-items:flex-start; justify-content:center; padding:13vh 6vw 0;">
           <div class="band-inner" style="width:100%; max-width:1000px;">
             <div style="text-align:center; margin-bottom:36px;">
               <div style="font-size:12px; letter-spacing:.3em; text-transform:uppercase; color:#6B6358; margin-bottom:14px;">Hire the range</div>
-              <h2 style="font-family:'Cormorant Garamond',serif; font-weight:500; font-size:clamp(32px,4.4vw,52px); line-height:1.03; margin:0; color:#2B2620;">For every gathering.</h2>
+              <h2 style="font-family:'Playfair Display',serif; font-weight:500; font-size:clamp(32px,4.4vw,52px); line-height:1.03; margin:0; color:#2B2620;">For every gathering.</h2>
             </div>
-            <div style="display:grid; grid-template-columns:repeat(3,minmax(200px,1fr)); gap:20px;">
-              <div style="pointer-events:auto; background:rgba(var(--scrim),.94); border:1px solid #E2DCCF; border-radius:4px; padding:24px;">
-                <div style="font-family:'Cormorant Garamond',serif; font-size:22px; color:#2B2620;">Events &amp; retreats</div>
-                <p style="font-size:14px; line-height:1.6; color:#6B6358; margin:8px 0 14px;">10–60 mats, delivered and collected. Ideal for classes, brunch clubs &amp; weekenders.</p>
-                <div style="font-size:15px; color:#2B2620;">From £8.50 / mat</div>
-                <button data-hire-cta style="margin-top:16px; width:100%; background:#2B2620; color:#F5F1E8; border:none; font-family:'Libre Baskerville',serif; font-size:11px; letter-spacing:.2em; text-transform:uppercase; padding:13px; border-radius:2px; cursor:pointer;">Enquire to hire</button>
+            <div class="s4grid">
+              <div class="s4card">
+                <span class="s4ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11a8 8 0 0 1 13.5-5.5L20 8"/><path d="M20 4v4h-4"/><path d="M20 13a8 8 0 0 1-13.5 5.5L4 16"/><path d="M4 20v-4h4"/></svg></span>
+                <div class="s4nm">Studios &amp; partners</div>
+                <div class="s4who">60+ mats</div>
+                <p class="s4ds">A reduced rate with recurring delivery to keep your studio stocked.</p>
+                <div class="s4pr">Reduced rate</div>
+                <button data-hire-cta class="btn-line">Request a rate</button>
               </div>
-              <div style="pointer-events:auto; background:rgba(var(--scrim),.94); border:1px solid #E2DCCF; border-radius:4px; padding:24px;">
-                <div style="font-family:'Cormorant Garamond',serif; font-size:22px; color:#2B2620;">Studios &amp; partners</div>
-                <p style="font-size:14px; line-height:1.6; color:#6B6358; margin:8px 0 14px;">60+ mats on a reduced rate, with recurring delivery to keep your studio stocked.</p>
-                <div style="font-size:15px; color:#2B2620;">Reduced volume rate</div>
-                <button data-hire-cta style="margin-top:16px; width:100%; background:#2B2620; color:#F5F1E8; border:none; font-family:'Libre Baskerville',serif; font-size:11px; letter-spacing:.2em; text-transform:uppercase; padding:13px; border-radius:2px; cursor:pointer;">Request a rate</button>
+              <div class="s4card feat">
+                <span class="badge">Most booked</span>
+                <span class="s4ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="2"/><path d="M3 9.5h18M8 3v3.5M16 3v3.5"/></svg></span>
+                <div class="s4nm">Events &amp; retreats</div>
+                <div class="s4who">10–60 mats</div>
+                <p class="s4ds">Delivered and collected. Ideal for classes, brunch clubs &amp; weekenders.</p>
+                <div class="s4pr">From £8.50 <small>/ mat</small></div>
+                <button data-hire-cta class="btn-solid">Enquire to hire</button>
               </div>
-              <div style="pointer-events:auto; background:#2B2620; color:#F5F1E8; border-radius:4px; padding:24px; display:flex; flex-direction:column;">
-                <div style="font-size:11px; letter-spacing:.24em; text-transform:uppercase; color:rgba(245,241,232,.6); margin-bottom:10px;">Brand partnerships</div>
-                <div style="font-family:'Cormorant Garamond',serif; font-size:24px; line-height:1.05;">Let's build something together.</div>
-                <p style="font-size:14px; line-height:1.6; color:rgba(245,241,232,.7); margin:12px 0 14px;">Branded mats, press days and activations — designed with your team.</p>
-                <button data-hire-cta style="margin-top:auto; width:100%; background:transparent; color:#F5F1E8; border:1px solid rgba(245,241,232,.5); font-family:'Libre Baskerville',serif; font-size:11px; letter-spacing:.2em; text-transform:uppercase; padding:13px; border-radius:2px; cursor:pointer;">Work with us</button>
+              <div class="s4card">
+                <span class="s4ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.6L19.5 10l-5.6 1.4L12 17l-1.9-5.6L4.5 10l5.6-1.4z"/></svg></span>
+                <div class="s4nm">Brand partnerships</div>
+                <div class="s4who">Bespoke</div>
+                <p class="s4ds">Branded mats, press days &amp; activations — designed with your team.</p>
+                <div class="s4pr">Let's talk</div>
+                <button data-hire-cta class="btn-line">Work with us</button>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- BAND 5 — THE SAÏA CLUB -->
-        <div data-band="0.58,0.72" style="position:absolute; inset:0; display:flex; align-items:center; justify-content:flex-start; padding:0 7vw; background:linear-gradient(90deg, rgba(var(--scrim),.94) 0%, rgba(var(--scrim),.72) 32%, rgba(var(--scrim),0) 56%);">
+        <!-- FLOW LEVEL 1 — CRISTINA STANDS · PILATES INTRO -->
+        <div class="flow-rail" data-band="0.576,0.66" style="position:absolute; inset:0; display:flex; align-items:center; justify-content:flex-start; padding:0 7vw;">
           <div class="band-inner" style="max-width:460px;">
-            <div style="font-size:12px; letter-spacing:.3em; text-transform:uppercase; color:#B8624A; margin-bottom:16px;">The SAÏA Club</div>
-            <h2 style="font-family:'Cormorant Garamond',serif; font-weight:500; font-size:clamp(34px,4.6vw,58px); line-height:1.02; margin:0 0 22px; color:#2B2620;">We curate unforgettable experiences.</h2>
-            <p style="font-size:17px; line-height:1.8; color:#6B6358; margin:0 auto; max-width:520px;">Join us for a series of events in London for like-minded women — to support each other, feel inspired, and celebrate sisterhood. A female-led club built on fitness, community &amp; mindset.</p>
+            <div style="font-size:12px; letter-spacing:.3em; text-transform:uppercase; color:#B8624A; margin-bottom:16px;">Fitness</div>
+            <h2 style="font-family:'Playfair Display',serif; font-weight:500; font-size:clamp(34px,4.6vw,58px); line-height:1.0; margin:0 0 22px; color:#2B2620;">Move with<br>Cristina.</h2>
+            <p style="font-size:16px; line-height:1.75; color:#6B6358; margin:0; max-width:400px;">Founder-led Pilates for women in London — small, strong and slow, on the same mat you'll come to know by heart.</p>
           </div>
         </div>
 
-        <!-- BAND 6 — PILATES WITH CRISTINA -->
-        <div data-band="0.72,0.86" style="position:absolute; inset:0; display:flex; align-items:center; justify-content:flex-start; padding:0 7vw; background:linear-gradient(90deg, rgba(var(--scrim),.94) 0%, rgba(var(--scrim),.78) 34%, rgba(var(--scrim),0) 58%);">
+        <!-- FLOW LEVEL 2 — CRISTINA REACHES UP · THE METHOD -->
+        <div class="flow-rail" data-band="0.675,0.755" style="position:absolute; inset:0; display:flex; align-items:center; justify-content:flex-start; padding:0 7vw;">
           <div class="band-inner" style="max-width:460px;">
-            <div style="font-size:12px; letter-spacing:.3em; text-transform:uppercase; color:#6B6358; margin-bottom:16px;">Fitness</div>
-            <h2 style="font-family:'Cormorant Garamond',serif; font-weight:500; font-size:clamp(34px,4.6vw,58px); line-height:1.0; margin:0 0 22px; color:#2B2620;">Move with Cristina.</h2>
-            <p style="font-size:16px; line-height:1.75; color:#6B6358; margin:0; max-width:400px;">Small, strong, slow Pilates — led by our founder, on the same mat you'll come to know by heart. Classical &amp; Reformer; 1-to-1 in NW3, or group classes in Hampstead. Breath-led, built for every body.</p>
+            <div style="font-size:12px; letter-spacing:.3em; text-transform:uppercase; color:#B8624A; margin-bottom:16px;">The method</div>
+            <h2 style="font-family:'Playfair Display',serif; font-weight:500; font-size:clamp(34px,4.6vw,58px); line-height:1.02; margin:0 0 22px; color:#2B2620;">Strength from<br>the inside out.</h2>
+            <p style="font-size:17px; line-height:1.8; color:#6B6358; margin:0; max-width:460px;">Classical Pilates and Reformer, drawn from Joseph Pilates' own system, Contrology. Breath-led and built for every level.</p>
           </div>
         </div>
 
-        <!-- BAND 7 — JOIN / GET ON THE GUEST LIST -->
-        <div data-band="0.86,1" style="position:absolute; inset:0; display:flex; align-items:center; justify-content:flex-start; padding:0 7vw; background:linear-gradient(90deg, rgba(var(--scrim),.94) 0%, rgba(var(--scrim),.72) 34%, rgba(var(--scrim),0) 58%);">
-          <div class="band-inner" style="max-width:500px;">
-            <div style="font-size:12px; letter-spacing:.3em; text-transform:uppercase; color:#B8624A; margin-bottom:18px;">Join the SAÏA Community</div>
-            <h2 style="font-family:'Cormorant Garamond',serif; font-weight:500; font-size:clamp(36px,5vw,62px); line-height:1.02; margin:0 0 20px; color:#2B2620;">Get on the guest list.</h2>
-            <p style="font-size:16px; line-height:1.7; color:#6B6358; margin:0 0 30px;">First word on upcoming events and mat-hire availability.</p>
-            <div style="pointer-events:auto; display:flex; flex-wrap:wrap; gap:12px; justify-content:flex-start; max-width:440px;">
-              <input type="email" placeholder="Enter your email" aria-label="Email address" class="input-focus" style="flex:1 1 240px; font-family:'Libre Baskerville',serif; font-size:15px; padding:15px 18px; background:#fff; border-radius:2px; color:#2B2620;">
-              <button class="btn-ink" style="flex:0 0 auto; border:none; font-family:'Libre Baskerville',serif; font-size:12px; letter-spacing:.22em; text-transform:uppercase; padding:15px 34px; border-radius:2px; cursor:pointer;">Subscribe</button>
+        <!-- FLOW LEVEL 3 — CRISTINA FOLDS → DOWNWARD DOG · WHERE -->
+        <div class="flow-rail" data-band="0.778,0.86" style="position:absolute; inset:0; display:flex; align-items:center; justify-content:flex-start; padding:0 7vw;">
+          <div class="band-inner" style="max-width:460px;">
+            <div style="font-size:12px; letter-spacing:.3em; text-transform:uppercase; color:#6B6358; margin-bottom:16px;">Where</div>
+            <h2 style="font-family:'Playfair Display',serif; font-weight:500; font-size:clamp(34px,4.6vw,58px); line-height:1.0; margin:0 0 22px; color:#2B2620;">NW3 &amp;<br>Hampstead.</h2>
+            <p style="font-size:16px; line-height:1.75; color:#6B6358; margin:0; max-width:400px;">One-to-one in NW3, or group classes in Hampstead. Wherever you start, Cristina meets you there.</p>
+          </div>
+        </div>
+
+        <!-- FLOW LEVEL 4 — CRISTINA LOW LUNGE · WHY -->
+        <div class="flow-rail" data-band="0.882,0.955" style="position:absolute; inset:0; display:flex; align-items:center; justify-content:flex-start; padding:0 7vw;">
+          <div class="band-inner" style="max-width:460px;">
+            <div style="font-size:12px; letter-spacing:.3em; text-transform:uppercase; color:#B8624A; margin-bottom:16px;">Why</div>
+            <h2 style="font-family:'Playfair Display',serif; font-weight:500; font-size:clamp(34px,4.6vw,58px); line-height:1.0; margin:0 0 22px; color:#2B2620;">Breath-led,<br>for every body.</h2>
+            <p style="font-size:16px; line-height:1.75; color:#6B6358; margin:0; max-width:400px;">Train for how you feel, not just how you look. Show up, breathe, build control — session by session.</p>
+          </div>
+        </div>
+
+        <!-- FLOW LEVEL 5 — CRISTINA SEATED, HANDS TO HEART · PILATES GUEST LIST -->
+        <div class="flow-rail" data-band="0.972,1" style="position:absolute; inset:0; display:flex; align-items:center; justify-content:flex-start; padding:0 7vw;">
+          <div class="band-inner" style="max-width:520px;">
+            <div style="pointer-events:auto; background:#FBF9F4; border:1px solid #DAD4C8; border-radius:6px; padding:clamp(28px,4vw,44px); box-shadow:0 18px 40px rgba(43,38,32,.10);">
+              <div style="font-size:12px; letter-spacing:.3em; text-transform:uppercase; color:#B8624A; margin-bottom:16px;">Join the Pilates guest list</div>
+              <h2 style="font-family:'Playfair Display',serif; font-weight:500; font-size:clamp(32px,4.4vw,52px); line-height:1.04; margin:0 0 16px; color:#2B2620;">Reserve your spot.</h2>
+              <p style="font-size:15px; line-height:1.7; color:#6B6358; margin:0 0 24px;">First word when Cristina opens new Pilates classes in NW3 &amp; Hampstead — and a place held for you.</p>
+              <form data-guest-form novalidate style="display:flex; flex-wrap:wrap; gap:12px;">
+                <input type="email" name="email" required placeholder="Enter your email" aria-label="Email address" class="input-focus" style="flex:1 1 220px; font-family:'Inter',sans-serif; font-size:15px; padding:15px 18px; background:#fff; border-radius:2px; color:#2B2620;">
+                <button type="submit" class="btn-ink" style="flex:0 0 auto; border:none; font-family:'Inter',sans-serif; font-size:12px; letter-spacing:.22em; text-transform:uppercase; padding:15px 34px; border-radius:2px; cursor:pointer;">Join the list</button>
+                <p data-guest-msg aria-live="polite" style="flex:1 1 100%; margin:2px 0 0; font-size:12px; color:#6B6358; min-height:1.1em;">Free to join · no spam · just first word on classes.</p>
+              </form>
             </div>
           </div>
         </div>
@@ -233,29 +487,93 @@
 
   <!-- ============ FLAT TAIL (pin released) ============ -->
 
-  <!-- ============ TESTIMONIALS ============ -->
-  <section id="events" style="background:#E9E6DF; padding:clamp(70px,9vw,130px) 6vw;">
-    <div style="max-width:1320px; margin:0 auto;">
-      <div style="text-align:center; margin-bottom:clamp(40px,5vw,64px);">
-        <div style="font-size:12px; letter-spacing:.3em; text-transform:uppercase; color:#B8624A; margin-bottom:16px;">SAÏA women</div>
-        <h2 style="font-family:'Cormorant Garamond',serif; font-weight:500; font-size:clamp(32px,4.4vw,52px); line-height:1.03; margin:0;">In their words.</h2>
+  <!-- ============ ESTIMATE YOUR HIRE — spotlight stage ============ -->
+  <section class="saia-est-stage" aria-label="Estimate your mat hire">
+    <div class="vb">
+      <div class="stagewrap">
+        <div class="pitch">
+          <p class="eyebrow">Mat hire · instant estimate</p>
+          <h2><span class="word">See</span> <span class="word">your</span> <span class="word">number.</span></h2>
+          <p class="lead">From our NW3 base to your event — mats, days and courier, totalled live.</p>
+          <div class="bigroute" data-route-wrap data-big></div>
+        </div>
+        <form class="est b" data-est onsubmit="return false">
+          <p class="eyebrow">Build your quote</p>
+          <div class="grid2" style="margin-top:14px;">
+            <div class="field"><label for="estMats">Mats</label><input id="estMats" data-mats type="number" min="10" step="1" placeholder="10+" inputmode="numeric"></div>
+            <div class="field"><label for="estDays">Days</label><input id="estDays" data-days type="number" min="2" step="1" placeholder="2" inputmode="numeric"></div>
+          </div>
+          <div class="note" data-note aria-live="polite"></div>
+          <div class="field full"><label>Getting the mats</label>
+            <div class="seg" data-method data-m="" role="group" aria-label="Delivery method">
+              <span class="thumb" aria-hidden="true"></span>
+              <button type="button" data-m="deliver">Deliver</button>
+              <button type="button" data-m="pickup">Collect NW3 (free)</button>
+            </div>
+          </div>
+          <div class="pcwrap" data-pcwrap><div class="field full"><label for="estPc">Event postcode</label><input id="estPc" data-pc type="text" placeholder="e.g. EC2Y 8DS" autocomplete="postal-code" maxlength="9"></div></div>
+          <div class="result" data-result>
+            <span class="zone" data-zone><span class="dot"></span><span data-zonetxt></span></span>
+            <div class="line"><span class="kk">Mat hire<small data-matsub></small></span><span class="vv" data-matcost>—</span></div>
+            <div class="line"><span class="kk" data-delk>Delivery &amp; collection</span><span class="vv" data-delcost>—</span></div>
+            <div class="total"><span class="kk">Estimated total</span><span class="vv" data-total>—</span></div>
+            <a class="cta" data-cta href="#" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15l-1.3 4.8 4.9-1.3A10 10 0 1 0 12 2z"/></svg> Book the hire</a>
+            <p class="disc"><b>Estimate only.</b> Addison Lee courier guide; Cristina confirms on booking.</p>
+          </div>
+        </form>
       </div>
-      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(290px,1fr)); gap:28px;">
-        <div style="background:#F5F1E8; border-radius:2px; padding:38px 34px;">
-          <div style="font-family:'Cormorant Garamond',serif; font-size:50px; line-height:.6; color:#B8624A;">“</div>
-          <p style="font-family:'Cormorant Garamond',serif; font-size:22px; line-height:1.42; margin:14px 0 26px; color:#2B2620;">I love attending SAÏA events, the locations are always beautiful and each event has a unique and thoughtful activity. Cristina has a special skill of gathering like minded girls and creating amazing space for connection.</p>
-          <div style="font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:#6B6358;">Diana</div>
-        </div>
-        <div style="background:#F5F1E8; border-radius:2px; padding:38px 34px;">
-          <div style="font-family:'Cormorant Garamond',serif; font-size:50px; line-height:.6; color:#B8624A;">“</div>
-          <p style="font-family:'Cormorant Garamond',serif; font-size:22px; line-height:1.42; margin:14px 0 26px; color:#2B2620;">A SAÏA Woman is not afraid to speak her truth, and is someone who inspires and lifts up other women around her.</p>
-          <div style="font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:#6B6358;">Georgina — Olympic Rhythmic Gymnast</div>
-        </div>
-        <div style="background:#F5F1E8; border-radius:2px; padding:38px 34px;">
-          <div style="font-family:'Cormorant Garamond',serif; font-size:50px; line-height:.6; color:#B8624A;">“</div>
-          <p style="font-family:'Cormorant Garamond',serif; font-size:22px; line-height:1.42; margin:14px 0 26px; color:#2B2620;">The SAÏA community is a celebration of women's empowerment and networking with determined women who share similar values.</p>
-          <div style="font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:#6B6358;">Tamta</div>
-        </div>
+    </div>
+  </section>
+
+  <!-- ============ HIRE YOGA MATS — clear CTA ============ -->
+  <section id="mat-hire" aria-label="Hire yoga mats" style="background:#EFEADF; padding:clamp(64px,8vw,110px) 6vw; border-top:1px solid #DAD4C8;">
+    <div style="max-width:920px; margin:0 auto; text-align:center;">
+      <div style="font-size:12px; letter-spacing:.3em; text-transform:uppercase; color:#B8624A; margin-bottom:18px;">Mat hire</div>
+      <h2 style="font-family:'Playfair Display',serif; font-weight:500; font-size:clamp(34px,4.8vw,58px); line-height:1.02; margin:0 0 22px; color:#2B2620;">Hire yoga mats<br>for your event.</h2>
+      <p style="font-size:clamp(16px,1.5vw,18px); line-height:1.8; color:#4A443B; max-width:560px; margin:0 auto 32px;">Our signature mat, delivered across London and collected after — from a 10-mat morning class to a 200-person retreat. You simply unroll and begin.</p>
+      <div style="display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-bottom:36px;">
+        <span class="hire-chip">£8.50 / mat</span>
+        <span class="hire-chip">2-day hire</span>
+        <span class="hire-chip">Minimum 10</span>
+        <span class="hire-chip">Same-day London delivery</span>
+        <span class="hire-chip">Free NW3 collection</span>
+      </div>
+      <button data-hire-cta style="background:#2B2620; color:#F5F1E8; border:none; font-family:'Inter',sans-serif; font-size:11px; letter-spacing:.2em; text-transform:uppercase; padding:16px 38px; border-radius:2px; cursor:pointer;">Enquire to hire</button>
+    </div>
+  </section>
+
+  <!-- ============ GALLERY — photo reel film strip ============ -->
+  <section id="events" class="reel-section" aria-label="SAÏA women — photo reel">
+    <div class="rl-scroll">
+      <div class="rl-sticky">
+        <div class="rl-bg"></div>
+        <div class="film-rails"><div class="perf-row top"></div><div class="perf-row bottom"></div></div>
+        <div class="rl-head"><div class="t">SAÏA women</div><h2>Gallery</h2></div>
+        <div class="caps" id="reelCaps"></div>
+        <div class="rl-track" id="reelTrack"></div>
+        <div class="rl-hint" aria-hidden="true">Grayscale off-centre · hover · scroll ↓</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PILATES WITH CRISTINA ============ -->
+  <section id="pilates" style="background:#F5F1E8; padding:clamp(72px,9vw,120px) 6vw; border-top:1px solid #DAD4C8;">
+    <div style="max-width:820px; margin:0 auto;">
+      <div style="text-align:center; margin-bottom:clamp(36px,4vw,52px);">
+        <div style="font-size:12px; letter-spacing:.3em; text-transform:uppercase; color:#B8624A; margin-bottom:18px;">Fitness</div>
+        <h2 style="font-family:'Playfair Display',serif; font-weight:500; font-size:clamp(34px,4.6vw,56px); line-height:1.02; margin:0 0 24px; color:#2B2620;">Pilates with Cristina.</h2>
+        <p style="font-size:clamp(16px,1.5vw,18px); line-height:1.8; color:#4A443B; max-width:560px; margin:0 auto;">Cristina teaches Pilates for women in London: one-to-one in NW3 and group classes in Hampstead. She trained in the Classical method and teaches Reformer Pilates, working from Joseph Pilates' own system, Contrology, to build strength and control from the inside out. It suits every level, and she meets you where you are.</p>
+      </div>
+      <div style="font-size:11px; letter-spacing:.3em; text-transform:uppercase; color:#6B6358; text-align:center; margin-bottom:28px;">Five simple rules</div>
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:24px 36px; max-width:680px; margin:0 auto;">
+        <div style="display:flex; gap:16px; align-items:baseline;"><span style="font-family:'Playfair Display',serif; font-size:24px; color:#B8624A;">01</span><div><div style="font-family:'Playfair Display',serif; font-size:21px; color:#2B2620;">It has to be fun</div><div style="font-size:14px; line-height:1.6; color:#6B6358; margin-top:4px;">If you enjoy it, you keep doing it.</div></div></div>
+        <div style="display:flex; gap:16px; align-items:baseline;"><span style="font-family:'Playfair Display',serif; font-size:24px; color:#B8624A;">02</span><div><div style="font-family:'Playfair Display',serif; font-size:21px; color:#2B2620;">It has to be rewarding</div><div style="font-size:14px; line-height:1.6; color:#6B6358; margin-top:4px;">Every session should leave you feeling better than you started.</div></div></div>
+        <div style="display:flex; gap:16px; align-items:baseline;"><span style="font-family:'Playfair Display',serif; font-size:24px; color:#B8624A;">03</span><div><div style="font-family:'Playfair Display',serif; font-size:21px; color:#2B2620;">Keep it balanced</div><div style="font-size:14px; line-height:1.6; color:#6B6358; margin-top:4px;">Eat well in the week, then enjoy your weekend.</div></div></div>
+        <div style="display:flex; gap:16px; align-items:baseline;"><span style="font-family:'Playfair Display',serif; font-size:24px; color:#B8624A;">04</span><div><div style="font-family:'Playfair Display',serif; font-size:21px; color:#2B2620;">Do it for the right reasons</div><div style="font-size:14px; line-height:1.6; color:#6B6358; margin-top:4px;">Train for how you feel, not just how you look.</div></div></div>
+        <div style="display:flex; gap:16px; align-items:baseline;"><span style="font-family:'Playfair Display',serif; font-size:24px; color:#B8624A;">05</span><div><div style="font-family:'Playfair Display',serif; font-size:21px; color:#2B2620;">Always show up</div><div style="font-size:14px; line-height:1.6; color:#6B6358; margin-top:4px;">If you miss one session, do not miss two.</div></div></div>
+      </div>
+      <div style="text-align:center; margin-top:clamp(40px,5vw,56px);">
+        <a href="https://wa.me/447444611914" style="display:inline-flex; align-items:center; gap:10px; background:#2B2620; color:#F5F1E8; font-family:'Inter',sans-serif; font-size:11px; letter-spacing:.2em; text-transform:uppercase; padding:15px 32px; border-radius:2px; text-decoration:none;">Train with Cristina</a>
       </div>
     </div>
   </section>
@@ -265,12 +583,13 @@
     <div style="max-width:1200px; margin:0 auto;">
       <div style="text-align:center; font-size:11px; letter-spacing:.3em; text-transform:uppercase; color:#6B6358; margin-bottom:34px;">In the press</div>
       <div style="display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:clamp(28px,6vw,72px); color:#6B6358;">
-        <span style="font-family:'Cormorant Garamond',serif; font-size:26px; letter-spacing:.12em;">VOGUE</span>
-        <span style="font-family:'Cormorant Garamond',serif; font-size:26px; letter-spacing:.18em;">STYLIST</span>
-        <span style="font-family:'Cormorant Garamond',serif; font-size:24px; letter-spacing:.04em; font-style:italic;">Harper’s Bazaar</span>
-        <span style="font-family:'Cormorant Garamond',serif; font-size:26px; letter-spacing:.16em;">ELLE</span>
-        <span style="font-family:'Cormorant Garamond',serif; font-size:22px; letter-spacing:.22em;">REFINERY29</span>
-        <span style="font-family:'Cormorant Garamond',serif; font-size:24px; letter-spacing:.18em;">COURIER</span>
+        <span style="font-family:'Playfair Display',serif; font-size:26px; letter-spacing:.16em;">GRAZIA</span>
+        <span style="font-family:'Playfair Display',serif; font-size:26px; letter-spacing:.04em;">Forbes</span>
+        <span style="font-family:'Playfair Display',serif; font-size:22px; letter-spacing:.06em; line-height:1; text-align:center;">London Evening Standard</span>
+        <span style="font-family:'Playfair Display',serif; font-size:26px; letter-spacing:.14em;">SHAPE</span>
+        <span style="font-family:'Playfair Display',serif; font-size:24px; letter-spacing:.04em;">Daily Mail</span>
+        <span style="font-family:'Playfair Display',serif; font-size:24px; letter-spacing:.04em;">OM Yoga &amp; Lifestyle</span>
+        <span style="font-family:'Playfair Display',serif; font-size:24px; letter-spacing:.02em; font-style:italic;">The Telegraph</span>
       </div>
     </div>
   </section>
@@ -280,10 +599,10 @@
     <div style="max-width:1320px; margin:0 auto;">
       <div style="display:flex; flex-wrap:wrap; gap:48px; justify-content:space-between;">
         <div style="flex:1 1 280px; max-width:360px;">
-          <div style="font-family:'Cormorant Garamond',serif; font-size:34px; letter-spacing:.2em; line-height:1;">SAÏA</div>
+          <div style="font-family:'Playfair Display',serif; font-size:34px; letter-spacing:.2em; line-height:1;">SAÏA</div>
           <div style="font-size:10px; letter-spacing:.5em; text-transform:uppercase; color:rgba(245,241,232,.55); margin:6px 0 22px;">London</div>
           <p style="font-size:14px; line-height:1.75; color:rgba(245,241,232,.65); margin:0 0 24px; max-width:300px;">A female-led club empowering women through fitness, community &amp; mindset. Premium yoga-mat hire across London.</p>
-          <button data-hire-cta style="background:#B8624A; color:#F5F1E8; border:none; font-family:'Libre Baskerville',serif; font-size:11px; letter-spacing:.2em; text-transform:uppercase; padding:14px 26px; border-radius:2px; cursor:pointer;">Hire a mat</button>
+          <button data-hire-cta style="background:#B8624A; color:#F5F1E8; border:none; font-family:'Inter',sans-serif; font-size:11px; letter-spacing:.2em; text-transform:uppercase; padding:14px 26px; border-radius:2px; cursor:pointer;">Hire a mat</button>
           <div style="display:flex; gap:18px; margin-top:24px;">
             <a href="https://www.instagram.com/saialondon" aria-label="SAÏA on Instagram" style="color:rgba(245,241,232,.7); text-decoration:none;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="3" y="3" width="18" height="18" rx="5"></rect><circle cx="12" cy="12" r="4"></circle><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"></circle></svg></a>
             <a href="https://www.facebook.com/saialondon" aria-label="SAÏA on Facebook" style="color:rgba(245,241,232,.7); text-decoration:none;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M15 8h-2a2 2 0 0 0-2 2v11"></path><path d="M8 13h6"></path><path d="M11 21V10a3 3 0 0 1 3-3h1"></path></svg></a>
@@ -293,16 +612,16 @@
         <div style="flex:0 1 auto; display:flex; flex-wrap:wrap; gap:48px;">
           <div>
             <div style="font-size:11px; letter-spacing:.22em; text-transform:uppercase; color:rgba(245,241,232,.5); margin-bottom:18px;">Customer care</div>
-            <div style="display:flex; flex-direction:column; gap:12px; font-size:14px;"><a href="https://wa.me/447444611914" style="color:rgba(245,241,232,.78); text-decoration:none;">WhatsApp Cristina</a><a href="#" style="color:rgba(245,241,232,.78); text-decoration:none;">Terms &amp; conditions</a></div>
+            <div style="display:flex; flex-direction:column; gap:12px; font-size:14px;"><a href="https://wa.me/447444611914" style="color:rgba(245,241,232,.78); text-decoration:none;">WhatsApp Cristina</a><a href="https://www.saialondon.com/pages/contact-us" style="color:rgba(245,241,232,.78); text-decoration:none;">Contact us</a><a href="https://www.saialondon.com/pages/terms-and-conditions" style="color:rgba(245,241,232,.78); text-decoration:none;">Terms &amp; conditions</a></div>
           </div>
           <div>
             <div style="font-size:11px; letter-spacing:.22em; text-transform:uppercase; color:rgba(245,241,232,.5); margin-bottom:18px;">About us</div>
-            <div style="display:flex; flex-direction:column; gap:12px; font-size:14px;"><a href="#story" style="color:rgba(245,241,232,.78); text-decoration:none;">Our story</a><a href="#hire" style="color:rgba(245,241,232,.78); text-decoration:none;">Yoga mat hire</a><a href="#events" style="color:rgba(245,241,232,.78); text-decoration:none;">Events</a></div>
+            <div style="display:flex; flex-direction:column; gap:12px; font-size:14px;"><a href="story.html" style="color:rgba(245,241,232,.78); text-decoration:none;">Our story</a><a href="#mat-hire" style="color:rgba(245,241,232,.78); text-decoration:none;">Yoga mat hire</a><a href="#events" style="color:rgba(245,241,232,.78); text-decoration:none;">Gallery</a></div>
           </div>
           <div style="max-width:240px;">
             <div style="font-size:11px; letter-spacing:.22em; text-transform:uppercase; color:rgba(245,241,232,.5); margin-bottom:18px;">Subscribe</div>
             <p style="font-size:13px; line-height:1.6; color:rgba(245,241,232,.6); margin:0 0 14px;">Get on the guest list of our upcoming events.</p>
-            <div style="display:flex; border-bottom:1px solid rgba(245,241,232,.35);"><input type="email" placeholder="Email" aria-label="Email address" style="flex:1; background:none; border:none; color:#F5F1E8; font-family:'Libre Baskerville',serif; font-size:14px; padding:8px 0; outline:none;"><span style="font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:#B8624A; padding:8px 0; cursor:pointer;">Join</span></div>
+            <div style="display:flex; border-bottom:1px solid rgba(245,241,232,.35);"><input type="email" placeholder="Email" aria-label="Email address" style="flex:1; background:none; border:none; color:#F5F1E8; font-family:'Inter',sans-serif; font-size:14px; padding:8px 0; outline:none;"><span style="font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:#B8624A; padding:8px 0; cursor:pointer;">Join</span></div>
           </div>
         </div>
       </div>
@@ -318,27 +637,261 @@
     <div id="homeChatPanel" style="display:none; width:min(380px,calc(100vw - 32px)); height:min(560px,calc(100vh - 110px)); background:#F5F1E8; border-radius:6px; box-shadow:0 24px 60px rgba(43,38,32,.32); overflow:hidden; flex-direction:column; animation:saiaSlideIn .32s ease both;">
       <div style="background:#2B2620; color:#F5F1E8; padding:20px 22px; display:flex; justify-content:space-between; align-items:center; flex:none;">
         <div style="display:flex; gap:12px; align-items:center;">
-          <span style="width:36px; height:36px; border-radius:50%; border:1px solid rgba(245,241,232,.4); display:flex; align-items:center; justify-content:center; font-family:'Cormorant Garamond',serif; font-size:18px;">S</span>
+          <span style="width:36px; height:36px; border-radius:50%; border:1px solid rgba(245,241,232,.4); display:flex; align-items:center; justify-content:center; font-family:'Playfair Display',serif; font-size:18px;">S</span>
           <div><div style="font-size:12px; letter-spacing:.24em; text-transform:uppercase;">SAÏA Concierge</div><div style="font-size:11px; color:rgba(245,241,232,.6); margin-top:3px; display:flex; align-items:center; gap:6px;"><span style="width:6px; height:6px; border-radius:50%; background:#7FA67F;"></span>Online now</div></div>
         </div>
         <button id="homeChatClose" aria-label="Close concierge" style="background:none; border:none; cursor:pointer; padding:4px; display:flex;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(245,241,232,.75)" stroke-width="1.4"><line x1="5" y1="5" x2="19" y2="19"></line><line x1="19" y1="5" x2="5" y2="19"></line></svg></button>
       </div>
       <div id="homeThread" class="saia-thread" style="flex:1; overflow-y:auto; padding:22px; display:flex; flex-direction:column; gap:13px;"></div>
       <div style="padding:2px 16px 14px; display:flex; flex-wrap:wrap; gap:8px; flex:none;">
-        <button data-q="Which mat is right for me?" class="home-chip" style="font-family:'Libre Baskerville',serif; font-size:12px; color:#B8624A; border:1px solid #B8624A; background:none; border-radius:30px; padding:8px 13px; cursor:pointer;">Which mat suits me?</button>
-        <button data-q="How does hire work?" class="home-chip" style="font-family:'Libre Baskerville',serif; font-size:12px; color:#B8624A; border:1px solid #B8624A; background:none; border-radius:30px; padding:8px 13px; cursor:pointer;">How does hire work?</button>
-        <button data-q="What's your return policy?" class="home-chip" style="font-family:'Libre Baskerville',serif; font-size:12px; color:#B8624A; border:1px solid #B8624A; background:none; border-radius:30px; padding:8px 13px; cursor:pointer;">Return policy</button>
+        <button data-q="Which mat is right for me?" class="home-chip" style="font-family:'Inter',sans-serif; font-size:12px; color:#B8624A; border:1px solid #B8624A; background:none; border-radius:30px; padding:8px 13px; cursor:pointer;">Which mat suits me?</button>
+        <button data-q="How does hire work?" class="home-chip" style="font-family:'Inter',sans-serif; font-size:12px; color:#B8624A; border:1px solid #B8624A; background:none; border-radius:30px; padding:8px 13px; cursor:pointer;">How does hire work?</button>
+        <button data-q="What's your return policy?" class="home-chip" style="font-family:'Inter',sans-serif; font-size:12px; color:#B8624A; border:1px solid #B8624A; background:none; border-radius:30px; padding:8px 13px; cursor:pointer;">Return policy</button>
       </div>
       <div style="padding:13px 16px; border-top:1px solid #DAD4C8; display:flex; gap:10px; align-items:center; flex:none;">
-        <input id="homeChatInput" type="text" placeholder="Type a message…" aria-label="Message the concierge" style="flex:1; border:none; background:transparent; font-family:'Libre Baskerville',serif; font-size:14px; color:#2B2620; outline:none;">
+        <input id="homeChatInput" type="text" placeholder="Type a message…" aria-label="Message the concierge" style="flex:1; border:none; background:transparent; font-family:'Inter',sans-serif; font-size:14px; color:#2B2620; outline:none;">
         <button id="homeChatSend" style="background:none; border:none; cursor:pointer; font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:#B8624A;">Send</button>
       </div>
     </div>
-    <button id="homeChatLauncher" aria-label="Open the SAÏA concierge" class="launcher-lift" style="width:60px; height:60px; border-radius:50%; background:#2B2620; color:#F5F1E8; border:none; cursor:pointer; box-shadow:0 12px 28px rgba(43,38,32,.34); position:relative;"><span style="font-family:'Cormorant Garamond',serif; font-size:26px;">S</span><span style="position:absolute; top:7px; right:7px; width:9px; height:9px; border-radius:50%; background:#B8624A; outline:2px solid #F5F1E8;"></span></button>
+    <button id="homeChatLauncher" aria-label="Open the SAÏA concierge" class="launcher-lift" style="width:60px; height:60px; border-radius:50%; background:#2B2620; color:#F5F1E8; border:none; cursor:pointer; box-shadow:0 12px 28px rgba(43,38,32,.34); position:relative;"><span style="font-family:'Playfair Display',serif; font-size:26px;">S</span><span style="position:absolute; top:7px; right:7px; width:9px; height:9px; border-radius:50%; background:#B8624A; outline:2px solid #F5F1E8;"></span></button>
   </div>
 
 </div>
 
+<script>
+/* SAÏA — Gallery photo reel (film-strip, minimal rails) */
+(function(){
+  var sec = document.getElementById('events');
+  var track = document.getElementById('reelTrack');
+  var capsBox = document.getElementById('reelCaps');
+  if(!sec || !track || !capsBox) return;
+
+  var PHOTOS = [
+    "Snapinsta.app_242292911_1079452836196028_3808565095717851061_n_1080.jpg",
+    "DSC04282.jpg",
+    "Snapinsta.app_317006758_6013053755392457_3370483635582872631_n_1080.jpg",
+    "IMG_2390.jpg",
+    "Snapinsta.app_273931134_460379012416069_8989016968091085995_n_1080.jpg",
+    "DSC04109.jpg",
+    "Snapinsta.app_262830446_642595000235284_7056160579951222718_n_1080.jpg",
+    "85978036-3243-4BC3-9E98-AF5B59AEB391.jpg",
+    "Snapinsta.app_316821809_554430629853980_3601036597804038524_n_1080_1.jpg",
+    "DSC04139.jpg",
+    "Snapinsta.app_274042141_476998050588663_3300805879876636614_n_1080.jpg",
+    "IMG_2392.jpg"
+  ].map(function(f){ return "photos/" + f; });
+  var WORDS = ["A Woman Who Wins.","Fitness, community and mindset.","She speaks her truth.","Beautiful venues, real connection.","Sisterhood, celebrated."];
+  var VALUES = ["Community","Movement","Strength","Stillness","Together","Mindset"];
+
+  var clamp = function(v,a,b){ return Math.min(b,Math.max(a,v)); };
+  var lerp  = function(a,b,t){ return a+(b-a)*t; };
+
+  PHOTOS.forEach(function(src,i){
+    var f = document.createElement('figure');
+    f.innerHTML = '<div class="ken"><img loading="lazy" src="'+src+'" alt="SAÏA London — community photograph '+(i+1)+'"></div><span class="chip">'+VALUES[i%VALUES.length]+'</span>';
+    track.appendChild(f);
+  });
+  WORDS.forEach(function(w){ var d=document.createElement('div'); d.className='w'; d.textContent=w; capsBox.appendChild(d); });
+
+  var figs = [].slice.call(track.children);
+  var caps = [].slice.call(capsBox.children);
+
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches) return; // CSS lays it out statically
+
+  var scroll = sec.querySelector('.rl-scroll');
+  var rails = [].slice.call(sec.querySelectorAll('.perf-row'));
+  var cur = 0, tgt = 0, hot = null;
+
+  function setupRails(){ var w = track.scrollWidth + window.innerWidth; rails.forEach(function(r){ r.style.width = w + 'px'; }); }
+  setupRails(); window.addEventListener('resize', setupRails);
+
+  figs.forEach(function(f){
+    f.addEventListener('mouseenter', function(){ hot = f; f.classList.add('hot'); });
+    f.addEventListener('mouseleave', function(){ f.classList.remove('hot'); if(hot===f) hot=null; f.dataset.rx=0; f.dataset.ry=0; });
+    f.addEventListener('mousemove', function(e){ var r=f.getBoundingClientRect();
+      f.dataset.ry = (((e.clientX-r.left)/r.width-0.5)*9).toFixed(2);
+      f.dataset.rx = ((-((e.clientY-r.top)/r.height-0.5))*9).toFixed(2);
+    });
+  });
+
+  function progress(){ var r=scroll.getBoundingClientRect(); var total=scroll.offsetHeight-window.innerHeight; return clamp((-r.top)/total,0,1); }
+  function showCap(p){ var i=clamp(Math.floor(p*caps.length),0,caps.length-1); caps.forEach(function(e,k){ e.classList.toggle('on', k===i); }); }
+
+  function tick(){
+    tgt = progress(); cur = lerp(cur, tgt, 0.12);
+    var max = track.scrollWidth - window.innerWidth, filmX = -cur*max;
+    track.style.transform = 'translateX('+filmX+'px)';
+    rails.forEach(function(r){ r.style.transform = 'translateX('+filmX+'px)'; });
+    var cx = window.innerWidth/2;
+    figs.forEach(function(f){
+      var r = f.getBoundingClientRect();
+      var d = Math.abs((r.left+r.width/2)-cx)/window.innerWidth;
+      var s=clamp(1-d*0.32,0.74,1), op=clamp(1-d*1.05,0.34,1), bl=clamp(d*4.2,0,3), g=clamp((d-0.04)*2.4,0,1), sat=lerp(1.08,0.9,clamp(d,0,1));
+      var ty=d*44, rx=0, ry=0;
+      if(f===hot){ s+=0.10; op=1; bl=0; g=0; sat=1.1; ty-=16; rx=+(f.dataset.rx||0); ry=+(f.dataset.ry||0); }
+      f.style.transform = 'perspective(1200px) translateY('+ty+'px) rotateX('+rx+'deg) rotateY('+ry+'deg) scale('+s.toFixed(3)+')';
+      f.style.opacity = op;
+      f.style.filter = 'blur('+bl.toFixed(2)+'px) grayscale('+g.toFixed(2)+') saturate('+sat.toFixed(2)+')';
+    });
+    showCap(cur);
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+})();
+</script>
+<!-- Estimate-your-hire spotlight stage engine -->
+<script>
+(function(){
+  var stage=document.querySelector('.saia-est-stage');
+  if(!stage) return;
+  var MAT_RATE=8.5, EXTRA_DAY=1.5, MIN_MATS=10, BASE_DAYS=2;
+  var CENTRAL=['EC1','EC2','EC3','EC4','WC1','WC2','W1','SW1','SE1','N1','NW1','E1','W2'];
+  var LONDON=['E','EC','N','NW','SE','SW','W','WC'], OUTER=['BR','CR','DA','EN','HA','IG','KT','RM','SM','TW','UB','WD'];
+  var ZONES={ central:{label:'Zone 1 · Central London', round:35}, greater:{label:'Zone 2 · Greater London', round:45} };
+  var STOPS=[{t:0,label:'NW3'},{t:0.36,label:'Details'},{t:0.68,label:'Delivery'},{t:1,label:'Your event'}];
+  var VAN='<g class="van"><rect x="-12" y="-8" width="15" height="11" rx="2"></rect><path d="M3 -5 h4.5 l3.5 3.2 v4.8 h-8 z"></path><rect class="win" x="-9" y="-5.5" width="5.5" height="4" rx="1"></rect><circle class="wheel" cx="-6.5" cy="4.5" r="2.4"></circle><circle class="wheel" cx="6.5" cy="4.5" r="2.4"></circle></g>';
+  var reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var SVGNS='http://www.w3.org/2000/svg';
+  function gbp(n){return '£'+n.toFixed(2);}
+  function classify(raw){var pc=(raw||'').toUpperCase().replace(/[^A-Z0-9]/g,'');if(pc.length<2)return null;
+    var ow=pc.length>3?pc.slice(0,pc.length-3):pc,m=ow.match(/^([A-Z]{1,2})(\d{1,2})?/);if(!m)return null;
+    var area=m[1],key=area+(m[2]?m[2]:'');
+    if(CENTRAL.indexOf(key)!==-1)return ZONES.central;
+    if(LONDON.indexOf(area)!==-1||OUTER.indexOf(area)!==-1)return ZONES.greater;
+    return {label:'outside',round:null};}
+
+  function buildRoute(wrap, big){
+    var vb = big ? '0 0 600 130' : '0 0 600 60';
+    var d  = big ? 'M60 96 C 200 14, 400 14, 540 90' : 'M40 44 C 180 6, 420 6, 560 40';
+    wrap.innerHTML='<svg viewBox="'+vb+'" preserveAspectRatio="xMidYMid meet" aria-hidden="true">'
+      +'<path class="track" d="'+d+'"></path><path class="rfill" d="'+d+'"></path>'
+      +'<g class="miles"></g>'+VAN+'</svg>';
+    var route=wrap.querySelector('.track'), fill=wrap.querySelector('.rfill'),
+        miles=wrap.querySelector('.miles'), van=wrap.querySelector('.van');
+    var len=route.getTotalLength();
+    fill.style.strokeDasharray=len; fill.style.strokeDashoffset=len;
+    var mileEls=[];
+    STOPS.forEach(function(s,i){
+      var p=route.getPointAtLength(len*s.t);
+      var g=document.createElementNS(SVGNS,'g'); g.setAttribute('class','mile');
+      var ring=document.createElementNS(SVGNS,'circle');ring.setAttribute('class','ring');ring.setAttribute('cx',p.x);ring.setAttribute('cy',p.y);ring.setAttribute('r',6);
+      var c=document.createElementNS(SVGNS,'circle');c.setAttribute('cx',p.x);c.setAttribute('cy',p.y);c.setAttribute('r',5);c.setAttribute('fill','#DAD4C8');
+      var below=(i===0||i===STOPS.length-1);
+      var t=document.createElementNS(SVGNS,'text');t.setAttribute('x',p.x);t.setAttribute('y',p.y+(below?18:-11));t.setAttribute('text-anchor','middle');t.setAttribute('class',i===STOPS.length-1?'big':'');t.textContent=s.label;
+      g.appendChild(ring);g.appendChild(c);g.appendChild(t);miles.appendChild(g);
+      mileEls.push({g:g,c:c,t:t});
+    });
+    function placeVan(p){var L=len*p,a=route.getPointAtLength(L),b=route.getPointAtLength(Math.min(len,L+1));
+      var ang=Math.atan2(b.y-a.y,b.x-a.x)*180/Math.PI;van.setAttribute('transform','translate('+a.x+','+a.y+') rotate('+ang+')');
+      fill.style.strokeDashoffset=len*(1-p);}
+    placeVan(0);
+    return {placeVan:placeVan, mileEls:mileEls, len:len};
+  }
+
+  function wire(root){
+    var q=function(s){return root.querySelector(s);};
+    var els={mats:q('[data-mats]'),days:q('[data-days]'),note:q('[data-note]'),pc:q('[data-pc]'),pcwrap:q('[data-pcwrap]'),
+      method:q('[data-method]'),result:q('[data-result]'),zone:q('[data-zone]'),zoneTxt:q('[data-zonetxt]'),
+      matCost:q('[data-matcost]'),matSub:q('[data-matsub]'),delK:q('[data-delk]'),delCost:q('[data-delcost]'),
+      total:q('[data-total]'),cta:q('[data-cta]')};
+    var method=null, curT=0, raf=null;
+
+    var wraps=[].slice.call(stage.querySelectorAll('[data-route-wrap]'));
+    var routes=wraps.map(function(w){return buildRoute(w, w.hasAttribute('data-big'));});
+
+    function placeAll(p){routes.forEach(function(r){r.placeVan(p);});}
+    function lightMiles(reached){routes.forEach(function(r){r.mileEls.forEach(function(m,i){
+      m.g.classList.toggle('done',i<=reached);
+      m.g.classList.toggle('live',(i===reached&&reached<3)||(reached===3&&i===3));
+      m.c.setAttribute('fill',i<=reached?(i===3?'#B8624A':'#2B2620'):'#DAD4C8');
+    });});}
+    function lastLabel(txt){routes.forEach(function(r){r.mileEls[3].t.textContent=txt;});}
+
+    function driveVan(to){if(reduce){curT=to;placeAll(to);return;}
+      if(raf)cancelAnimationFrame(raf);var from=curT,start=null,dur=320+Math.abs(to-from)*1100;
+      function step(ts){if(start===null)start=ts;var k=Math.min(1,(ts-start)/dur),e=1-Math.pow(1-k,3),p=from+(to-from)*e;
+        placeAll(p);if(k<1)raf=requestAnimationFrame(step);else curT=to;}raf=requestAnimationFrame(step);}
+
+    var totalNodes=[].slice.call(stage.querySelectorAll('[data-total]'));
+    function setTotal(html){totalNodes.forEach(function(n){n.innerHTML=html;});}
+    function tweenTotal(to,prefix){var from=parseFloat(totalNodes[0].dataset.val||'0')||0;
+      if(to===null){totalNodes.forEach(function(n){n.dataset.val='0';});setTotal(prefix||'—');return;}
+      if(reduce){totalNodes.forEach(function(n){n.dataset.val=to;});setTotal((prefix||'')+gbp(to));return;}
+      var start=null;function f(ts){if(start===null)start=ts;var k=Math.min(1,(ts-start)/680),e=1-Math.pow(1-k,3),v=from+(to-from)*e;
+        setTotal((prefix||'')+gbp(v));if(k<1)requestAnimationFrame(f);else totalNodes.forEach(function(n){n.dataset.val=to;});}requestAnimationFrame(f);}
+
+    function render(){
+      var mats=parseInt(els.mats.value,10)||0, days=parseInt(els.days.value,10)||0;
+      if(els.note) els.note.textContent=(els.mats.value&&mats<MIN_MATS)?'Minimum hire is 10 mats.':((els.days.value&&days<BASE_DAYS)?'Minimum hire is 2 days.':'');
+      var s1=mats>=MIN_MATS&&days>=BASE_DAYS, s2=s1&&method!==null;
+      var z=method==='deliver'?classify(els.pc.value):null;
+      var s3=s2&&(method==='pickup'||(method==='deliver'&&z!==null));
+      var done=s1?(s2?(s3?3:2):1):0;
+      els.pcwrap.classList.toggle('show',method==='deliver');
+      var reached=method==='pickup'&&done>=2?3:done;
+      driveVan([0,0.36,0.68,1][reached]); lightMiles(reached);
+      lastLabel(method==='pickup'?'NW3 · collect':(z&&z.label!=='outside'?z.label.split(' · ')[1]:(z&&z.label==='outside'?'Outside London':'Your event')));
+      var arrived=(done===3)||(method==='pickup'&&done>=2);
+      els.result.classList.toggle('show',arrived);
+      if(!arrived){ if(!els.mats.value&&!els.days.value) setTotal('—'); return; }
+      var matCost=mats*MAT_RATE+mats*EXTRA_DAY*Math.max(0,days-BASE_DAYS);
+      els.matCost.textContent=gbp(matCost); if(els.matSub) els.matSub.textContent=mats+' mats · '+days+' days';
+      var totalNum=null,prefix='',delText='—',zoneShow=false,wa;
+      if(method==='pickup'){els.delK.innerHTML='Collection<small>Pick up from NW3 — free</small>';delText='Free';totalNum=matCost;wa='collect from NW3';}
+      else if(z.label==='outside'){els.delK.innerHTML='Delivery &amp; collection<small>Addison Lee — by quote</small>';delText='By quote';els.zoneTxt.textContent='Outside London';zoneShow=true;totalNum=null;wa='delivery to '+els.pc.value.toUpperCase()+' (outside London)';}
+      else {els.delK.innerHTML='Delivery &amp; collection<small>Addison Lee — low estimate</small>';delText='from '+gbp(z.round);els.zoneTxt.textContent=z.label;zoneShow=true;totalNum=matCost+z.round;prefix='<span class="pre">from</span>';wa='delivery to '+els.pc.value.toUpperCase()+' ('+z.label+')';}
+      els.delCost.textContent=delText; els.zone.style.display=zoneShow?'':'none';
+      if(totalNum===null){setTotal(gbp(matCost)+' <span class="pre">+ quote</span>');totalNodes.forEach(function(n){n.dataset.val='0';});}
+      else tweenTotal(totalNum,prefix);
+      var label=totalNum===null?('£'+matCost.toFixed(2)+' + delivery quote'):((prefix?'from ':'')+gbp(totalNum));
+      var msg='Hi Cristina! I\'d like to book '+mats+' mats for '+days+' days, '+wa+'. Estimated total '+label+'. Please confirm availability.';
+      els.cta.href='https://wa.me/447444611914?text='+encodeURIComponent(msg);
+    }
+
+    els.method.addEventListener('click',function(e){var b=e.target.closest('button[data-m]');if(!b)return;
+      method=b.getAttribute('data-m');els.method.setAttribute('data-m',method);
+      els.method.querySelectorAll('button').forEach(function(x){x.classList.toggle('on',x===b);});render();});
+    ['input','change'].forEach(function(ev){els.mats.addEventListener(ev,render);els.days.addEventListener(ev,render);els.pc.addEventListener(ev,render);});
+
+    function setMethod(m){method=m;els.method.setAttribute('data-m',m);els.method.querySelectorAll('button').forEach(function(x){x.classList.toggle('on',x.getAttribute('data-m')===m);});}
+    function prefill(){els.mats.value=20;els.days.value=2;setMethod('deliver');els.pc.value='EC2Y 8DS';}
+
+    return {render:render, prefill:prefill, reset:function(){curT=0;placeAll(0);totalNodes.forEach(function(n){n.dataset.val='0';});}};
+  }
+
+  var root=stage.querySelector('[data-est]');
+  var ctrl=wire(root);
+  ctrl.prefill();
+  ctrl.render();
+
+  // entrance: fire the word-up + card-in + drive-in once the stage scrolls into view
+  var vb=stage.querySelector('.vb'), played=false;
+  function play(){ if(played) return; played=true;
+    vb.classList.add('play'); ctrl.reset();
+    setTimeout(function(){ ctrl.render(); }, reduce?0:520);
+  }
+  if('IntersectionObserver' in window){
+    var io=new IntersectionObserver(function(es){ es.forEach(function(e){ if(e.isIntersecting){ play(); io.disconnect(); } }); },{threshold:.3});
+    io.observe(vb);
+  } else { play(); }
+})();
+</script>
+<script>
+  /* Pilates guest list — front-end only (no backend yet). Valid email → mockup confirmation page. */
+  (function () {
+    var form = document.querySelector('[data-guest-form]');
+    if (!form) return;
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var field = form.querySelector('input[type=email]');
+      var msg = form.querySelector('[data-guest-msg]');
+      var email = (field && field.value || '').trim();
+      var valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+      if (!valid) { if (msg) { msg.textContent = 'Please enter a valid email address.'; msg.style.color = '#B8624A'; } if (field) field.focus(); return; }
+      window.location.href = 'guest-list.html';
+    });
+  })();
+</script>
 <script src="vendor/three.min.js"></script>
 <script src="js/mat-core.js"></script>
 <script src="js/home.js"></script>

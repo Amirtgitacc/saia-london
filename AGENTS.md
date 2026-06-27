@@ -69,8 +69,10 @@ they can never disagree. **Change a fact once, here, and both brains update.** D
 - Mats are **HIRE ONLY — never "buy"/"for sale"**. £8.50/mat, 2-day hire, min 10.
 - Voice: warm, female-led, unpretentious, British English. English-only project.
 - Contact = WhatsApp Cristina (founder + Pilates instructor) on 07444 611 914; NW3 area.
-- Palette: cream `#F5F1E8`, ink `#2B2620`, terracotta accent `#B8624A`. Cormorant Garamond +
-  Hanken Grotesk. Don't remove existing UI elements when making changes.
+- Palette: cream `#F5F1E8`, ink `#2B2620`, terracotta accent `#B8624A`.
+- Fonts are per-page (not yet unified): `home.html`/`story.html` use **Playfair Display + Inter**;
+  `index.html`/`hero.html` still on **Cormorant Garamond + Hanken Grotesk**.
+- Don't remove existing UI elements when making changes.
 
 ## Model
 

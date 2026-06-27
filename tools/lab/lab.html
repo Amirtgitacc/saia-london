@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SAÏA — Cristina-on-mat lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500&family=Hanken+Grotesk:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root { --cream:#F5F1E8; --ink:#2B2620; --terra:#B8624A; --line:#d8cfbe; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--cream); color:var(--ink); font-family:'Hanken Grotesk',system-ui,sans-serif; line-height:1.5; }
+  header { padding:48px 6vw 8px; }
+  .kicker { letter-spacing:.18em; text-transform:uppercase; font-size:12px; color:var(--terra); }
+  h1 { font-family:'Cormorant Garamond',serif; font-weight:500; font-size:44px; margin:.1em 0 .2em; }
+  h2 { font-family:'Cormorant Garamond',serif; font-weight:500; font-size:30px; margin:0 0 4px; }
+  p.lede { max-width:780px; color:#5b5346; }
+  section { padding:24px 6vw 8px; }
+  .note { font-size:14px; color:#6b6356; max-width:860px; margin:2px 0 18px; }
+  .grid { display:grid; gap:20px; }
+  .three { grid-template-columns:repeat(3,1fr); }
+  .two { grid-template-columns:1fr 1fr; }
+  figure { margin:0; }
+  .card { background:#fff; border:1px solid var(--line); border-radius:10px; overflow:hidden; box-shadow:0 12px 26px rgba(43,38,32,.06); }
+  .card img { display:block; width:100%; height:auto; background:var(--cream); }
+  figcaption { padding:9px 14px; font-size:13px; color:#5b5346; display:flex; justify-content:space-between; align-items:center; }
+  .num { font-family:'Cormorant Garamond',serif; font-size:18px; color:var(--terra); }
+  .tag { font-size:11px; letter-spacing:.06em; text-transform:uppercase; padding:3px 8px; border-radius:99px; }
+  .bad { background:#f6e2dc; color:#9a4631; } .good { background:#e3ecdd; color:#3f6b3a; }
+  .divider { height:1px; background:var(--line); margin:34px 6vw 0; }
+  .legend { font-size:13px; color:#6b6356; padding:14px 6vw 60px; max-width:920px; }
+  @media (max-width:980px){ .three{ grid-template-columns:1fr 1fr; } }
+  @media (max-width:640px){ .three,.two{ grid-template-columns:1fr; } h1{font-size:34px;} }
+</style>
+</head>
+<body>
+<header>
+  <div class="kicker">SAÏA · Design lab</div>
+  <h1>The 15 poses — perspective-matched, on the mat</h1>
+  <p class="lede">All 15 generated to the gentle "C" mat angle, drawn <em>in</em> the mat's perspective so Cristina
+  sits on it. Source frames (mats still baked in — they register to one rect at the bake step). Review for
+  perspective, grounding, and identity consistency. The motion runs 1 → 15.</p>
+</header>
+
+<section>
+  <h2 style="color:var(--terra)">★ THE FULL FLOW (70s) — this is the new hero</h2>
+  <p class="note">All 14 transitions stitched into one continuous watercolour video: Cristina flows through every pose on one stable mat. On the live site this will be <strong>scrubbed by scroll</strong> (scroll down = she flows forward, scroll up = reverse). Here it just plays on loop. This replaces the old cross-dissolved stills entirely.</p>
+  <video src="/assets/flow.mp4" autoplay loop muted playsinline controls style="width:100%;max-width:860px;border:1px solid var(--line);border-radius:10px;display:block;box-shadow:0 16px 36px rgba(43,38,32,.10)"></video>
+</section>
+
+<div class="divider"></div>
+
+<section>
+  <h2>Motion test — the first proof</h2>
+  <p class="note">Seedance 2.0 interpolating <strong>pose 3 (stand) → pose 4 (arms rise)</strong>: it generates the real motion <em>between</em> two of our approved stills. Watch — the watercolour style and her identity hold, the mat stays dead still, and she actually <em>moves</em>. This is the "motion picture" approach: 14 such clips (pose→pose) stitched into one continuous flow, scroll-scrubbed. Loops below.</p>
+  <video src="assets/test-flow.mp4" autoplay loop muted playsinline style="width:100%;max-width:760px;border:1px solid var(--line);border-radius:10px;display:block;box-shadow:0 14px 30px rgba(43,38,32,.08)"></video>
+  <p class="note" style="margin-top:14px">Verdict to confirm: if this holds up, we generate the 14 transitions, stitch them, and scrub the flow on scroll — one stable mat, true motion, no fades.</p>
+</section>
+
+<div class="divider"></div>
+
+<section>
+  <h2>The 15 keyframes</h2>
+  <p class="note">Walk in → step on → stand → arms rise → reach up → heart open → hinge → fold → dog → lunge → lower → seated → twist → reach → hands to heart.</p>
+  <div class="grid three">
+    <figure class="card"><img src="assets/onmat-01.png" alt="walk in"><figcaption><span><span class="num">01</span> walk in</span></figcaption></figure>
+    <figure class="card"><img src="assets/onmat-02.png" alt="step on"><figcaption><span><span class="num">02</span> step on</span></figcaption></figure>
+    <figure class="card"><img src="assets/onmat-03.png" alt="stand"><figcaption><span><span class="num">03</span> stand</span> <span class="tag good">test</span></figcaption></figure>
+    <figure class="card"><img src="assets/onmat-04.png" alt="arms rise"><figcaption><span><span class="num">04</span> arms rise</span></figcaption></figure>
+    <figure class="card"><img src="assets/onmat-05.png" alt="reach up"><figcaption><span><span class="num">05</span> reach up</span></figcaption></figure>
+    <figure class="card"><img src="assets/onmat-06.png" alt="heart open"><figcaption><span><span class="num">06</span> heart open</span></figcaption></figure>
+    <figure class="card"><img src="assets/onmat-07.png" alt="hinge"><figcaption><span><span class="num">07</span> hinge</span></figcaption></figure>
+    <figure class="card"><img src="assets/onmat-08.png" alt="forward fold"><figcaption><span><span class="num">08</span> forward fold</span></figcaption></figure>
+    <figure class="card"><img src="assets/onmat-09.png" alt="downward dog"><figcaption><span><span class="num">09</span> downward dog</span> <span class="tag good">test</span></figcaption></figure>
+    <figure class="card"><img src="assets/onmat-10.png" alt="low lunge"><figcaption><span><span class="num">10</span> low lunge</span></figcaption></figure>
+    <figure class="card"><img src="assets/onmat-11.png" alt="lower to seat"><figcaption><span><span class="num">11</span> lower to seat</span></figcaption></figure>
+    <figure class="card"><img src="assets/onmat-12.png" alt="seated cross"><figcaption><span><span class="num">12</span> seated cross</span></figcaption></figure>
+    <figure class="card"><img src="assets/onmat-13.png" alt="seated twist"><figcaption><span><span class="num">13</span> seated twist</span></figcaption></figure>
+    <figure class="card"><img src="assets/onmat-14.png" alt="seated reach"><figcaption><span><span class="num">14</span> seated reach</span></figcaption></figure>
+    <figure class="card"><img src="assets/onmat-15.png" alt="hands to heart"><figcaption><span><span class="num">15</span> hands to heart</span></figcaption></figure>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<section>
+  <h2>Reminder — before → after</h2>
+  <p class="note">Why this works now: flat figure on a steep mat (left) vs perspective-matched on the gentle mat (right).</p>
+  <div class="grid two">
+    <figure class="card"><img src="assets/before-stand.png" alt="before"><figcaption>current live (broken) <span class="tag bad">before</span></figcaption></figure>
+    <figure class="card"><img src="assets/onmat-03.png" alt="after"><figcaption>perspective-matched <span class="tag good">after</span></figcaption></figure>
+  </div>
+</section>
+
+<p class="legend">
+  What to look for · (1) <strong>perspective</strong> — does she sit ON the mat in each, not floating? (2) <strong>grounding</strong> — feet/hands/seat believably on the surface? (3) <strong>identity</strong> — consistent face/hair/outfit across all 15? (4) any <strong>off</strong> poses to regenerate. Flag any numbers and I'll redo just those. Next step after your OK: bake → register all 15 to one mat rect → wire into the live handoff.
+</p>
+</body>
+</html>

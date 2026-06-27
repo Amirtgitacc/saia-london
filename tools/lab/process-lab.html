@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SAÏA · Process animation lab — “Hiring is effortless”</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{ --cream:#F5F1E8; --ink:#2B2620; --muted:#6B6358; --terra:#B8624A; --line:#DAD4C8;
+         --display:'Playfair Display',serif; --body:'Inter',sans-serif; }
+  *{box-sizing:border-box;}
+  body{margin:0;background:#E7E1D4;color:var(--ink);font-family:var(--body);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;}
+
+  .lab-head{padding:30px clamp(20px,5vw,64px) 8px;}
+  .lab-head .kick{font-size:11px;letter-spacing:.34em;text-transform:uppercase;color:var(--terra);}
+  .lab-head h1{font-family:var(--display);font-weight:500;font-size:clamp(26px,3.6vw,42px);margin:8px 0 6px;line-height:1;}
+  .lab-head p{max-width:720px;font-size:14px;line-height:1.7;color:var(--muted);margin:0;}
+  .lab-bar{position:sticky;top:0;z-index:20;display:flex;gap:12px;align-items:center;padding:13px clamp(20px,5vw,64px);
+           background:rgba(231,225,212,.9);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);}
+  .lab-bar .note{font-size:12px;color:var(--muted);margin-right:auto;}
+  button.act{font-family:var(--body);font-size:11px;letter-spacing:.14em;text-transform:uppercase;background:var(--ink);color:var(--cream);border:none;padding:11px 20px;border-radius:2px;cursor:pointer;}
+  button.act:focus-visible,.replay:focus-visible{outline:2px solid var(--terra);outline-offset:2px;}
+
+  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:24px;padding:24px clamp(20px,5vw,64px) 80px;}
+  @media (max-width:960px){.grid{grid-template-columns:1fr;}}
+
+  .cell{background:var(--cream);border:1px solid var(--line);border-radius:8px;overflow:hidden;box-shadow:0 16px 36px rgba(43,38,32,.09);}
+  .cell .meta{display:flex;align-items:baseline;gap:10px;padding:13px 17px 11px;border-bottom:1px solid var(--line);}
+  .cell .meta .tag{font-family:var(--display);font-size:20px;color:var(--terra);line-height:1;}
+  .cell .meta .name{font-size:12px;letter-spacing:.14em;text-transform:uppercase;}
+  .cell .meta .desc{font-size:11.5px;color:var(--muted);margin-left:auto;text-align:right;max-width:52%;line-height:1.4;}
+  .ctrl{display:flex;align-items:center;gap:12px;padding:11px 16px;background:#FBF9F4;border-top:1px solid var(--line);}
+  .replay{font-family:var(--body);font-size:10px;letter-spacing:.16em;text-transform:uppercase;background:var(--ink);color:#fff;border:none;padding:8px 16px;border-radius:2px;cursor:pointer;}
+  .scrub{flex:1;accent-color:var(--terra);}
+
+  .stage{position:relative;aspect-ratio:16/10;overflow:hidden;background:radial-gradient(125% 120% at 30% 36%, #FAF7F0 0%, #F2ECE0 64%, #EAE3D5 100%);}
+
+  /* ---- the vertical step list (shared) ---- */
+  .proc{position:absolute;left:8%;top:9%;right:8%;}
+  .eyebrow{font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:var(--terra);}
+  .display{font-family:var(--display);font-weight:500;color:var(--ink);line-height:1;font-size:clamp(19px,2.8vw,28px);margin:8px 0 0;}
+  .intro{font-size:11px;line-height:1.5;color:var(--muted);max-width:330px;margin:8px 0 0;}
+
+  .steps{position:relative;margin-top:14px;}
+  .steps .track{position:absolute;left:16px;top:16px;bottom:16px;width:2px;background:var(--line);border-radius:2px;}
+  .steps .fill{position:absolute;left:16px;top:16px;width:2px;height:0;background:var(--terra);border-radius:2px;}
+  .marker{position:absolute;left:17px;top:16px;width:30px;height:30px;transform:translate(-50%,-50%);border-radius:50%;
+          background:var(--terra);color:#fff;display:grid;place-items:center;box-shadow:0 6px 14px rgba(184,98,74,.4);z-index:3;}
+  .marker svg{width:15px;height:15px;}
+  .step{position:relative;display:flex;gap:14px;align-items:flex-start;padding:6px 0;opacity:.4;transition:opacity .4s ease;}
+  .step.done,.step.active{opacity:1;}
+  .step.active{transform:translateX(2px);}
+  .dot{position:relative;z-index:1;flex:0 0 34px;height:34px;border-radius:50%;background:var(--cream);border:1px solid var(--line);
+       display:grid;place-items:center;font-family:var(--display);font-size:14px;color:var(--muted);transition:all .35s ease;}
+  .step.done .dot,.step.active .dot{border-color:var(--terra);color:var(--terra);}
+  .dot .ck{display:none;}
+  .txt b{font-family:var(--display);font-weight:500;font-size:13.5px;color:var(--ink);display:block;line-height:1.1;}
+  .txt span{font-size:10.5px;color:var(--muted);}
+
+  /* ===== V2 — fill & tick: completed dots fill solid + check ===== */
+  .v2 .step.done .dot{background:var(--terra);color:#fff;border-color:var(--terra);}
+  .v2 .step.done .num{display:none;}
+  .v2 .step.done .dot .ck{display:block;}
+  .v2 .dot .ck{font-size:14px;line-height:1;}
+  .v2 .step.active .dot{box-shadow:0 0 0 4px rgba(184,98,74,.16);}
+
+  /* ===== V3 — van on a road (motif along the bottom) ===== */
+  .v3 .proc{top:8%;bottom:7%;}   /* full-height so the road anchors to the stage bottom */
+  .v3 .steps{max-width:62%;}
+  .v3 .road{position:absolute;left:6%;right:6%;bottom:10%;height:54px;}
+  .v3 .road .line{position:absolute;left:0;right:0;top:34px;height:2px;
+                  background:repeating-linear-gradient(90deg,var(--line) 0 8px,transparent 8px 16px);}
+  .v3 .road .prog{position:absolute;left:0;top:34px;height:2px;width:0;background:var(--terra);}
+  .v3 .pin{position:absolute;top:34px;width:9px;height:9px;border-radius:50%;background:var(--cream);border:2px solid var(--line);transform:translate(-50%,-50%);transition:all .3s;}
+  .v3 .pin.on{border-color:var(--terra);background:var(--terra);}
+  .v3 .pin b{position:absolute;left:50%;top:14px;transform:translateX(-50%);white-space:nowrap;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);}
+  .v3 .pin.on b{color:var(--terra);}
+  .v3 .van{position:absolute;top:34px;left:0;transform:translate(-50%,-50%);color:var(--terra);z-index:2;transition:left .08s linear;}
+  .v3 .van svg{width:30px;height:30px;display:block;filter:drop-shadow(0 4px 6px rgba(43,38,32,.2));}
+
+  /* ===== V4 — arrows light up sequentially ===== */
+  .v4 .steps .track,.v4 .steps .fill{display:none;}
+  .v4 .step{padding:5px 0;}
+  .v4 .arrow{position:relative;height:16px;margin-left:16px;color:var(--line);transition:color .35s,transform .35s;}
+  .v4 .arrow svg{width:14px;height:14px;display:block;}
+  .v4 .arrow.on{color:var(--terra);animation:bob .9s ease-in-out infinite;}
+  @keyframes bob{0%,100%{transform:translateY(0);}50%{transform:translateY(3px);}}
+</style>
+</head>
+<body>
+
+<div class="lab-head">
+  <div class="kick">Process animation lab · Section 3</div>
+  <h1>Make the four steps feel like a journey</h1>
+  <p>Same vertical list you picked — now with motion that shows the process happening one by one: order → deliver → practise → collect. On the live page this is driven by scroll; here, hit <strong>Play</strong> or drag the <strong>scrubber</strong> to move through it.</p>
+</div>
+
+<div class="lab-bar">
+  <span class="note">Pick the animation that best tells the story. We can also blend (e.g. courier marker + tick).</span>
+  <button class="act" id="playAll">Play all</button>
+</div>
+
+<div class="grid" id="grid">
+
+  <!-- V1 — courier marker that morphs -->
+  <section class="cell v1">
+    <div class="meta"><span class="tag">1</span><span class="name">Courier marker</span><span class="desc">A token travels the rail, morphing envelope → van → mat → parcel.</span></div>
+    <div class="stage"><div class="proc">
+      <div class="eyebrow">Mat hire</div>
+      <h2 class="display">Hiring is effortless.</h2>
+      <div class="steps">
+        <span class="track"></span><span class="fill"></span><span class="marker"></span>
+        <div class="step"><span class="dot"><span class="num">01</span></span><div class="txt"><b>Tell us your event</b><span>Date, location, how many mats.</span></div></div>
+        <div class="step"><span class="dot"><span class="num">02</span></span><div class="txt"><b>We deliver early</b><span>The day before, by London courier.</span></div></div>
+        <div class="step"><span class="dot"><span class="num">03</span></span><div class="txt"><b>You practise</b><span>A clean, grippy mat per guest.</span></div></div>
+        <div class="step"><span class="dot"><span class="num">04</span></span><div class="txt"><b>We collect after</b><span>We pick it all up the day after.</span></div></div>
+      </div>
+    </div></div>
+    <div class="ctrl"><button class="replay">▶ Play</button><input type="range" class="scrub" min="0" max="1000" value="0"></div>
+  </section>
+
+  <!-- V2 — fill & tick -->
+  <section class="cell v2">
+    <div class="meta"><span class="tag">2</span><span class="name">Fill &amp; tick</span><span class="desc">The line draws down; each finished step flips its number to a check.</span></div>
+    <div class="stage"><div class="proc">
+      <div class="eyebrow">Mat hire</div>
+      <h2 class="display">Hiring is effortless.</h2>
+      <div class="steps">
+        <span class="track"></span><span class="fill"></span>
+        <div class="step"><span class="dot"><span class="num">01</span><span class="ck">✓</span></span><div class="txt"><b>Tell us your event</b><span>Date, location, how many mats.</span></div></div>
+        <div class="step"><span class="dot"><span class="num">02</span><span class="ck">✓</span></span><div class="txt"><b>We deliver early</b><span>The day before, by London courier.</span></div></div>
+        <div class="step"><span class="dot"><span class="num">03</span><span class="ck">✓</span></span><div class="txt"><b>You practise</b><span>A clean, grippy mat per guest.</span></div></div>
+        <div class="step"><span class="dot"><span class="num">04</span><span class="ck">✓</span></span><div class="txt"><b>We collect after</b><span>We pick it all up the day after.</span></div></div>
+      </div>
+    </div></div>
+    <div class="ctrl"><button class="replay">▶ Play</button><input type="range" class="scrub" min="0" max="1000" value="0"></div>
+  </section>
+
+  <!-- V3 — van on a road -->
+  <section class="cell v3">
+    <div class="meta"><span class="tag">3</span><span class="name">Van on a road</span><span class="desc">A little van drives a dotted road past 4 stops. Playful &amp; literal.</span></div>
+    <div class="stage"><div class="proc">
+      <div class="eyebrow">Mat hire</div>
+      <h2 class="display">Hiring is effortless.</h2>
+      <div class="steps">
+        <span class="track"></span><span class="fill"></span>
+        <div class="step"><span class="dot"><span class="num">01</span></span><div class="txt"><b>Tell us your event</b><span>Date, location, how many.</span></div></div>
+        <div class="step"><span class="dot"><span class="num">02</span></span><div class="txt"><b>We deliver early</b><span>The day before.</span></div></div>
+        <div class="step"><span class="dot"><span class="num">03</span></span><div class="txt"><b>You practise</b><span>A grippy mat per guest.</span></div></div>
+        <div class="step"><span class="dot"><span class="num">04</span></span><div class="txt"><b>We collect after</b><span>The day after.</span></div></div>
+      </div>
+      <div class="road">
+        <span class="line"></span><span class="prog"></span>
+        <span class="pin" style="left:4%"><b>Order</b></span>
+        <span class="pin" style="left:36%"><b>Deliver</b></span>
+        <span class="pin" style="left:68%"><b>Practise</b></span>
+        <span class="pin" style="left:96%"><b>Collect</b></span>
+        <span class="van"></span>
+      </div>
+    </div></div>
+    <div class="ctrl"><button class="replay">▶ Play</button><input type="range" class="scrub" min="0" max="1000" value="0"></div>
+  </section>
+
+  <!-- V4 — arrows -->
+  <section class="cell v4">
+    <div class="meta"><span class="tag">4</span><span class="name">Arrows</span><span class="desc">Down-arrows light and bob between steps as each is reached. Minimal.</span></div>
+    <div class="stage"><div class="proc">
+      <div class="eyebrow">Mat hire</div>
+      <h2 class="display">Hiring is effortless.</h2>
+      <div class="steps">
+        <div class="step"><span class="dot"><span class="num">01</span></span><div class="txt"><b>Tell us your event</b><span>Date, location, how many mats.</span></div></div>
+        <span class="arrow"></span>
+        <div class="step"><span class="dot"><span class="num">02</span></span><div class="txt"><b>We deliver early</b><span>The day before, by London courier.</span></div></div>
+        <span class="arrow"></span>
+        <div class="step"><span class="dot"><span class="num">03</span></span><div class="txt"><b>You practise</b><span>A clean, grippy mat per guest.</span></div></div>
+        <span class="arrow"></span>
+        <div class="step"><span class="dot"><span class="num">04</span></span><div class="txt"><b>We collect after</b><span>We pick it all up the day after.</span></div></div>
+      </div>
+    </div></div>
+    <div class="ctrl"><button class="replay">▶ Play</button><input type="range" class="scrub" min="0" max="1000" value="0"></div>
+  </section>
+
+</div>
+
+<script>
+  // inline SVG icons (stroke = currentColor)
+  var S = function(p){ return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+p+'</svg>'; };
+  var ENVELOPE = S('<rect x="3" y="6" width="18" height="12" rx="1.5"/><path d="M3.5 7l8.5 6 8.5-6"/>');
+  var VAN      = S('<path d="M2 7.5h11v7H2z"/><path d="M13 10h4l3 3v1.5h-7z"/><circle cx="7" cy="16.5" r="1.6"/><circle cx="17" cy="16.5" r="1.6"/>');
+  var PERSON   = S('<circle cx="12" cy="6.5" r="2.3"/><path d="M12 10c-3.2 0-5 2.6-5 6h10c0-3.4-1.8-6-5-6z"/>');
+  var PARCEL   = S('<path d="M4 8l8-4 8 4-8 4-8-4z"/><path d="M4 8v8l8 4 8-4V8"/><path d="M9.3 13.4l2 2 3.6-3.6"/>');
+  var COURIER  = [ENVELOPE, VAN, PERSON, PARCEL];
+  var ARROW    = S('<path d="M12 4v15"/><path d="M6.5 13.5L12 19l5.5-5.5"/>');
+
+  // seed the markers / vans / arrows
+  document.querySelectorAll('.v1 .marker').forEach(function(m){ m.innerHTML = COURIER[0]; m.dataset.idx = 0; });
+  document.querySelectorAll('.v3 .van').forEach(function(v){ v.innerHTML = VAN; });
+  document.querySelectorAll('.v4 .arrow').forEach(function(a){ a.innerHTML = ARROW; });
+
+  function setProgress(cell, p){
+    var steps = cell.querySelectorAll('.step'), n = steps.length;
+    steps.forEach(function(s,i){
+      s.classList.toggle('done', p >= (i+1)/n - 0.001);
+      s.classList.toggle('active', p < (i+1)/n - 0.001 && p >= i/n - 0.001);
+    });
+    var stepsEl = cell.querySelector('.steps');
+    var fill = cell.querySelector('.fill'), marker = cell.querySelector('.marker');
+    if(stepsEl && (fill || marker)){
+      var h = stepsEl.clientHeight, top = 16, span = h - 32;
+      if(fill) fill.style.height = Math.max(0, p*span) + 'px';
+      if(marker){
+        marker.style.top = (top + p*span) + 'px';
+        var idx = Math.min(n-1, Math.floor(p*n + 0.0001));
+        if(marker.dataset.idx != idx){ marker.dataset.idx = idx; marker.innerHTML = COURIER[idx]; }
+      }
+    }
+    // V3 van + pins
+    var van = cell.querySelector('.van'), prog = cell.querySelector('.prog');
+    if(van){
+      van.style.left = (4 + p*92) + '%';
+      if(prog) prog.style.width = (p*92) + '%';
+      cell.querySelectorAll('.pin').forEach(function(pn,i){ pn.classList.toggle('on', p >= i/(n-1) - 0.02); });
+    }
+    // V4 arrows
+    cell.querySelectorAll('.arrow').forEach(function(ar,i){ ar.classList.toggle('on', p >= (i+1)/n - 0.001 && p < (i+2)/n + 0.06); });
+  }
+
+  function animate(cell, dur){
+    var slider = cell.querySelector('.scrub');
+    var start = null;
+    function frame(t){
+      if(start===null) start = t;
+      var k = Math.min(1, (t - start) / dur);
+      // ease for a touch of life
+      var e = k<0.5 ? 2*k*k : 1-Math.pow(-2*k+2,2)/2;
+      setProgress(cell, e);
+      if(slider) slider.value = Math.round(e*1000);
+      if(k < 1) requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  }
+
+  document.querySelectorAll('.cell').forEach(function(cell){
+    setProgress(cell, 0);
+    cell.querySelector('.replay').addEventListener('click', function(){ animate(cell, 3200); });
+    cell.querySelector('.scrub').addEventListener('input', function(){ setProgress(cell, this.value/1000); });
+  });
+  document.getElementById('playAll').addEventListener('click', function(){
+    document.querySelectorAll('.cell').forEach(function(cell){ animate(cell, 3200); });
+  });
+
+  // gentle auto-play on load, staggered
+  window.addEventListener('load', function(){
+    document.querySelectorAll('.cell').forEach(function(cell,i){ setTimeout(function(){ animate(cell, 3200); }, 350 + i*260); });
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SAÏA · Content-on-mat lab — Round 2: reveal animation (layout D)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cream:#F5F1E8; --ink:#2B2620; --muted:#6B6358; --terra:#B8624A; --line:#DAD4C8;
+    --frame:'Libre Baskerville',Georgia,serif; --display:'Cormorant Garamond',serif;
+    --spd:1; /* slow-mo multiplier */
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:#E7E1D4;color:var(--ink);font-family:var(--frame);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;}
+
+  .lab-head{padding:34px clamp(20px,5vw,64px) 8px;}
+  .lab-head .kick{font-size:11px;letter-spacing:.34em;text-transform:uppercase;color:var(--terra);}
+  .lab-head h1{font-family:var(--display);font-weight:500;font-size:clamp(28px,4vw,46px);margin:10px 0 6px;line-height:1;}
+  .lab-head p{max-width:700px;font-size:14px;line-height:1.7;color:var(--muted);margin:0;}
+  .lab-bar{position:sticky;top:0;z-index:20;display:flex;flex-wrap:wrap;gap:12px;align-items:center;
+           padding:14px clamp(20px,5vw,64px);background:rgba(231,225,212,.86);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);}
+  .lab-bar .note{font-size:12px;color:var(--muted);margin-right:auto;}
+  button.act{font-family:var(--frame);font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+             background:var(--ink);color:var(--cream);border:none;padding:11px 20px;border-radius:2px;cursor:pointer;}
+  button.act.ghost{background:transparent;color:var(--ink);border:1px solid var(--ink);}
+  button.act.on{background:var(--terra);color:#fff;}
+  button.act:focus-visible,.cell .replay:focus-visible{outline:2px solid var(--terra);outline-offset:2px;}
+
+  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:26px;padding:26px clamp(20px,5vw,64px) 80px;}
+  @media (max-width:900px){.grid{grid-template-columns:1fr;}}
+
+  .cell{background:var(--cream);border:1px solid var(--line);border-radius:8px;overflow:hidden;box-shadow:0 18px 40px rgba(43,38,32,.10);}
+  .cell .meta{display:flex;align-items:baseline;gap:12px;padding:14px 18px 12px;border-bottom:1px solid var(--line);}
+  .cell .meta .tag{font-family:var(--display);font-size:22px;color:var(--terra);line-height:1;}
+  .cell .meta .name{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink);}
+  .cell .meta .desc{font-size:12px;color:var(--muted);margin-left:auto;text-align:right;max-width:52%;line-height:1.4;}
+  .cell .replaywrap{display:flex;justify-content:flex-end;padding:10px 14px;background:#FBF9F4;border-top:1px solid var(--line);}
+  .cell .replay{font-family:var(--frame);font-size:10px;letter-spacing:.18em;text-transform:uppercase;
+                background:transparent;color:var(--muted);border:1px solid var(--line);padding:8px 14px;border-radius:2px;cursor:pointer;}
+  .cell .replay:hover{color:var(--ink);border-color:var(--ink);}
+
+  /* stage — identical to live: figure right, content left (layout D) */
+  .stage{position:relative;aspect-ratio:16/10;overflow:hidden;background:
+          radial-gradient(120% 120% at 30% 40%, #FAF7F0 0%, #F2ECE0 60%, #EAE3D5 100%);}
+  .stage::after{content:"";position:absolute;inset:0;pointer-events:none;
+                background:radial-gradient(60% 90% at 22% 50%, rgba(250,247,240,.6) 0%, rgba(250,247,240,0) 60%);}
+  .stage .fig{position:absolute;right:-4%;top:50%;transform:translateY(-50%);height:96%;width:auto;
+              filter:drop-shadow(0 26px 30px rgba(43,38,32,.16));pointer-events:none;user-select:none;}
+  .stage .matshadow{position:absolute;right:8%;bottom:7%;width:46%;height:5%;border-radius:50%;
+                    background:radial-gradient(closest-side, rgba(43,38,32,.18), transparent);}
+
+  /* layout D panel — narrow left text, terracotta rule, NO scrim */
+  .panel{position:absolute;left:6%;top:50%;transform:translateY(-50%);z-index:3;
+         width:40%;max-width:340px;padding-left:22px;}
+  .panel .rule{position:absolute;left:0;top:2px;bottom:2px;width:2px;background:var(--terra);transform-origin:top;}
+  .panel .eyebrow{font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:var(--terra);margin-bottom:12px;}
+  .panel h2{font-family:var(--display);font-weight:500;line-height:1.02;margin:0 0 12px;color:var(--ink);font-size:30px;}
+  .panel p{font-size:13px;line-height:1.65;color:var(--muted);margin:0;}
+  .panel .cta{display:inline-block;margin-top:16px;font-family:var(--frame);font-size:10px;letter-spacing:.18em;
+              text-transform:uppercase;background:var(--ink);color:var(--cream);padding:11px 22px;border-radius:2px;text-decoration:none;}
+
+  /* animate only the text children, never the figure. Panel centering stays static. */
+  .panel .anim{opacity:0;will-change:transform,opacity,filter,clip-path;}
+  /* used to snap back to the hidden state instantly so a replay actually re-animates */
+  .stage.noanim .anim,.stage.noanim .rule{transition:none !important;}
+
+  /* ===== 1 — line-by-line rise ===== */
+  .a1 .panel .anim{transform:translateY(16px);transition:opacity calc(var(--spd)*.55s) ease,transform calc(var(--spd)*.6s) cubic-bezier(.2,.7,.2,1);}
+  .a1 .panel .rule{transform:scaleY(0);transition:transform calc(var(--spd)*.5s) ease;}
+  .a1 .stage.show .panel .anim{opacity:1;transform:translateY(0);}
+  .a1 .stage.show .panel .rule{transform:scaleY(1);}
+  .a1 .stage.show .anim:nth-child(2){transition-delay:calc(var(--spd)*.05s);}
+  .a1 .stage.show .anim:nth-child(3){transition-delay:calc(var(--spd)*.14s);}
+  .a1 .stage.show .anim:nth-child(4){transition-delay:calc(var(--spd)*.24s);}
+  .a1 .stage.show .anim:nth-child(5){transition-delay:calc(var(--spd)*.34s);}
+
+  /* ===== 2 — mask wipe up ===== */
+  .a2 .panel .anim{clip-path:inset(0 0 100% 0);transform:translateY(10px);
+                   transition:clip-path calc(var(--spd)*.6s) cubic-bezier(.3,.8,.2,1),transform calc(var(--spd)*.6s) ease,opacity calc(var(--spd)*.3s) ease;}
+  .a2 .panel .rule{transform:scaleY(0);transition:transform calc(var(--spd)*.45s) ease;}
+  .a2 .stage.show .panel .anim{opacity:1;clip-path:inset(0 0 0% 0);transform:translateY(0);}
+  .a2 .stage.show .panel .rule{transform:scaleY(1);}
+  .a2 .stage.show .anim:nth-child(2){transition-delay:calc(var(--spd)*.08s);}
+  .a2 .stage.show .anim:nth-child(3){transition-delay:calc(var(--spd)*.18s);}
+  .a2 .stage.show .anim:nth-child(4){transition-delay:calc(var(--spd)*.30s);}
+  .a2 .stage.show .anim:nth-child(5){transition-delay:calc(var(--spd)*.42s);}
+
+  /* ===== 3 — blur settle (watercolour) ===== */
+  .a3 .panel .anim{filter:blur(12px);transform:translateY(10px) scale(1.03);
+                   transition:opacity calc(var(--spd)*.8s) ease,filter calc(var(--spd)*.85s) ease,transform calc(var(--spd)*.85s) ease;}
+  .a3 .panel .rule{opacity:0;transition:opacity calc(var(--spd)*.7s) ease;}
+  .a3 .stage.show .panel .anim{opacity:1;filter:blur(0);transform:translateY(0) scale(1);}
+  .a3 .stage.show .panel .rule{opacity:1;}
+  .a3 .stage.show .anim:nth-child(3){transition-delay:calc(var(--spd)*.10s);}
+  .a3 .stage.show .anim:nth-child(4){transition-delay:calc(var(--spd)*.18s);}
+  .a3 .stage.show .anim:nth-child(5){transition-delay:calc(var(--spd)*.26s);}
+
+  /* ===== 4 — rule draws, then text slides in from it ===== */
+  .a4 .panel .anim{transform:translateX(-12px);transition:opacity calc(var(--spd)*.5s) ease,transform calc(var(--spd)*.55s) cubic-bezier(.2,.7,.2,1);}
+  .a4 .panel .rule{transform:scaleY(0);transition:transform calc(var(--spd)*.4s) cubic-bezier(.4,0,.2,1);}
+  .a4 .stage.show .panel .rule{transform:scaleY(1);}
+  .a4 .stage.show .panel .anim{opacity:1;transform:translateX(0);}
+  .a4 .stage.show .anim:nth-child(2){transition-delay:calc(var(--spd)*.34s);}
+  .a4 .stage.show .anim:nth-child(3){transition-delay:calc(var(--spd)*.44s);}
+  .a4 .stage.show .anim:nth-child(4){transition-delay:calc(var(--spd)*.54s);}
+  .a4 .stage.show .anim:nth-child(5){transition-delay:calc(var(--spd)*.64s);}
+</style>
+</head>
+<body>
+
+<div class="lab-head">
+  <div class="kick">Content-on-mat lab · Round 2 of 3 · layout D (margin rail)</div>
+  <h1>How should it arrive?</h1>
+  <p>Your chosen placement — the scrim-free margin rail — with four different reveal animations. Text only ever moves; the figure/video stays untouched. Hit <em>Replay</em> on a cell, <em>Replay all</em> up top, or turn on <em>Slow motion</em> to study the motion frame-by-frame.</p>
+</div>
+
+<div class="lab-bar">
+  <span class="note">Pick the reveal that feels most SAÏA. Round 3 = per-section polish on your winner.</span>
+  <button class="act ghost" id="slowmo">Slow motion: off</button>
+  <button class="act" id="replayAll">Replay all</button>
+</div>
+
+<div class="grid" id="grid">
+
+  <section class="cell a1">
+    <div class="meta"><span class="tag">1</span><span class="name">Line-by-line rise</span>
+      <span class="desc">Each line lifts &amp; fades in turn. Composed, editorial.</span></div>
+    <div class="stage">
+      <img class="fig" alt="" data-fig><div class="matshadow"></div>
+      <div class="panel">
+        <span class="rule"></span>
+        <div class="eyebrow anim">A women's club in London</div>
+        <h2 class="anim">Yoga mat hire,<br>across London.</h2>
+        <p class="anim">£8.50 a mat, same-week delivery across London.</p>
+        <a class="cta anim" href="#">Hire a mat</a>
+      </div>
+    </div>
+    <div class="replaywrap"><button class="replay">↻ Replay</button></div>
+  </section>
+
+  <section class="cell a2">
+    <div class="meta"><span class="tag">2</span><span class="name">Mask wipe up</span>
+      <span class="desc">Lines uncover from the baseline up. Crisp, modern.</span></div>
+    <div class="stage">
+      <img class="fig" alt="" data-fig><div class="matshadow"></div>
+      <div class="panel">
+        <span class="rule"></span>
+        <div class="eyebrow anim">A women's club in London</div>
+        <h2 class="anim">Yoga mat hire,<br>across London.</h2>
+        <p class="anim">£8.50 a mat, same-week delivery across London.</p>
+        <a class="cta anim" href="#">Hire a mat</a>
+      </div>
+    </div>
+    <div class="replaywrap"><button class="replay">↻ Replay</button></div>
+  </section>
+
+  <section class="cell a3">
+    <div class="meta"><span class="tag">3</span><span class="name">Blur settle</span>
+      <span class="desc">Focuses in from soft blur. Matches the watercolour figure.</span></div>
+    <div class="stage">
+      <img class="fig" alt="" data-fig><div class="matshadow"></div>
+      <div class="panel">
+        <span class="rule"></span>
+        <div class="eyebrow anim">A women's club in London</div>
+        <h2 class="anim">Yoga mat hire,<br>across London.</h2>
+        <p class="anim">£8.50 a mat, same-week delivery across London.</p>
+        <a class="cta anim" href="#">Hire a mat</a>
+      </div>
+    </div>
+    <div class="replaywrap"><button class="replay">↻ Replay</button></div>
+  </section>
+
+  <section class="cell a4">
+    <div class="meta"><span class="tag">4</span><span class="name">Rule draws → text slides in</span>
+      <span class="desc">The terracotta rule draws down, text follows from it. Signature.</span></div>
+    <div class="stage">
+      <img class="fig" alt="" data-fig><div class="matshadow"></div>
+      <div class="panel">
+        <span class="rule"></span>
+        <div class="eyebrow anim">A women's club in London</div>
+        <h2 class="anim">Yoga mat hire,<br>across London.</h2>
+        <p class="anim">£8.50 a mat, same-week delivery across London.</p>
+        <a class="cta anim" href="#">Hire a mat</a>
+      </div>
+    </div>
+    <div class="replaywrap"><button class="replay">↻ Replay</button></div>
+  </section>
+
+</div>
+
+<script>
+  var FIG = '../../assets/flow-frames/f150.webp';
+  document.querySelectorAll('[data-fig]').forEach(function(img){ img.src = FIG; });
+
+  function reveal(stage){
+    stage.classList.add('noanim');    // transitions off
+    stage.classList.remove('show');   // snap to hidden state instantly
+    void stage.offsetWidth;           // apply it
+    stage.classList.remove('noanim'); // transitions back on
+    void stage.offsetWidth;
+    requestAnimationFrame(function(){ stage.classList.add('show'); }); // animate in
+  }
+  function revealAll(){ document.querySelectorAll('.stage').forEach(reveal); }
+
+  document.querySelectorAll('.cell').forEach(function(cell){
+    var stage = cell.querySelector('.stage');
+    cell.querySelector('.replay').addEventListener('click', function(){ reveal(stage); });
+  });
+  document.getElementById('replayAll').addEventListener('click', revealAll);
+
+  var slow = false;
+  document.getElementById('slowmo').addEventListener('click', function(){
+    slow = !slow;
+    document.documentElement.style.setProperty('--spd', slow ? '3' : '1');
+    this.textContent = 'Slow motion: ' + (slow ? 'on' : 'off');
+    this.classList.toggle('on', slow);
+    revealAll();
+  });
+
+  window.addEventListener('load', function(){
+    document.querySelectorAll('.stage').forEach(function(s,i){ setTimeout(function(){ reveal(s); }, 150 + i*160); });
+  });
+</script>
+</body>
+</html>

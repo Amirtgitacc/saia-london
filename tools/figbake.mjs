@@ -15,7 +15,7 @@ import { readdirSync, mkdirSync, readFileSync, writeFileSync, existsSync } from 
 import path from 'node:path';
 
 const SRC_DIR = 'tools/figsrc';
-const OUT_DIR = 'tools/figbaked';
+const OUT_DIR = 'assets/figure';
 
 /* canonical output frame — identical for all 15 poses. The page shows figure-N.png
    at one fixed CSS rect, so the mat never moves and only Cristina crossfades. */
@@ -46,7 +46,7 @@ function dataURL(file) {
 const summary = [];
 for (const file of files) {
   if (!existsSync(file)) { console.log('skip (missing):', file); continue; }
-  const name = path.basename(file).replace(/\.(png|jpe?g)$/i, '');
+  const name = 'figure-' + parseInt(path.basename(file).replace(/[^0-9]/g, ''), 10);
   const res = await page.evaluate(async ({ src, OUT_W, OUT_H, TARGET }) => {
     const img = new Image();
     img.src = src;

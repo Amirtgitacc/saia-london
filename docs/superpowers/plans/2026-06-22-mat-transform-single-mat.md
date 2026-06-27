@@ -394,119 +394,143 @@ git add js/home-journey.js && git commit -m "chore(home): calibrate figure box t
 
 ---
 
-### Task 5: Regenerate the 15 poses mat-free, with a baked contact shadow (R2 assets)
+### Task 5: Inventory the reuse source frames (DECISION: reuse, not regenerate)
 
-**Files:**
-- Create: `tools/figsrc/figure-1..15.png` (raw generations; overwrite existing)
+**Decision (2026-06-22):** The existing on-mat generations in `tools/figsrc/pose-01..15.{png,jpeg}` are beautiful, identity-consistent, and have real bare-feet-on-mat contact. We REUSE them and lift Cristina off the mat in Task 6 — no Higgsfield regeneration. (Original plan's mat-free regeneration is shelved; revisit only if extraction fails on specific poses.)
+
+**Files:** none modified — this task is verification + the pose→figure order mapping.
 
 **Interfaces:**
-- Produces: 15 raw frames of Cristina, mat-free, on a plain pale ground, each with a soft contact shadow beneath her contact points, framed full-body with consistent scale.
+- Produces: a confirmed `pose-NN → figure-N` ordering that Task 6 consumes.
 
-- [ ] **Step 0: Capture the canonical mat render as a PLACEMENT reference**
-
-So the AI places her feet/hands to the *actual* surface (fixing the old "standing in front of the mat" bug) WITHOUT drawing a mat we'd then have to remove. Render the live watercolour mesh mat at the pose camera and save it as a reference image:
+- [ ] **Step 1: Confirm the 15 source frames exist and map the order**
 
 ```bash
-cd "/Users/at/Projects/site 2" && node -e '
-const { chromium } = require("playwright");
-(async () => {
-  const b = await chromium.launch();
-  const p = await b.newPage({ viewport: { width: 1440, height: 900 } });
-  await p.goto("http://localhost:8000/home.html", { waitUntil: "networkidle" });
-  await p.waitForFunction(() => window.SAIA && window.SAIA._rig);
-  await p.evaluate(() => window.SAIA._rig.at(0.62));   // fully watercolour, locked cam
-  await p.screenshot({ path: "tools/figsrc/_mat-reference.png" });
-  await b.close();
-})();'
+cd "/Users/at/Projects/site 2" && ls tools/figsrc/pose-*.{png,jpeg} 2>/dev/null | sort
 ```
-This `_mat-reference.png` is fed to the generator as a *placement* guide only — the prompt explicitly says NOT to draw it.
+Expected: `pose-01` … `pose-15` (mix of `.png`/`.jpeg`). The numeric order IS the motion order = `FIG_LABELS` (`js/home-journey.js:121-123`): 01 walk in, 02 step on, 03 stand, 04 arms rise, 05 reach up, 06 heart open, 07 hinge, 08 forward fold, 09 downward dog, 10 low lunge, 11 lower to seat, 12 seated cross, 13 seated twist, 14 seated reach, 15 hands to heart. So `pose-NN` → `figure-N` is a direct 1:1 by number.
 
-- [ ] **Step 1: Generate the 15 poses (Higgsfield `nano_banana_pro`)**
+- [ ] **Step 2: Spot-check two frames are on-mat as expected**
 
-Pose order = `FIG_LABELS` (`js/home-journey.js:121-123`): walk in, step on, stand, arms rise, reach up, heart open, hinge, forward fold, downward dog, low lunge, lower to seat, seated cross, seated twist, seated reach, hands to heart.
-
-Per the asset pipeline (`docs/REPORT-…` §7): use the locked face/stand identity refs, soft identity phrasing ("keep her recognisable…"; avoid emphatic "THIS EXACT person" which stalls jobs). Feed `_mat-reference.png` as a placement reference. Recipe per pose:
-
-> "Cristina, hand-painted watercolour, [POSE], full body, terracotta leggings + soft cream top. Place her so her hands/feet rest on the surface shown in the reference image — weight pressing in, toes/fingers splayed and gripping — but DO NOT draw the mat or any floor; plain warm-cream background only. A soft diffuse contact shadow directly beneath her contact points. Whole figure visible with margin, centred, consistent scale. Aspect 4:3, 2k."
-
-Key points: **mat-free generation** (nothing to drift or subtract — this is why we reject plate-subtraction), but the reference render + "weight pressing in / gripping" phrasing gives grounded contact, and the painted **soft contact shadow** sells it once composited over the live mat. Spread poses (downward dog, low lunge) must fit fully within frame with margin so they land inside the mat rect.
-
-- [ ] **Step 2: Save raw frames**
-
-Save as `tools/figsrc/figure-1.png` … `tools/figsrc/figure-15.png` (matching the pose order above).
-
-- [ ] **Step 3: Visual gate**
-
-Eyeball each: she is mat-free, has a soft contact shadow under her contact points, is fully in frame, and at consistent scale across poses. Regenerate any that overflow or lack a shadow.
-
-- [ ] **Step 4: Commit** (skip if no git repo)
-```bash
-git add tools/figsrc && git commit -m "assets: mat-free Cristina poses with contact shadow"
-```
+Confirm (by eye) `pose-03` (stand) and `pose-09` (downward dog): Cristina painted ON a muted charcoal/taupe mat, warm skin/terracotta/cream against the cool grey mat (this colour contrast is what Task 6's mat-removal relies on). No code change. If a frame is mat-free already or has an oddly-coloured mat, note it for Task 6.
 
 ---
 
-### Task 6: `figbake` v2 — register mat-free figures by silhouette, keep the shadow
+### Task 6: `figbake` v3 — lift Cristina off the mat (extract figure + synthesize contact shadow)
 
 **Files:**
-- Modify: `js/`… no — Modify: `tools/figbake.mjs`
-- Output: `assets/figure/figure-1..15.png` (mat-free, registered)
+- Modify: `tools/figbake.mjs`
+- Output: `assets/figure/figure-1..15.png` (transparent: Cristina + a synthesized soft contact shadow, mat removed, registered to one canonical contact line)
 
 **Interfaces:**
-- Consumes: `tools/figsrc/figure-*.png` (Task 5).
-- Produces: `assets/figure/figure-1..15.png` at `OUT_W×OUT_H`, transparent background, the figure + soft contact-shadow halo registered so her contact point lands on one canonical anchor and her height is normalised — identical contact line across all 15 frames.
+- Consumes: `tools/figsrc/pose-01..15.{png,jpeg}` (Task 5).
+- Produces: `assets/figure/figure-1..15.png` at `OUT_W×OUT_H`, transparent, Cristina-only + a synthesized ground shadow, registered so her contact point lands on one canonical anchor and her height is normalised → identical contact line across all 15 frames (no second mat anywhere).
 
-- [ ] **Step 1: Replace mat detection with figure-silhouette registration**
+**Why this works (the core idea):** the WebGL mesh is now the only mat, so the figure must contribute NO mat pixels. Each `pose-NN` is Cristina on a cool grey mat against a cream background; her body (warm skin, terracotta leggings, cream top) and the cool grey mat are strongly colour-separated. So: (1) border flood-fill removes the cream, (2) a connectivity flood-fill from the lower mat "wings" removes the mat (stopping at her warm/saturated body — connectivity keeps her dark hair, which is disconnected from the mat, safe), (3) her painted shadow is consumed with the mat, so we synthesize a clean soft ground shadow from her lower silhouette, (4) register by figure silhouette. **This is the user-chosen reuse path.** Thresholds will need a tuning pass against the real frames — iterate using the `.debug.png` overlays.
 
-In `tools/figbake.mjs`, the registration currently detects the *mat* (`js/`… i.e. `tools/figbake.mjs:73-101`) and anchors on mat bottom-centre + mat width. Replace that detection with figure-silhouette detection. Keep the existing flood-fill alpha matte block (`tools/figbake.mjs:104-125`) — it already strips only the cream connected to the border, which keeps her soft contact shadow opaque (grey shadow is farther from cream than `Tf=30`). After the flood fill builds `outside`, derive the figure anchor from the INSIDE (opaque) pixels:
+The existing pipeline order in `tools/figbake.mjs`: corner bg sample → mat silhouette detection (`~:73-101`, REMOVE) → border flood-fill alpha matte (`~:104-125`, KEEP) → transform (`~:127-132`, REPLACE) → debug (`~:135-144`, REPLACE). Keep the helpers (`lum`, `sat`, `dist`, `bg`). The new flow inside `page.evaluate`: corner bg sample → border flood-fill (cream→transparent) → **mat-removal flood (NEW)** → **figure silhouette scan (NEW)** → **synthesized shadow + figure draw (NEW)** → debug.
 
-Replace the detection block (from `const yStart = Math.floor(H * 0.40);` through the `conf` line at `tools/figbake.mjs:100`) with a placeholder that runs AFTER the matte (move it below the matte loop). Concretely, after `cx.putImageData(sd, 0, 0);` (`tools/figbake.mjs:125`), insert:
+- [ ] **Step 1: After the border flood-fill, REMOVE the mat by a connectivity flood**
+
+The border flood-fill already builds `outside` (1 = cream-connected-to-border = transparent). Opaque = figure + mat. Right AFTER that flood-fill loop completes (and BEFORE writing alpha at `~:118`), insert mat removal. Sample the mat colour from the lower side-wings (mat extends left/right past her body), then flood mat-like pixels from the bottom/side seeds:
 
 ```js
-    // figure registration: anchor = bottom-centre of the opaque silhouette (her contact),
-    // scale = normalise silhouette HEIGHT to TARGET.height. No mat is involved.
+    // ---- remove the mat: it's the only thing we must NOT ship (the WebGL mesh is the mat) ----
+    const satOf = (r, g, b) => { const mx = Math.max(r, g, b), mn = Math.min(r, g, b); return mx ? (mx - mn) / mx : 0; };
+    const lumOf = (r, g, b) => 0.299 * r + 0.587 * g + 0.114 * b;
+    // sample mat colour from the lower wings (leftmost/rightmost opaque px per row = mat, away from her)
+    let mr = 0, mg = 0, mb = 0, mn2 = 0;
+    for (let y = Math.floor(H * 0.84); y < Math.floor(H * 0.97); y++) {
+      let xl = -1, xr = -1;
+      for (let x = 0; x < W; x++) { const idx = y * W + x; if (!outside[idx]) { if (xl < 0) xl = x; xr = x; } }
+      if (xl < 0) continue;
+      for (const x of [xl, xl + 8, xr - 8, xr]) { if (x < 0 || x >= W) continue; const i = (y * W + x) * 4; mr += px[i]; mg += px[i + 1]; mb += px[i + 2]; mn2++; }
+    }
+    const matC = mn2 ? [mr / mn2, mg / mn2, mb / mn2] : [110, 108, 104];
+    // "mat-like": low saturation, mid/low luminance, near the sampled mat colour. Her warm skin,
+    // terracotta leggings (high sat) and cream top (high lum) all FAIL this → they survive.
+    const matLike = (idx) => {
+      if (outside[idx]) return false;
+      const i = idx * 4, r = px[i], g = px[i + 1], b = px[i + 2];
+      return satOf(r, g, b) < 0.30 && lumOf(r, g, b) < 168 &&
+             Math.hypot(r - matC[0], g - matC[1], b - matC[2]) < 72;
+    };
+    const isMat = new Uint8Array(W * H), mstack = [];
+    const mseed = (idx) => { if (!isMat[idx] && matLike(idx)) { isMat[idx] = 1; mstack.push(idx); } };
+    for (let x = 0; x < W; x++) { mseed((H - 1) * W + x); mseed((Math.floor(H * 0.93)) * W + x); }
+    for (let y = Math.floor(H * 0.55); y < H; y++) { mseed(y * W); mseed(y * W + W - 1); }
+    while (mstack.length) {
+      const idx = mstack.pop(), x = idx % W, y = (idx / W) | 0;
+      if (x > 0) mseed(idx - 1); if (x < W - 1) mseed(idx + 1);
+      if (y > 0) mseed(idx - W); if (y < H - 1) mseed(idx + W);
+    }
+    for (let idx = 0; idx < W * H; idx++) if (isMat[idx]) outside[idx] = 1;  // fold mat into "transparent"
+```
+
+Then the EXISTING alpha-write loop (`~:118-124`, which sets `px[..3]=0` where `outside`, else opaque with a 1px feather) runs unchanged — it now erases cream AND mat. Keep `cx.putImageData(sd, 0, 0);`.
+
+- [ ] **Step 2: Scan the figure silhouette (Cristina only, post-mat-removal)**
+
+After `cx.putImageData(sd, 0, 0);`, insert the silhouette scan + contact anchor:
+
+```js
+    // figure silhouette = remaining opaque pixels (Cristina, mat gone). Anchor on her contact
+    // (bottom-centre), normalise by height so all 15 share one contact line.
     let top = H, bottom = -1, minX = W, maxX = -1;
-    let loX = W, loXmax = -1, loY0 = 0;
     for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
       const idx = y * W + x;
-      if (!outside[idx] && px[idx * 4 + 3] > 8) {     // opaque = figure or her shadow
-        if (y < top) top = y; if (y > bottom) bottom = y;
-        if (x < minX) minX = x; if (x > maxX) maxX = x;
-      }
+      if (!outside[idx]) { if (y < top) top = y; if (y > bottom) bottom = y; if (x < minX) minX = x; if (x > maxX) maxX = x; }
     }
     if (bottom < 0) return { ok: false, bg };
-    // contact-centre: horizontal centroid of opaque pixels in the lowest 12% (her feet/hands + shadow)
-    const bandTop = bottom - Math.round((bottom - top) * 0.12);
+    const bandTop = bottom - Math.max(1, Math.round((bottom - top) * 0.10));
     let sumX = 0, nX = 0;
-    for (let y = bandTop; y <= bottom; y++) for (let x = 0; x < W; x++) {
-      const idx = y * W + x;
-      if (!outside[idx] && px[idx * 4 + 3] > 8) { sumX += x; nX++; }
-    }
+    for (let y = bandTop; y <= bottom; y++) for (let x = 0; x < W; x++) { const idx = y * W + x; if (!outside[idx]) { sumX += x; nX++; } }
     const contactX = nX ? sumX / nX : (minX + maxX) / 2;
-    const contactY = bottom;
-    const figH = bottom - top;
-    const conf = Math.max(0, Math.min(1, (figH / H - 0.45) / 0.5)); // tall, well-framed = confident
+    const contactY = bottom, figH = bottom - top;
+    const conf = Math.max(0, Math.min(1, (figH / H - 0.45) / 0.5));
 ```
 
-- [ ] **Step 2: Update the output transform and TARGET**
+- [ ] **Step 3: Synthesize a soft ground shadow, then draw the figure on top**
 
-Change `TARGET` (`tools/figbake.mjs:23`) to anchor on contact + normalise by height:
+Replace the transform block (`~:127-132`). The synthesized shadow = her cutout, recoloured ink-dark, squashed flat at the contact line, blurred, low alpha — drawn UNDER her:
+
 ```js
-const TARGET = { cx: 700, bottomY: 1380, height: 1240 }; // contact centre + figure height in the output
-```
-Replace the transform block (`tools/figbake.mjs:127-132`):
-```js
-    // map (contactX, contactY) -> (TARGET.cx, TARGET.bottomY), scale so figure height == TARGET.height
+    const TARGET = window.__TARGET;   // {cx, bottomY, height} — see Step 4
     const s = TARGET.height / figH;
     const out = document.createElement('canvas'); out.width = OUT_W; out.height = OUT_H;
     const oc = out.getContext('2d'); oc.imageSmoothingQuality = 'high';
+
+    // her silhouette recoloured to ink-dark (for the shadow)
+    const sh = document.createElement('canvas'); sh.width = W; sh.height = H;
+    const shc = sh.getContext('2d');
+    shc.drawImage(c, 0, 0); shc.globalCompositeOperation = 'source-in';
+    shc.fillStyle = 'rgb(46,40,33)'; shc.fillRect(0, 0, W, H);
+
+    // ground shadow: flattened (scaleY≈0.18) + blurred + faint, anchored at the contact line
+    oc.save();
+    oc.globalAlpha = 0.30; oc.filter = 'blur(16px)';
+    oc.translate(TARGET.cx, TARGET.bottomY); oc.scale(s, s * 0.18); oc.translate(-contactX, -contactY);
+    oc.drawImage(sh, 0, 0);
+    oc.restore();
+
+    // Cristina on top
+    oc.save();
     oc.translate(TARGET.cx, TARGET.bottomY); oc.scale(s, s); oc.translate(-contactX, -contactY);
-    oc.drawImage(c, 0, 0);   // c carries the alpha matte (figure + soft shadow)
+    oc.drawImage(c, 0, 0);
+    oc.restore();
 ```
 
-- [ ] **Step 3: Update the debug overlay + return payload**
+- [ ] **Step 4: Set `TARGET`, `OUT_DIR`, and pass `TARGET` into the page**
 
-Replace the debug draw (`tools/figbake.mjs:135-144`) so it boxes the figure silhouette and marks the contact point:
+- Change `TARGET` (`tools/figbake.mjs:23`):
+  ```js
+  const TARGET = { cx: 700, bottomY: 1380, height: 1240 }; // contact centre + figure height in output
+  ```
+- The `page.evaluate(... , { src, OUT_W, OUT_H, TARGET })` call already passes `TARGET` in; inside the evaluate, the destructured `TARGET` is in scope — use it directly (drop the `window.__TARGET` placeholder in Step 3's first line; it was only a reminder). Confirm `TARGET` is in the evaluate's argument destructuring.
+- Set `OUT_DIR = 'assets/figure'` (`tools/figbake.mjs:18`) so output lands where `home.html` loads it.
+
+- [ ] **Step 5: Replace the debug overlay + return payload** (`~:135-144`)
+
 ```js
     const dbg = document.createElement('canvas'); dbg.width = OUT_W; dbg.height = OUT_H;
     const dc = dbg.getContext('2d'); dc.fillStyle = '#1b1b1b'; dc.fillRect(0, 0, OUT_W, OUT_H);
@@ -514,29 +538,28 @@ Replace the debug draw (`tools/figbake.mjs:135-144`) so it boxes the figure silh
     dc.lineWidth = 4; dc.strokeStyle = '#36d399';
     dc.strokeRect(minX * ds, top * ds, (maxX - minX) * ds, (bottom - top) * ds);
     dc.fillStyle = '#ff5a36'; dc.beginPath(); dc.arc(contactX * ds, contactY * ds, 7, 0, 7); dc.fill();
-    return { ok: true, conf, contactX, contactY, figH, s, bg, H, W,
+    return { ok: true, conf, contactX, contactY, figH, matC, s, bg, H, W,
       png: out.toDataURL('image/png'), debug: dbg.toDataURL('image/png') };
 ```
-Update the success log line (`tools/figbake.mjs:152`) to use the new fields:
-```js
-  console.log(`✓ ${name}  conf=${res.conf.toFixed(2)} figH=${res.figH|0} cx=${res.contactX|0} s=${res.s.toFixed(3)}${flag}`);
-```
+Update the success log (`~:152`): `console.log(\`✓ ${name}  conf=${res.conf.toFixed(2)} figH=${res.figH|0} cx=${res.contactX|0} matC=${res.matC.map(n=>n|0)} s=${res.s.toFixed(3)}${flag}\`);`
 
-- [ ] **Step 4: Bake into `assets/figure/`**
+Also fix the input file discovery: source frames are `pose-NN.{png,jpeg}` and output must be `figure-N.png`. Map names so `pose-03` → `figure-3` (strip leading zero). The default `files` glob already picks up `tools/figsrc/*.{png,jpe?g}`; change the output `name` to `figure-${parseInt(basename.replace(/[^0-9]/g,''),10)}`.
 
-`figbake` writes to `tools/figbaked/` by default. Either change `OUT_DIR` to `assets/figure` or copy after. Set `OUT_DIR = 'assets/figure'` (`tools/figbake.mjs:18`) so the page picks them up directly. Then:
+- [ ] **Step 6: Bake + ITERATE on thresholds**
+
 ```bash
 cd "/Users/at/Projects/site 2" && node tools/figbake.mjs
 ```
-Expected: 15 `✓` lines, no `MAT NOT DETECTED`, conf mostly ≥ 0.55. Frames written to `assets/figure/figure-1..15.png` + `.debug.png`.
+Expected: 15 `✓` lines → `assets/figure/figure-1..15.png` + `.debug.png`.
+**This is the iteration loop.** Open several outputs and `.debug.png`. Tune ONLY these knobs and re-run until clean:
+- Mat not fully removed (grey patches remain near her feet/between legs) → raise `matLike` luminance ceiling (168→180) or colour distance (72→90), or add a lower seed row.
+- Part of HER removed (e.g. cream top, a foot) → tighten the same thresholds (she's being over-consumed): lower the luminance ceiling or distance.
+- Shadow too heavy/light or detached → tune `globalAlpha` (0.30), `blur(16px)`, and the `s*0.18` squash.
+Document the final threshold values in the report.
 
-- [ ] **Step 5: Visual gate — one stable contact line**
-
-Flip through `assets/figure/figure-1..15.png`: each is a mat-free Cristina + soft shadow, all at the same scale, contact point at the same spot. Open a couple of `.debug.png` to confirm the green box hugs the figure and the red dot is at her feet.
-
-- [ ] **Step 6: Commit** (skip if no git repo)
+- [ ] **Step 7: Commit** (skip if no git repo)
 ```bash
-git add tools/figbake.mjs assets/figure/figure-*.png && git commit -m "feat(figbake): register mat-free figures by silhouette"
+git add tools/figbake.mjs assets/figure/figure-*.png && git commit -m "feat(figbake): lift Cristina off the mat + synthesize contact shadow"
 ```
 
 ---
