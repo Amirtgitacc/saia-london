@@ -36,6 +36,24 @@
 
   const bandEls = stage ? Array.prototype.slice.call(stage.querySelectorAll('[data-band]')) : [];
 
+  /* Band 3 "van on a road" — scrubbed across its data-band range (0.30→0.44) */
+  const hireRoad = stage ? stage.querySelector('.hire-road') : null;
+  const hireRoadParts = hireRoad ? {
+    van: hireRoad.querySelector('.hr-van'),
+    prog: hireRoad.querySelector('.hr-prog'),
+    pins: Array.prototype.slice.call(hireRoad.querySelectorAll('.hr-pin'))
+  } : null;
+  function driveHireRoad(p) {
+    if (!hireRoadParts) return;
+    // finish the road by p0.38 — while the band copy is still dead-sharp (plateau ends ~0.392) —
+    // so you SEE the van reach "Collect" before the text begins to fade out.
+    let lp = (p - 0.30) / (0.38 - 0.30); lp = Math.max(0, Math.min(1, lp));
+    if (hireRoadParts.van) hireRoadParts.van.style.left = (4 + lp * 92) + '%';
+    if (hireRoadParts.prog) hireRoadParts.prog.style.width = (lp * 92) + '%';
+    const n = hireRoadParts.pins.length;
+    hireRoadParts.pins.forEach((pn, i) => pn.classList.toggle('on', lp >= i / (n - 1) - 0.02));
+  }
+
   /* ---- state ---- */
   let renderer, scene, camera, group, meshMaterial, floor, key, hemi;
   const ctx = {};
@@ -313,18 +331,28 @@
   function bands(p) {
     for (const e of bandEls) {
       const parts = (e.getAttribute('data-band') || '0,1').split(',').map(Number);
-      const a = parts[0], b = parts[1];
-      const f = Math.min(0.04, (b - a) * 0.3);
-      const kin = a <= 0.001 ? 1 : Math.min(1, Math.max(0, (p - a) / f));
-      const kout = b >= 0.999 ? 1 : Math.min(1, Math.max(0, (b - p) / f));
+      const a = parts[0], b = parts[1], w = b - a;
+      // "crisp almost the whole way": SNAP sharp on entry (tiny fin) and stay full-resolution
+      // across ~70% of the band, with only a quick soft fade at the very start and very end.
+      // exit stays a touch wider than entry so it drifts (not snaps) away, still readable.
+      const fin = Math.min(0.012, w * 0.09);
+      const fout = Math.min(0.03, w * 0.22);
+      const kinL = a <= 0.001 ? 1 : Math.min(1, Math.max(0, (p - a) / fin));
+      const koutL = b >= 0.999 ? 1 : Math.min(1, Math.max(0, (b - p) / fout));
+      // smoothstep both edges so entrance/exit ease rather than ramp linearly
+      const kin = kinL * kinL * (3 - 2 * kinL);
+      const kout = koutL * koutL * (3 - 2 * koutL);
       let k = Math.min(kin, kout); if (p < a - 0.001 || p > b + 0.001) k = 0;
       e.style.opacity = k.toFixed(3);
       const inner = e.firstElementChild;
       if (inner) {
-        // blur-settle: as k goes 0→1 the content focuses in from soft blur, lifts and settles
-        const inv = 1 - k;
-        inner.style.transform = 'translateY(' + (inv * 10).toFixed(1) + 'px) scale(' + (1 + inv * 0.02).toFixed(4) + ')';
-        inner.style.filter = inv > 0.002 ? 'blur(' + (inv * 7).toFixed(2) + 'px)' : 'none';
+        // blur-settle, DECOUPLED from opacity: heavy focus-in blur that resolves into clarity,
+        // but only a gentle blur on the way OUT — so you can still read it as it drifts away.
+        const invIn = 1 - kinL, invOut = 1 - koutL;
+        const blur = invIn * 5 + invOut * 1.4;
+        const lift = invIn * 8 - invOut * 4;   // rises in from below; drifts up a touch as it leaves
+        inner.style.transform = 'translateY(' + lift.toFixed(1) + 'px) scale(' + (1 + invIn * 0.02).toFixed(4) + ')';
+        inner.style.filter = blur > 0.05 ? 'blur(' + blur.toFixed(2) + 'px)' : 'none';
       }
       e.style.pointerEvents = k > 0.5 ? 'auto' : 'none';
     }
@@ -341,6 +369,7 @@
     if (rail) rail.style.height = (p * 100).toFixed(1) + '%';
     if (hint) hint.style.opacity = (1 - Math.min(1, p / 0.04)).toFixed(3);
     bands(p);
+    driveHireRoad(p);
     scrubFlow(p);
   }
 
@@ -420,7 +449,7 @@
         if (meshMaterial.userData.setMorph) meshMaterial.userData.setMorph(morphFor(p), bloomFor(p));
         renderer.render(scene, camera);
         canvas.style.opacity = (1 - handoffFor(p)).toFixed(3);
-        bands(p); scrubFlow(p);
+        bands(p); driveHireRoad(p); scrubFlow(p);
       },
       matRect() { return meshMatRect(); },         // mesh mat's screen-space bbox at current cam
     };
