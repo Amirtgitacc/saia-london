@@ -4,6 +4,9 @@ Static site for SAÏA London (a female-led women's club — **mat hire is the pr
 community, then Yoga/Pilates). Dependency-free front end; one tiny Node endpoint powers the
 Claude side of the concierge. See `README.md` for the site internals (3D pages, GLB, etc.).
 
+> **Current design state** of the `home.html` redesign (what's live, decided, and open) lives in
+> `docs/HANDOVER-home-redesign.md` — check there before touching `home.html` layout/flow.
+
 ## Run / verify
 
 ```bash
@@ -69,8 +72,10 @@ they can never disagree. **Change a fact once, here, and both brains update.** D
 - Mats are **HIRE ONLY — never "buy"/"for sale"**. £8.50/mat, 2-day hire, min 10.
 - Voice: warm, female-led, unpretentious, British English. English-only project.
 - Contact = WhatsApp Cristina (founder + Pilates instructor) on 07444 611 914; NW3 area.
-- Palette: cream `#F5F1E8`, ink `#2B2620`, terracotta accent `#B8624A`. Cormorant Garamond +
-  Hanken Grotesk. Don't remove existing UI elements when making changes.
+- Palette: cream `#F5F1E8`, ink `#2B2620`, terracotta accent `#B8624A`.
+- Fonts are per-page (not yet unified): `home.html` uses **Playfair Display + Inter**;
+  `index.html`/`hero.html` still on **Cormorant Garamond + Hanken Grotesk**.
+- Don't remove existing UI elements when making changes.
 
 ## Model
 
@@ -83,10 +88,13 @@ Delivery is by **Addison Lee** courier (NW3 warehouse → event; pickup from NW3
 hire facts from saialondon.com: £8.50/mat, 2-day base, **+£1.50/mat per extra day**, min 10,
 **60+ mats → reduced quote**; courier ≈ **£35–55 each way** to central London.
 
-- **NOW — Route C (placeholder):** `tools/lab/delivery-estimator.html`, a dependency-free zone
-  estimator (embeddable `.saia-estimator` component). Maps the event postcode to a London zone —
-  Zone 1/Central ≈ £80, Zone 2/Greater London from £110, outside London → WhatsApp quote — and
-  totals it with the mat-hire math. **Estimate only**; Cristina confirms the real courier price.
+- **NOW — Route C (placeholder, LIVE):** the estimator is live on `home.html` as the
+  `.saia-est-stage` "Spotlight" section (dark interrupt, self-drawing route, total counts up),
+  ported from `tools/lab/estimator-lab.html`. A dependency-free zone estimator maps the event
+  postcode to a London zone and totals it with the mat-hire math. Placeholder courier numbers are
+  deliberately LOW: **Central from £35, Greater London from £45**, outside London → WhatsApp quote.
+  **Estimate only**; Cristina confirms the real courier price. (Older standalone component:
+  `tools/lab/delivery-estimator.html`.)
 - **LATER — Route B (the plan):** swap the estimate for **live quotes via the Addison Lee
   "Quickbook" API** (Anypoint/MuleSoft). Has quote + booking endpoints (`POST /booking/create`,
   plus a price-quote call); auth = `AL client_id:client_secret`. Wire the quote into `server.js`
@@ -94,5 +102,3 @@ hire facts from saialondon.com: £8.50/mat, 2-day base, **+£1.50/mat per extra 
   credentials** — no public API fee (you pay per delivery, not per call); confirm account minimums
   with AL. No-code alternative on the real Shopify store: the official **Addison Lee Shopify app**
   (live same-day rates at checkout; free to install, bills in USD).
-
-Pending copy fix when the redesign lands: top-bar/meta says "same-week" — the site says **same-day**.

@@ -56,7 +56,7 @@
     /* ---- PRIORITY #3 — YOGA / PILATES ---- */
     pilates: {
       instructor: 'Cristina',
-      method: 'Classical Pilates and Reformer — small, slow and breath-led.',
+      method: 'Classical Pilates and Reformer — small, slow and breath-led, drawn from Joseph Pilates’ Contrology. Pilates for women, every level; Cristina meets you where you are.',
       format: '1-2-1 classes in NW3 and group classes in Hampstead, London.',
       booking: 'Tell me a day that suits and I’ll hold you a place; final booking is confirmed with Cristina.',
     },

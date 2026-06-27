@@ -37,7 +37,7 @@
   .is-static #homeBar, .is-static #homeHint { display: none !important; }
 </style>
 <style>
-  /* ===== "In their words" photo reel — film-strip, minimal rails ===== */
+  /* ===== Gallery photo reel — film-strip, minimal rails ===== */
   #events.reel-section{ background:linear-gradient(180deg,#F5F1E8,#EFEADF); }
   #events .rl-scroll{ height:460vh; position:relative; }
   #events .rl-sticky{ position:sticky; top:0; height:100vh; overflow:hidden; display:flex; align-items:center; }
@@ -68,6 +68,8 @@
   #events .rl-track figure.hot .chip{ opacity:1; transform:none; }
   #events .rl-hint{ position:absolute; bottom:2.6vh; left:0; right:0; text-align:center; z-index:6; color:#6B6358;
     font-size:10px; letter-spacing:.24em; text-transform:uppercase; }
+  .hire-chip{ font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:#6B6358; border:1px solid #C9C2B4; border-radius:30px; padding:7px 15px; }
+  .input-focus:focus{ outline:2px solid #B8624A; outline-offset:1px; }
   @media (max-width:767px){
     #events .rl-scroll{ height:380vh; }
     #events .rl-track{ gap:5vw; padding:0 18vw; }
@@ -259,9 +261,10 @@
   <header class="home-desktop-nav" style="position:sticky; top:0; z-index:50; background:rgba(245,241,232,.92); backdrop-filter:blur(10px); border-bottom:1px solid #DAD4C8;">
     <div style="display:grid; grid-template-columns:1fr auto 1fr; align-items:center; padding:22px 48px; max-width:1480px; margin:0 auto;">
       <nav style="display:flex; gap:32px; font-size:12px; letter-spacing:.18em; text-transform:uppercase; white-space:nowrap;">
-        <a href="#hire" class="saia-link" style="color:#2B2620; text-decoration:none;">Mat Hire</a>
-        <a href="#events" class="saia-link" style="color:#2B2620; text-decoration:none;">Events</a>
-        <a href="#story" class="saia-link" style="color:#2B2620; text-decoration:none;">Our Story</a>
+        <a href="#mat-hire" class="saia-link" style="color:#2B2620; text-decoration:none;">Mat Hire</a>
+        <a href="#pilates" class="saia-link" style="color:#2B2620; text-decoration:none;">Pilates</a>
+        <a href="#events" class="saia-link" style="color:#2B2620; text-decoration:none;">Gallery</a>
+        <a href="story.html" class="saia-link" style="color:#2B2620; text-decoration:none;">Our Story</a>
       </nav>
       <a href="#top" style="text-align:center; text-decoration:none; color:#2B2620;"><div style="font-family:'Playfair Display',serif; font-size:30px; letter-spacing:.2em; line-height:1;">SAÏA</div><div style="font-size:9px; letter-spacing:.52em; text-transform:uppercase; color:#6B6358; margin-top:3px;">London</div></a>
       <div style="display:flex; gap:24px; justify-content:flex-end; align-items:center;">
@@ -286,9 +289,10 @@
       <button id="navClose" aria-label="Close menu" style="background:none; border:none; cursor:pointer; display:flex;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2B2620" stroke-width="1.3"><line x1="5" y1="5" x2="19" y2="19"></line><line x1="19" y1="5" x2="5" y2="19"></line></svg></button>
     </div>
     <nav style="display:flex; flex-direction:column; gap:6px;">
-      <a href="#hire" data-drawer-link style="font-family:'Playfair Display',serif; font-size:38px; color:#2B2620; text-decoration:none; padding:10px 0; border-bottom:1px solid #DAD4C8;">Mat Hire</a>
-      <a href="#events" data-drawer-link style="font-family:'Playfair Display',serif; font-size:38px; color:#2B2620; text-decoration:none; padding:10px 0; border-bottom:1px solid #DAD4C8;">Events</a>
-      <a href="#story" data-drawer-link style="font-family:'Playfair Display',serif; font-size:38px; color:#2B2620; text-decoration:none; padding:10px 0; border-bottom:1px solid #DAD4C8;">Our Story</a>
+      <a href="#mat-hire" data-drawer-link style="font-family:'Playfair Display',serif; font-size:38px; color:#2B2620; text-decoration:none; padding:10px 0; border-bottom:1px solid #DAD4C8;">Mat Hire</a>
+      <a href="#pilates" data-drawer-link style="font-family:'Playfair Display',serif; font-size:38px; color:#2B2620; text-decoration:none; padding:10px 0; border-bottom:1px solid #DAD4C8;">Pilates</a>
+      <a href="#events" data-drawer-link style="font-family:'Playfair Display',serif; font-size:38px; color:#2B2620; text-decoration:none; padding:10px 0; border-bottom:1px solid #DAD4C8;">Gallery</a>
+      <a href="story.html" data-drawer-link style="font-family:'Playfair Display',serif; font-size:38px; color:#2B2620; text-decoration:none; padding:10px 0; border-bottom:1px solid #DAD4C8;">Our Story</a>
     </nav>
   </div>
 
@@ -421,52 +425,54 @@
           </div>
         </div>
 
-        <!-- FLOW LEVEL 1 — CRISTINA STANDS · MAT HIRE -->
+        <!-- FLOW LEVEL 1 — CRISTINA STANDS · PILATES INTRO -->
         <div class="flow-rail" data-band="0.576,0.66" style="position:absolute; inset:0; display:flex; align-items:center; justify-content:flex-start; padding:0 7vw;">
           <div class="band-inner" style="max-width:460px;">
-            <div style="font-size:12px; letter-spacing:.3em; text-transform:uppercase; color:#B8624A; margin-bottom:16px;">Mat hire</div>
-            <h2 style="font-family:'Playfair Display',serif; font-weight:500; font-size:clamp(34px,4.6vw,58px); line-height:1.0; margin:0 0 22px; color:#2B2620;">Roll it out<br>anywhere.</h2>
-            <p style="font-size:16px; line-height:1.75; color:#6B6358; margin:0 0 26px; max-width:400px;">Wherever your women gather, our mat is ready — £8.50 each, 2-day hire, minimum of ten. Delivered, set out and collected, so you simply unroll and begin.</p>
-            <button data-hire-cta style="pointer-events:auto; background:#2B2620; color:#F5F1E8; border:none; font-family:'Inter',sans-serif; font-size:11px; letter-spacing:.2em; text-transform:uppercase; padding:14px 30px; border-radius:2px; cursor:pointer;">Enquire to hire</button>
+            <div style="font-size:12px; letter-spacing:.3em; text-transform:uppercase; color:#B8624A; margin-bottom:16px;">Fitness</div>
+            <h2 style="font-family:'Playfair Display',serif; font-weight:500; font-size:clamp(34px,4.6vw,58px); line-height:1.0; margin:0 0 22px; color:#2B2620;">Move with<br>Cristina.</h2>
+            <p style="font-size:16px; line-height:1.75; color:#6B6358; margin:0; max-width:400px;">Founder-led Pilates for women in London — small, strong and slow, on the same mat you'll come to know by heart.</p>
           </div>
         </div>
 
-        <!-- FLOW LEVEL 2 — CRISTINA REACHES UP · THE SAÏA CLUB -->
+        <!-- FLOW LEVEL 2 — CRISTINA REACHES UP · THE METHOD -->
         <div class="flow-rail" data-band="0.675,0.755" style="position:absolute; inset:0; display:flex; align-items:center; justify-content:flex-start; padding:0 7vw;">
           <div class="band-inner" style="max-width:460px;">
-            <div style="font-size:12px; letter-spacing:.3em; text-transform:uppercase; color:#B8624A; margin-bottom:16px;">The SAÏA Club</div>
-            <h2 style="font-family:'Playfair Display',serif; font-weight:500; font-size:clamp(34px,4.6vw,58px); line-height:1.02; margin:0 0 22px; color:#2B2620;">We curate unforgettable experiences.</h2>
-            <p style="font-size:17px; line-height:1.8; color:#6B6358; margin:0 auto; max-width:520px;">Join us for a series of events in London for like-minded women — to support each other, feel inspired, and celebrate sisterhood. A female-led club built on fitness, community &amp; mindset.</p>
+            <div style="font-size:12px; letter-spacing:.3em; text-transform:uppercase; color:#B8624A; margin-bottom:16px;">The method</div>
+            <h2 style="font-family:'Playfair Display',serif; font-weight:500; font-size:clamp(34px,4.6vw,58px); line-height:1.02; margin:0 0 22px; color:#2B2620;">Strength from<br>the inside out.</h2>
+            <p style="font-size:17px; line-height:1.8; color:#6B6358; margin:0; max-width:460px;">Classical Pilates and Reformer, drawn from Joseph Pilates' own system, Contrology. Breath-led and built for every level.</p>
           </div>
         </div>
 
-        <!-- FLOW LEVEL 3 — CRISTINA FOLDS → DOWNWARD DOG · PILATES -->
+        <!-- FLOW LEVEL 3 — CRISTINA FOLDS → DOWNWARD DOG · WHERE -->
         <div class="flow-rail" data-band="0.778,0.86" style="position:absolute; inset:0; display:flex; align-items:center; justify-content:flex-start; padding:0 7vw;">
           <div class="band-inner" style="max-width:460px;">
-            <div style="font-size:12px; letter-spacing:.3em; text-transform:uppercase; color:#6B6358; margin-bottom:16px;">Fitness</div>
-            <h2 style="font-family:'Playfair Display',serif; font-weight:500; font-size:clamp(34px,4.6vw,58px); line-height:1.0; margin:0 0 22px; color:#2B2620;">Move with Cristina.</h2>
-            <p style="font-size:16px; line-height:1.75; color:#6B6358; margin:0; max-width:400px;">Small, strong, slow Pilates — led by our founder, on the same mat you'll come to know by heart. Classical &amp; Reformer; 1-to-1 in NW3, or group classes in Hampstead. Breath-led, built for every body.</p>
+            <div style="font-size:12px; letter-spacing:.3em; text-transform:uppercase; color:#6B6358; margin-bottom:16px;">Where</div>
+            <h2 style="font-family:'Playfair Display',serif; font-weight:500; font-size:clamp(34px,4.6vw,58px); line-height:1.0; margin:0 0 22px; color:#2B2620;">NW3 &amp;<br>Hampstead.</h2>
+            <p style="font-size:16px; line-height:1.75; color:#6B6358; margin:0; max-width:400px;">One-to-one in NW3, or group classes in Hampstead. Wherever you start, Cristina meets you there.</p>
           </div>
         </div>
 
-        <!-- FLOW LEVEL 4 — CRISTINA LOW LUNGE · COMMUNITY -->
+        <!-- FLOW LEVEL 4 — CRISTINA LOW LUNGE · WHY -->
         <div class="flow-rail" data-band="0.882,0.955" style="position:absolute; inset:0; display:flex; align-items:center; justify-content:flex-start; padding:0 7vw;">
           <div class="band-inner" style="max-width:460px;">
-            <div style="font-size:12px; letter-spacing:.3em; text-transform:uppercase; color:#B8624A; margin-bottom:16px;">Community</div>
-            <h2 style="font-family:'Playfair Display',serif; font-weight:500; font-size:clamp(34px,4.6vw,58px); line-height:1.0; margin:0 0 22px; color:#2B2620;">Stronger,<br>together.</h2>
-            <p style="font-size:16px; line-height:1.75; color:#6B6358; margin:0; max-width:400px;">Behind the mats and the movement is a circle of women in London — showing up for one another, on and off the mat. Fitness, community &amp; mindset, held by women, for women.</p>
+            <div style="font-size:12px; letter-spacing:.3em; text-transform:uppercase; color:#B8624A; margin-bottom:16px;">Why</div>
+            <h2 style="font-family:'Playfair Display',serif; font-weight:500; font-size:clamp(34px,4.6vw,58px); line-height:1.0; margin:0 0 22px; color:#2B2620;">Breath-led,<br>for every body.</h2>
+            <p style="font-size:16px; line-height:1.75; color:#6B6358; margin:0; max-width:400px;">Train for how you feel, not just how you look. Show up, breathe, build control — session by session.</p>
           </div>
         </div>
 
-        <!-- FLOW LEVEL 5 — CRISTINA SEATED, HANDS TO HEART · JOIN -->
+        <!-- FLOW LEVEL 5 — CRISTINA SEATED, HANDS TO HEART · PILATES GUEST LIST -->
         <div class="flow-rail" data-band="0.972,1" style="position:absolute; inset:0; display:flex; align-items:center; justify-content:flex-start; padding:0 7vw;">
-          <div class="band-inner" style="max-width:500px;">
-            <div style="font-size:12px; letter-spacing:.3em; text-transform:uppercase; color:#B8624A; margin-bottom:18px;">Join the SAÏA Community</div>
-            <h2 style="font-family:'Playfair Display',serif; font-weight:500; font-size:clamp(36px,5vw,62px); line-height:1.02; margin:0 0 20px; color:#2B2620;">Get on the guest list.</h2>
-            <p style="font-size:16px; line-height:1.7; color:#6B6358; margin:0 0 30px;">First word on upcoming events and mat-hire availability.</p>
-            <div style="pointer-events:auto; display:flex; flex-wrap:wrap; gap:12px; justify-content:flex-start; max-width:440px;">
-              <input type="email" placeholder="Enter your email" aria-label="Email address" class="input-focus" style="flex:1 1 240px; font-family:'Inter',sans-serif; font-size:15px; padding:15px 18px; background:#fff; border-radius:2px; color:#2B2620;">
-              <button class="btn-ink" style="flex:0 0 auto; border:none; font-family:'Inter',sans-serif; font-size:12px; letter-spacing:.22em; text-transform:uppercase; padding:15px 34px; border-radius:2px; cursor:pointer;">Subscribe</button>
+          <div class="band-inner" style="max-width:520px;">
+            <div style="pointer-events:auto; background:#FBF9F4; border:1px solid #DAD4C8; border-radius:6px; padding:clamp(28px,4vw,44px); box-shadow:0 18px 40px rgba(43,38,32,.10);">
+              <div style="font-size:12px; letter-spacing:.3em; text-transform:uppercase; color:#B8624A; margin-bottom:16px;">Join the Pilates guest list</div>
+              <h2 style="font-family:'Playfair Display',serif; font-weight:500; font-size:clamp(32px,4.4vw,52px); line-height:1.04; margin:0 0 16px; color:#2B2620;">Reserve your spot.</h2>
+              <p style="font-size:15px; line-height:1.7; color:#6B6358; margin:0 0 24px;">First word when Cristina opens new Pilates classes in NW3 &amp; Hampstead — and a place held for you.</p>
+              <form data-guest-form novalidate style="display:flex; flex-wrap:wrap; gap:12px;">
+                <input type="email" name="email" required placeholder="Enter your email" aria-label="Email address" class="input-focus" style="flex:1 1 220px; font-family:'Inter',sans-serif; font-size:15px; padding:15px 18px; background:#fff; border-radius:2px; color:#2B2620;">
+                <button type="submit" class="btn-ink" style="flex:0 0 auto; border:none; font-family:'Inter',sans-serif; font-size:12px; letter-spacing:.22em; text-transform:uppercase; padding:15px 34px; border-radius:2px; cursor:pointer;">Join the list</button>
+                <p data-guest-msg aria-live="polite" style="flex:1 1 100%; margin:2px 0 0; font-size:12px; color:#6B6358; min-height:1.1em;">Free to join · no spam · just first word on classes.</p>
+              </form>
             </div>
           </div>
         </div>
@@ -519,31 +525,34 @@
     </div>
   </section>
 
-  <!-- ============ PHOTO REEL — "In their words" film strip ============ -->
+  <!-- ============ HIRE YOGA MATS — clear CTA ============ -->
+  <section id="mat-hire" aria-label="Hire yoga mats" style="background:#EFEADF; padding:clamp(64px,8vw,110px) 6vw; border-top:1px solid #DAD4C8;">
+    <div style="max-width:920px; margin:0 auto; text-align:center;">
+      <div style="font-size:12px; letter-spacing:.3em; text-transform:uppercase; color:#B8624A; margin-bottom:18px;">Mat hire</div>
+      <h2 style="font-family:'Playfair Display',serif; font-weight:500; font-size:clamp(34px,4.8vw,58px); line-height:1.02; margin:0 0 22px; color:#2B2620;">Hire yoga mats<br>for your event.</h2>
+      <p style="font-size:clamp(16px,1.5vw,18px); line-height:1.8; color:#4A443B; max-width:560px; margin:0 auto 32px;">Our signature mat, delivered across London and collected after — from a 10-mat morning class to a 200-person retreat. You simply unroll and begin.</p>
+      <div style="display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-bottom:36px;">
+        <span class="hire-chip">£8.50 / mat</span>
+        <span class="hire-chip">2-day hire</span>
+        <span class="hire-chip">Minimum 10</span>
+        <span class="hire-chip">Same-day London delivery</span>
+        <span class="hire-chip">Free NW3 collection</span>
+      </div>
+      <button data-hire-cta style="background:#2B2620; color:#F5F1E8; border:none; font-family:'Inter',sans-serif; font-size:11px; letter-spacing:.2em; text-transform:uppercase; padding:16px 38px; border-radius:2px; cursor:pointer;">Enquire to hire</button>
+    </div>
+  </section>
+
+  <!-- ============ GALLERY — photo reel film strip ============ -->
   <section id="events" class="reel-section" aria-label="SAÏA women — photo reel">
     <div class="rl-scroll">
       <div class="rl-sticky">
         <div class="rl-bg"></div>
         <div class="film-rails"><div class="perf-row top"></div><div class="perf-row bottom"></div></div>
-        <div class="rl-head"><div class="t">SAÏA women</div><h2>In their words</h2></div>
+        <div class="rl-head"><div class="t">SAÏA women</div><h2>Gallery</h2></div>
         <div class="caps" id="reelCaps"></div>
         <div class="rl-track" id="reelTrack"></div>
         <div class="rl-hint" aria-hidden="true">Grayscale off-centre · hover · scroll ↓</div>
       </div>
-    </div>
-  </section>
-
-  <!-- ============ OUR STORY ============ -->
-  <section id="story" style="background:linear-gradient(180deg,#EFEADF,#F5F1E8); padding:clamp(72px,9vw,128px) 6vw;">
-    <div style="max-width:760px; margin:0 auto; text-align:center;">
-      <div style="font-size:12px; letter-spacing:.3em; text-transform:uppercase; color:#B8624A; margin-bottom:18px;">Our story</div>
-      <h2 style="font-family:'Playfair Display',serif; font-weight:500; font-size:clamp(34px,5vw,60px); line-height:1.02; margin:0 0 36px; color:#2B2620;">A Woman Who Wins.</h2>
-      <div style="font-size:clamp(16px,1.5vw,18px); line-height:1.85; color:#4A443B; text-align:left; display:flex; flex-direction:column; gap:22px;">
-        <p style="margin:0;">SAÏA started in 2020, when our founder Cristina began making her own yoga mats and bags. To bring her customers together, she ran a monthly Brunch Club: a morning of movement and good food in a beautiful London venue.</p>
-        <p style="margin:0;">Women began travelling in from outside the city just to be in the room, and a community formed around it. That community is now the heart of SAÏA. Cristina is English-Mexican, lives in London, and still welcomes every guest herself.</p>
-        <p style="margin:0;">The name comes from her great-grandmother, Calandita, who worked a small farm in Mexico and sold a cow to fund her move to the city. SAÏA means 'a woman who wins,' and Calandita is who it is named for.</p>
-      </div>
-      <div style="font-family:'Playfair Display',serif; font-style:italic; font-size:20px; color:#2B2620; margin-top:32px;">Cristina, founder of SAÏA</div>
     </div>
   </section>
 
@@ -607,7 +616,7 @@
           </div>
           <div>
             <div style="font-size:11px; letter-spacing:.22em; text-transform:uppercase; color:rgba(245,241,232,.5); margin-bottom:18px;">About us</div>
-            <div style="display:flex; flex-direction:column; gap:12px; font-size:14px;"><a href="#story" style="color:rgba(245,241,232,.78); text-decoration:none;">Our story</a><a href="#hire" style="color:rgba(245,241,232,.78); text-decoration:none;">Yoga mat hire</a><a href="#events" style="color:rgba(245,241,232,.78); text-decoration:none;">Events</a></div>
+            <div style="display:flex; flex-direction:column; gap:12px; font-size:14px;"><a href="story.html" style="color:rgba(245,241,232,.78); text-decoration:none;">Our story</a><a href="#mat-hire" style="color:rgba(245,241,232,.78); text-decoration:none;">Yoga mat hire</a><a href="#events" style="color:rgba(245,241,232,.78); text-decoration:none;">Gallery</a></div>
           </div>
           <div style="max-width:240px;">
             <div style="font-size:11px; letter-spacing:.22em; text-transform:uppercase; color:rgba(245,241,232,.5); margin-bottom:18px;">Subscribe</div>
@@ -650,7 +659,7 @@
 </div>
 
 <script>
-/* SAÏA — "In their words" photo reel (film-strip, minimal rails) */
+/* SAÏA — Gallery photo reel (film-strip, minimal rails) */
 (function(){
   var sec = document.getElementById('events');
   var track = document.getElementById('reelTrack');
@@ -866,6 +875,22 @@
     io.observe(vb);
   } else { play(); }
 })();
+</script>
+<script>
+  /* Pilates guest list — front-end only (no backend yet). Valid email → mockup confirmation page. */
+  (function () {
+    var form = document.querySelector('[data-guest-form]');
+    if (!form) return;
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var field = form.querySelector('input[type=email]');
+      var msg = form.querySelector('[data-guest-msg]');
+      var email = (field && field.value || '').trim();
+      var valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+      if (!valid) { if (msg) { msg.textContent = 'Please enter a valid email address.'; msg.style.color = '#B8624A'; } if (field) field.focus(); return; }
+      window.location.href = 'guest-list.html';
+    });
+  })();
 </script>
 <script src="vendor/three.min.js"></script>
 <script src="js/mat-core.js"></script>
