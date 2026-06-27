@@ -698,6 +698,20 @@
     </div>
   </section>
 
+  <!-- ============ INLINE CONCIERGE — designed-in conversion block ============ -->
+  <section id="concierge-hire" aria-label="Plan your hire with the SAÏA concierge" style="background:#EFEADF; padding:clamp(64px,8vw,110px) 6vw; border-top:1px solid #DAD4C8;">
+    <div style="max-width:760px; margin:0 auto;">
+      <div style="font-size:12px; letter-spacing:.3em; text-transform:uppercase; color:#B8624A; margin-bottom:16px; text-align:center;">The SAÏA concierge</div>
+      <h2 style="font-family:'Playfair Display',serif; font-weight:500; font-size:clamp(32px,4.6vw,54px); line-height:1.04; margin:0 0 18px; color:#2B2620; text-align:center;">Tell me about your event.</h2>
+      <p style="font-size:clamp(15px,1.5vw,18px); line-height:1.7; color:#4A443B; max-width:520px; margin:0 auto 28px; text-align:center;">I’ll sort the mats, give you a quote, and take you all the way to a checkout link. Ask me anything.</p>
+      <div id="homeInlineConcierge" class="saia-thread" style="background:#F5F1E8; border:1px solid #DAD4C8; border-radius:6px; min-height:220px; max-height:460px; overflow-y:auto; padding:20px; display:flex; flex-direction:column; gap:13px;"></div>
+      <div style="display:flex; gap:10px; align-items:center; margin-top:12px; border:1px solid #DAD4C8; border-radius:30px; padding:10px 16px; background:#fff;">
+        <input id="homeInlineInput" type="text" placeholder="e.g. 30 women, Saturday, NW3…" aria-label="Message the concierge" style="flex:1; border:none; background:transparent; font-family:'Inter',sans-serif; font-size:14px; color:#2B2620; outline:none;">
+        <button id="homeInlineSend" type="button" style="background:none; border:none; cursor:pointer; font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:#B8624A;">Send</button>
+      </div>
+    </div>
+  </section>
+
   <!-- ============ GALLERY — photo reel film strip ============ -->
   <section id="events" class="reel-section" aria-label="SAÏA women photo reel">
     <div class="rl-scroll">
@@ -772,7 +786,7 @@
           </div>
           <div>
             <div style="font-size:11px; letter-spacing:.22em; text-transform:uppercase; color:rgba(245,241,232,.5); margin-bottom:18px;">About us</div>
-            <div style="display:flex; flex-direction:column; gap:12px; font-size:14px;"><a href="story.html" style="color:rgba(245,241,232,.78); text-decoration:none;">Our story</a><a href="#estimate" style="color:rgba(245,241,232,.78); text-decoration:none;">Yoga mat hire</a><a href="#events" style="color:rgba(245,241,232,.78); text-decoration:none;">Gallery</a></div>
+            <div style="display:flex; flex-direction:column; gap:12px; font-size:14px;"><a href="story.html" style="color:rgba(245,241,232,.78); text-decoration:none;">Our story</a><a href="#concierge-hire" style="color:rgba(245,241,232,.78); text-decoration:none;">Yoga mat hire</a><a href="#events" style="color:rgba(245,241,232,.78); text-decoration:none;">Gallery</a></div>
           </div>
           <div style="max-width:240px;">
             <div style="font-size:11px; letter-spacing:.22em; text-transform:uppercase; color:rgba(245,241,232,.5); margin-bottom:18px;">Subscribe</div>
@@ -799,11 +813,6 @@
         <button id="homeChatClose" aria-label="Close concierge" style="background:none; border:none; cursor:pointer; padding:4px; display:flex;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(245,241,232,.75)" stroke-width="1.4"><line x1="5" y1="5" x2="19" y2="19"></line><line x1="19" y1="5" x2="5" y2="19"></line></svg></button>
       </div>
       <div id="homeThread" class="saia-thread" style="flex:1; overflow-y:auto; padding:22px; display:flex; flex-direction:column; gap:13px;"></div>
-      <div style="padding:2px 16px 14px; display:flex; flex-wrap:wrap; gap:8px; flex:none;">
-        <button data-q="Which mat is right for me?" class="home-chip" style="font-family:'Inter',sans-serif; font-size:12px; color:#B8624A; border:1px solid #B8624A; background:none; border-radius:30px; padding:8px 13px; cursor:pointer;">Which mat suits me?</button>
-        <button data-q="How does hire work?" class="home-chip" style="font-family:'Inter',sans-serif; font-size:12px; color:#B8624A; border:1px solid #B8624A; background:none; border-radius:30px; padding:8px 13px; cursor:pointer;">How does hire work?</button>
-        <button data-q="What's your return policy?" class="home-chip" style="font-family:'Inter',sans-serif; font-size:12px; color:#B8624A; border:1px solid #B8624A; background:none; border-radius:30px; padding:8px 13px; cursor:pointer;">Return policy</button>
-      </div>
       <div style="padding:13px 16px; border-top:1px solid #DAD4C8; display:flex; gap:10px; align-items:center; flex:none;">
         <input id="homeChatInput" type="text" placeholder="Type a message…" aria-label="Message the concierge" style="flex:1; border:none; background:transparent; font-family:'Inter',sans-serif; font-size:14px; color:#2B2620; outline:none;">
         <button id="homeChatSend" style="background:none; border:none; cursor:pointer; font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:#B8624A;">Send</button>
@@ -1063,6 +1072,9 @@
 </script>
 <script src="vendor/three.min.js"></script>
 <script src="js/mat-core.js"></script>
+<script src="js/saia-knowledge.js"></script>
+<script src="js/planner.js"></script>
+<script src="js/home-concierge.js"></script>
 <script src="js/home.js"></script>
 <script src="js/home-journey.js"></script>
 <!-- mobile-only scroll journey: lazy-loads the vendored three.js ES modules on small screens -->
