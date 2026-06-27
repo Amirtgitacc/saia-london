@@ -17,7 +17,7 @@
     hire: { pricePerMat: 8.5, currency: '£', hireDays: 2, minMats: 10, extraDayPerMat: 1.5, bulkThreshold: 60,
       mat: { size: '68 × 185 cm, 4 mm thick', colour: 'black', material: 'natural rubber with a PU surface', features: 'non-slip and anti-odour' },
       delivery: 'Same-day courier across London from our Central London warehouse.',
-      collection: 'We collect the day after — no need to clean them, we handle that.' },
+      collection: 'We collect the day after. No need to clean them, we handle that.' },
     contact: { whatsapp: '07444 611 914', person: 'Cristina', pickup: 'NW3 warehouse' },
     club: { ethos: 'women who lift each other up', join: 'pop your email in to hear about gatherings' },
     pilates: { method: 'small, slow and breath-led', format: '1-2-1 in NW3, group in Hampstead' },
@@ -50,12 +50,12 @@
           acts.push('Recommended ' + rec + ' mats for ' + (g || '—') + ' guests'); break;
         }
         case 'set_date': hire.date = args.date; acts.push('Set date to ' + args.date); break;
-        case 'quote': hire.total = total(hire); hire.status = 'Quoted'; acts.push('Prepared a quote — ' + money(H.pricePerMat) + ' / mat, ' + H.hireDays + '-day hire'); break;
+        case 'quote': hire.total = total(hire); hire.status = 'Quoted'; acts.push('Prepared a quote: ' + money(H.pricePerMat) + ' / mat, ' + H.hireDays + '-day hire'); break;
         case 'book_delivery': if (args.date) hire.date = args.date; hire.status = 'Delivery scheduled'; acts.push('Scheduled delivery' + (hire.date ? ' · ' + hire.date : '')); break;
         case 'checkout': if (!hire.total) hire.total = total(hire); hire.status = 'Checkout link ready'; acts.push('Generated a secure Shopify checkout link'); break;
-        case 'confirm': if (!hire.total) hire.total = total(hire); hire.status = 'Confirmed'; acts.push('Hire confirmed — confirmation on its way'); break;
+        case 'confirm': if (!hire.total) hire.total = total(hire); hire.status = 'Confirmed'; acts.push('Hire confirmed. Confirmation on its way'); break;
         case 'rsvp_event': acts.push('Reserved your place · ' + (args.event || 'SAÏA event')); break;
-        case 'book_pilates': acts.push('Pilates with Cristina' + (args.date ? ' · ' + args.date : '') + ' — held for you'); break;
+        case 'book_pilates': acts.push('Pilates with Cristina' + (args.date ? ' · ' + args.date : '') + ', held for you'); break;
         case 'join_newsletter': acts.push('Added you to the SAÏA guest list' + (args.email ? ' · ' + args.email : '')); break;
         default: break;
       }
@@ -76,7 +76,7 @@
 
     // greeting / thanks — keep it human
     if (has(/^(hi|hey|hello|good (morning|afternoon|evening)|yo|hiya)\b/))
-      return m('Hello, lovely — I’m Noor. I can plan mat hire for an event, share what’s on, or book you in for Pilates with Cristina. What brings you in?');
+      return m('Hello, lovely. I’m Noor. I can plan mat hire for an event, share what’s on, or book you in for Pilates with Cristina. What brings you in?');
     if (has(/\b(thanks|thank you|cheers|ta)\b/))
       return m('Any time. Anything else I can sort for your day?');
 
@@ -88,7 +88,7 @@
 
     // Pilates / classes / yoga
     if (has(/pilates|reformer|class(es)?|yoga session|work ?out|sessions?\b/) && !has(/mat/)) {
-      return m('Pilates with Cristina is ' + KB.pilates.method + ' — ' + KB.pilates.format + '. Shall I hold you a place' + (day ? ' for ' + day : '') + '?',
+      return m('Pilates with Cristina is ' + KB.pilates.method + '. ' + KB.pilates.format + '. Shall I hold you a place' + (day ? ' for ' + day : '') + '?',
         [{ tool: 'book_pilates', args: { date: day || null } }]);
     }
 
@@ -99,12 +99,12 @@
 
     // membership / join / "is it for me"
     if (has(/right for me|is (it|this) for me|join\b|member|belong|guest list|newsletter|sign ?up/))
-      return m('If you want to move, gather and breathe with ' + KB.club.ethos + ' — yes, it’s for you. No pressure, no performing. ' + KB.club.join + ' and I’ll send the next gathering.',
+      return m('If you want to move, gather and breathe with ' + KB.club.ethos + '. Yes, it’s for you. No pressure, no performing. ' + KB.club.join + ' and I’ll send the next gathering.',
         [{ tool: 'join_newsletter', args: {} }]);
 
     // mat spec
     if (has(/what (are|kind|type)|material|rubber|thick|how big|dimension|size|spec|pvc|slip|odou?r|smell|made of/) && (has(/mat/) || has(/rubber|thick|pvc|slip|odou?r/)))
-      return m('Our mat is ' + H.mat.size + ', ' + H.mat.colour + ' — ' + H.mat.material + ', ' + H.mat.features + '. We hire it from ' + money(H.pricePerMat) + ' a mat. How many are you expecting?');
+      return m('Our mat is ' + H.mat.size + ', ' + H.mat.colour + ', ' + H.mat.material + ', ' + H.mat.features + '. We hire it from ' + money(H.pricePerMat) + ' a mat. How many are you expecting?');
 
     // how hire works
     if (has(/how (does|do|to)\s?(it|this|the hire|i|we)?\s?(work|hire|rent)|how does (it|hire) work|process/))
@@ -122,11 +122,11 @@
 
     // location / contact
     if (has(/where|location|nw3|warehouse|address|whats ?app|phone|number|contact|call|reach|email/))
-      return m('We’re ' + (KB.contact.pickup || 'in London') + '. For the quickest service, WhatsApp ' + KB.contact.person + ' on ' + KB.contact.whatsapp + ' — or tell me your numbers and I’ll start your hire right here.');
+      return m('We’re ' + (KB.contact.pickup || 'in London') + '. For the quickest service, WhatsApp ' + KB.contact.person + ' on ' + KB.contact.whatsapp + '. Or tell me your numbers and I’ll start your hire right here.');
 
     // recommend for a headcount
     if (has(/recommend|how many|enough|need\b/) && guests)
-      return m('For ' + guests + ' I’d allow a few spares — I’ve set ' + rec(guests) + ' mats. Want me to price it and arrange delivery?',
+      return m('For ' + guests + ' I’d allow a few spares. I’ve set ' + rec(guests) + ' mats. Want me to price it and arrange delivery?',
         [{ tool: 'recommend', args: { guests } }]);
 
     // a headcount → plan the whole hire
@@ -134,7 +134,7 @@
       const actions = [{ tool: 'set_event', args: { guests, date: day || null } }, { tool: 'recommend', args: { guests } }];
       if (day) actions.push({ tool: 'book_delivery', args: { date: day } });
       actions.push({ tool: 'quote' });
-      return m('Done — ' + rec(guests) + ' mats for ' + guests + (day ? ', delivered ' + day : '') + '. Quote’s in the panel; say “checkout” and I’ll make your payment link.', actions);
+      return m('Done. ' + rec(guests) + ' mats for ' + guests + (day ? ', delivered ' + day : '') + '. Quote’s in the panel; say “checkout” and I’ll make your payment link.', actions);
     }
 
     // explicit mat count
@@ -142,7 +142,7 @@
       const wantsPrice = has(/price|quote|cost|how much|rate/);
       const actions = [{ tool: 'add_mats', args: { n: matsN } }];
       if (wantsPrice) actions.push({ tool: 'quote' });
-      return m(wantsPrice ? matsN + ' mats at ' + money(H.pricePerMat) + ' each for a ' + H.hireDays + '-day hire — priced above. Shall I arrange delivery?' : 'Added ' + matsN + ' mats. Want a price?', actions);
+      return m(wantsPrice ? matsN + ' mats at ' + money(H.pricePerMat) + ' each for a ' + H.hireDays + '-day hire, priced above. Shall I arrange delivery?' : 'Added ' + matsN + ' mats. Want a price?', actions);
     }
 
     // pricing
@@ -152,12 +152,12 @@
 
     // checkout / pay
     if (has(/checkout|pay|payment|link|invoice/))
-      return m('Your secure checkout link is ready in the panel — that’s you joining the club. Anything else for your day?',
+      return m('Your secure checkout link is ready in the panel. That’s you joining the club. Anything else for your day?',
         [{ tool: 'checkout' }]);
 
     // confirm
     if (has(/^(yes|yep|yeah|go ahead|do it|lock it|confirm|book it|sounds good|please)\b|confirm|book now/))
-      return m('Confirmed — delivery the day before, collection after. Welcome to SAÏA.',
+      return m('Confirmed. Delivery the day before, collection after. Welcome to SAÏA.',
         [{ tool: 'confirm' }]);
 
     // not recognised → let Tier 2 (Claude assist) take it

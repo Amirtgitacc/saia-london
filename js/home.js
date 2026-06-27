@@ -39,12 +39,12 @@
 
   function reply(text) {
     const t = (text || '').toLowerCase();
-    if (t.includes('which mat') || t.includes('right for me') || t.includes('recommend')) return 'Our signature mat suits every practice — 4mm of natural rubber with a non-slip, anti-odour PU top, 68 × 185 cm. For events we hire it from £8.50 a mat. How many people are you expecting?';
+    if (t.includes('which mat') || t.includes('right for me') || t.includes('recommend')) return 'Our signature mat suits every practice: 4mm of natural rubber with a non-slip, anti-odour PU top, 68 × 185 cm. For events we hire it from £8.50 a mat. How many people are you expecting?';
     if (t.includes('how') && (t.includes('hire') || t.includes('work') || t.includes('rent'))) return 'It’s simple: tell us your date and numbers, we deliver the day before your event (min. 10 mats, from £8.50 each for a 2-day hire) and collect once you’re done. Shall I start a quote for you?';
     if (t.includes('price') || t.includes('cost') || t.includes('quote') || t.includes('how much')) return '£8.50 per mat for a 2-day hire, with a minimum of 10. Extra days are £1.50 a mat, plus courier delivery across London. Over 60 mats? I can arrange a reduced rate.';
-    if (t.includes('track') || t.includes('order') || t.includes('booking')) return 'Of course — share the email you booked with or your order number and I’ll check the status for you right away.';
-    if (t.includes('return') || t.includes('collect') || t.includes('pick')) return 'We collect the mats the day after your event, or you’re welcome to drop them at our NW3 warehouse. No need to clean them — we handle that.';
-    if (t.includes('event') || t.includes('community') || t.includes('club')) return 'Lovely — SAÏA hosts monthly experiences for women in London, from brunch clubs to movement mornings. Pop your email in our guest list and I’ll keep you posted.';
+    if (t.includes('track') || t.includes('order') || t.includes('booking')) return 'Of course. Share the email you booked with or your order number and I’ll check the status for you right away.';
+    if (t.includes('return') || t.includes('collect') || t.includes('pick')) return 'We collect the mats the day after your event, or you’re welcome to drop them at our NW3 warehouse. No need to clean them. We handle that.';
+    if (t.includes('event') || t.includes('community') || t.includes('club')) return 'Lovely. SAÏA hosts monthly experiences for women in London, from brunch clubs to movement mornings. Pop your email in our guest list and I’ll keep you posted.';
     return null; // not a known FAQ → escalate to the Claude assist
   }
 

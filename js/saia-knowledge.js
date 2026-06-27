@@ -32,8 +32,8 @@
       minMats: 10,
       extraDayPerMat: 1.5,                  // £ per mat per additional day
       bulkThreshold: 60,                    // 60+ → reduced quote, get in touch
-      delivery: 'Same-day courier (Addison Lee) from our Central London warehouse — roughly £35–£55 each way across London.',
-      collection: 'We collect the day after your event, or you can drop them back at our NW3 warehouse in working hours. No need to clean them — we handle that.',
+      delivery: 'Same-day courier (Addison Lee) from our Central London warehouse, roughly £35 to £55 each way across London.',
+      collection: 'We collect the day after your event, or you can drop them back at our NW3 warehouse in working hours. No need to clean them. We handle that.',
       noSale: true,                         // HIRE ONLY — never for sale
       retailReference: 79,                  // £ retail value, reference only (not for sale)
       mat: {
@@ -49,14 +49,14 @@
     club: {
       what: 'A female-led lifestyle brand empowering women through Fitness, Community and Mindset.',
       ethos: 'A SAÏA woman is not afraid to speak her truth, and is someone who inspires and lifts up other women.',
-      join: 'Free guest list — pop your email in to hear about upcoming experiences.',
+      join: 'Free guest list. Pop your email in to hear about upcoming experiences.',
       taglines: ['The SAÏA Club', 'Join the SAÏA Community'],
     },
 
     /* ---- PRIORITY #3 — YOGA / PILATES ---- */
     pilates: {
       instructor: 'Cristina',
-      method: 'Classical Pilates and Reformer — small, slow and breath-led, drawn from Joseph Pilates’ Contrology. Pilates for women, every level; Cristina meets you where you are.',
+      method: 'Classical Pilates and Reformer: small, slow and breath-led, drawn from Joseph Pilates’ Contrology. Pilates for women, every level; Cristina meets you where you are.',
       format: '1-2-1 classes in NW3 and group classes in Hampstead, London.',
       booking: 'Tell me a day that suits and I’ll hold you a place; final booking is confirmed with Cristina.',
     },
@@ -64,7 +64,7 @@
     /* ---- FOUNDER ---- */
     founder: {
       name: 'Cristina',
-      bio: 'Cristina is an English-Mexican entrepreneur in London and an advocate for female empowerment. She founded SAÏA in 2020, starting with yoga mats and bags, then created the monthly SAÏA Brunch Club and grew it into dinner parties, book clubs and 5k runs in Hyde Park — and she attends every event herself.',
+      bio: 'Cristina is an English-Mexican entrepreneur in London and an advocate for female empowerment. She founded SAÏA in 2020, starting with yoga mats and bags, then created the monthly SAÏA Brunch Club and grew it into dinner parties, book clubs and 5k runs in Hyde Park, and she attends every event herself.',
       meaning: 'SAÏA means “A Woman Who Wins”, inspired by her great-grandmother Calandita, a Mexican farm worker who sold a cow to finance her escape from farm life. Cristina credits her courage and self-belief.',
     },
 
@@ -81,17 +81,17 @@
   /* A compact markdown fact-sheet for the Tier-2 system prompt.
      Built from the structured fields above so it can never disagree. */
   KB.factSheet = [
-    '## SAÏA LONDON — what you (Noor) know',
+    '## SAÏA LONDON: what you (Noor) know',
     '',
     'SAÏA is ' + KB.club.what + ' ' + KB.founder.meaning,
     '',
-    '### Mat hire (your #1 priority — this is what most people want)',
-    '- Mats are for HIRE ONLY — never for sale.',
+    '### Mat hire (your #1 priority: this is what most people want)',
+    '- Mats are for HIRE ONLY. Never for sale.',
     '- ' + KB.hire.currency + KB.hire.pricePerMat.toFixed(2) + ' per mat for a ' + KB.hire.hireDays + '-day hire (the day before the event through the end of it).',
     '- Minimum ' + KB.hire.minMats + ' mats. Extra days are ' + KB.hire.currency + KB.hire.extraDayPerMat.toFixed(2) + ' per mat per day. ' + KB.hire.bulkThreshold + '+ mats → reduced quote, get in touch.',
     '- Delivery: ' + KB.hire.delivery,
     '- Collection: ' + KB.hire.collection,
-    '- The mat: ' + KB.hire.mat.size + ', ' + KB.hire.mat.colour + ', ' + KB.hire.mat.material + '; ' + KB.hire.mat.features + '. (Retail value ~' + KB.hire.currency + KB.hire.retailReference + ' each, for reference only — still hire-only.)',
+    '- The mat: ' + KB.hire.mat.size + ', ' + KB.hire.mat.colour + ', ' + KB.hire.mat.material + '; ' + KB.hire.mat.features + '. (Retail value ~' + KB.hire.currency + KB.hire.retailReference + ' each, for reference only, still hire-only.)',
     '- Booking/urgent: WhatsApp ' + KB.contact.person + ' on ' + KB.contact.whatsapp + '. Pickup at ' + KB.contact.pickup + '.',
     '',
     '### Community / the club (#2)',
