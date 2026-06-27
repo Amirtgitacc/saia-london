@@ -59,54 +59,84 @@
     filter: drop-shadow(0 24px 34px rgba(43,38,32,.18)); }
 </style>
 <style>
-  /* ===== Gallery photo reel — film-strip, minimal rails ===== */
-  #events.reel-section{ background:linear-gradient(180deg,#F5F1E8,#EFEADF); }
-  #events .rl-scroll{ height:460vh; position:relative; }
-  #events .rl-sticky{ position:sticky; top:0; height:100vh; overflow:hidden; display:flex; align-items:center; }
-  #events .rl-bg{ position:absolute; inset:0; z-index:0; }
-  #events .rl-head{ position:absolute; top:7vh; left:0; right:0; z-index:6; text-align:center; pointer-events:none; }
-  #events .rl-head .t{ font-size:12px; letter-spacing:.3em; text-transform:uppercase; color:#B8624A; }
-  #events .rl-head h2{ font-family:'Playfair Display',serif; font-weight:500; font-size:clamp(30px,4.4vw,52px); line-height:1; margin:8px 0 0; }
-  #events .caps{ position:absolute; left:0; right:0; bottom:6.5vh; z-index:6; text-align:center; pointer-events:none; height:1px; }
-  #events .caps .w{ position:absolute; left:0; right:0; bottom:0; padding:0 8vw; opacity:0; transform:translateY(18px);
-    transition:opacity .9s cubic-bezier(.16,1,.3,1), transform .9s cubic-bezier(.16,1,.3,1);
-    font-family:'Playfair Display',serif; font-style:italic; font-weight:500; font-size:clamp(22px,3vw,38px); line-height:1.05; color:#2B2620; }
-  #events .caps .w.on{ opacity:1; transform:none; }
-  #events .film-rails{ position:absolute; inset:0; z-index:1; overflow:hidden; pointer-events:none; }
-  #events .perf-row{ position:absolute; left:0; height:15px; will-change:transform; background:rgba(43,38,32,.82);
-    -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='15'%3E%3Crect x='4' y='2' width='17' height='11' rx='3.5' fill='white'/%3E%3C/svg%3E") repeat-x;
-    mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='15'%3E%3Crect x='4' y='2' width='17' height='11' rx='3.5' fill='white'/%3E%3C/svg%3E") repeat-x;
-    -webkit-mask-size:28px 15px; mask-size:28px 15px; }
-  #events .perf-row.top{ top:19.5vh; } #events .perf-row.bottom{ bottom:19.5vh; }
-  #events .rl-track{ position:relative; z-index:3; display:flex; align-items:center; gap:3vw; padding:0 42vw; will-change:transform; }
-  #events .rl-track figure{ position:relative; flex:0 0 auto; width:28vw; height:56vh; border-radius:3px; overflow:hidden; margin:0; will-change:transform,opacity,filter; }
-  #events .rl-track .ken{ position:absolute; inset:0; }
-  #events .rl-track .ken img{ width:100%; height:100%; object-fit:cover; transform:scale(1.16); animation:reelKen 15s ease-in-out infinite alternate; }
-  #events .rl-track figure:nth-child(even) .ken img{ animation-duration:19s; }
-  @keyframes reelKen{ from{ transform:scale(1.07) translate(-1%,-1%); } to{ transform:scale(1.2) translate(1.5%,1.5%); } }
-  #events .rl-track .chip{ position:absolute; left:12px; bottom:12px; z-index:4; font-size:10px; letter-spacing:.18em;
-    text-transform:uppercase; color:#fff; background:rgba(43,38,32,.55); -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px);
-    padding:5px 10px; border-radius:30px; opacity:0; transform:translateY(8px); transition:opacity .4s,transform .4s; }
-  #events .rl-track figure.hot .chip{ opacity:1; transform:none; }
-  #events .rl-hint{ position:absolute; bottom:2.6vh; left:0; right:0; text-align:center; z-index:6; color:#6B6358;
-    font-size:10px; letter-spacing:.24em; text-transform:uppercase; }
+  /* ===== Gallery — animated 3D photo grid (Atelier) =====
+     scroll vars set by JS on #events: --gl-warm (glow) --gl-tint (theme wash 1→0)
+     --gl-g (glass strength 1→0) --gl-ht (heading shrink/recolour 0→1) */
+  #events{ position:relative; --gl-warm:0; --gl-g:1; --gl-ht:0; --gl-tint:1; height:420vh;
+    background:linear-gradient(180deg, #F5F1E8 0%,
+      color-mix(in srgb, #EBE3D5 calc(40% + var(--gl-warm)*30%), #F5F1E8) 55%,
+      color-mix(in srgb, #EFE0D6 calc(var(--gl-warm)*70%), #EBE3D5) 100%); }
+  #events .gl-sticky{ position:sticky; top:0; height:100vh; width:100%; overflow:hidden;
+    perspective:1500px; perspective-origin:center 18%;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; }
+  #events .gl-glow{ position:absolute; left:50%; bottom:-12%; transform:translateX(-50%);
+    width:120vw; height:80vh; z-index:0; pointer-events:none;
+    background:radial-gradient(45% 55% at 38% 70%, rgba(201,138,119,.45), transparent 70%),
+      radial-gradient(50% 60% at 66% 60%, rgba(184,98,74,.34), transparent 72%);
+    filter:blur(50px); opacity:calc(.15 + var(--gl-warm)*.85); transition:opacity .2s linear; }
+  #events .gl-grain{ position:absolute; inset:0; z-index:5; pointer-events:none; opacity:.04; mix-blend-mode:multiply;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+  /* text — frosted glass panel that dissolves on scroll */
+  #events .gl-intro{ position:absolute; left:50%; top:46%; transform:translate(-50%,-50%); z-index:40;
+    text-align:center; padding:0 1.2rem; pointer-events:none; width:min(640px,86vw); }
+  #events .gl-card{ display:block; padding:34px clamp(26px,4vw,48px) 30px; border-radius:22px;
+    background:rgba(245,241,232,calc(.46*var(--gl-g,1)));
+    -webkit-backdrop-filter:blur(calc(22px*var(--gl-g,1))) saturate(1.2);
+    backdrop-filter:blur(calc(22px*var(--gl-g,1))) saturate(1.2);
+    border:1px solid rgba(255,255,255,calc(.55*var(--gl-g,1)));
+    box-shadow:0 36px 80px -34px rgba(43,38,32,calc(.6*var(--gl-g,1))), inset 0 1px 0 rgba(255,255,255,calc(.5*var(--gl-g,1)));
+    opacity:0; filter:blur(14px); transform:translateY(12px) scale(.98);
+    transition:opacity 1.1s cubic-bezier(.16,1,.3,1), filter 1.1s ease, transform 1.1s cubic-bezier(.16,1,.3,1),
+      background-color .2s linear, border-color .2s linear, box-shadow .2s linear; }
+  #events.gl-in .gl-card{ opacity:1; filter:blur(0); transform:none; }
+  #events .gl-kicker{ font-size:12px; letter-spacing:.34em; text-transform:uppercase; color:#B8624A;
+    opacity:var(--gl-g,1); transition:opacity .2s linear; }
+  #events .gl-intro h2{ font-family:'Playfair Display',serif; font-weight:400; font-size:clamp(34px,5vw,58px);
+    line-height:1.05; letter-spacing:-.01em; margin:9px 0 0;
+    color:#2B2620; color:color-mix(in srgb, #FBF7EF calc(var(--gl-ht,0)*100%), #2B2620);
+    scale:calc(1 - .34*var(--gl-ht,0));
+    text-shadow:0 2px calc(var(--gl-ht,0)*24px) rgba(28,22,16,calc(var(--gl-ht,0)*.6));
+    transition:scale .2s linear, color .2s linear, text-shadow .2s linear; }
+  #events .gl-intro h2 em{ font-style:italic; color:#B8624A;
+    color:color-mix(in srgb, #EAB59F calc(var(--gl-ht,0)*100%), #B8624A); }
+  #events .gl-intro p{ margin:14px auto 0; max-width:30rem; color:#4A4339; font-weight:400; font-size:clamp(14px,1.4vw,16px);
+    opacity:var(--gl-g,1); transition:opacity .2s linear; }
+  #events .gl-rule{ width:46px; height:1px; background:#B8624A; margin:18px auto 0;
+    opacity:calc(.7*var(--gl-g,1)); transition:opacity .2s linear; }
+  /* the 3D grid */
+  #events .gl-stage{ display:grid; grid-template-columns:repeat(3,1fr); gap:1rem; width:min(1080px,88vw);
+    transform-style:preserve-3d; transform:rotateX(62deg) scale(1.18); will-change:transform; margin:0 auto; z-index:10; }
+  #events .gl-col{ display:flex; flex-direction:column; gap:1rem; will-change:transform; }
+  #events .gl-tile{ position:relative; overflow:hidden; border-radius:14px; background:#EBE3D5;
+    box-shadow:0 26px 60px -28px rgba(43,38,32,.55), 0 2px 8px rgba(43,38,32,.10);
+    outline:1px solid rgba(255,255,255,.35); outline-offset:-1px;
+    transition:transform .6s cubic-bezier(.16,1,.3,1), box-shadow .6s ease; }
+  #events .gl-tile img{ width:100%; aspect-ratio:4/5; object-fit:cover;
+    filter:saturate(.94) contrast(.98) brightness(.99);
+    transition:transform 1.1s cubic-bezier(.16,1,.3,1), filter .55s ease; }
+  #events .gl-tile::before{ content:""; position:absolute; inset:0; z-index:2; pointer-events:none;
+    background:linear-gradient(160deg, rgba(255,255,255,.28), transparent 38%); mix-blend-mode:screen; }
+  #events .gl-tile::after{ content:""; position:absolute; inset:0; z-index:1; pointer-events:none;
+    background:linear-gradient(150deg, #C75B40 0%, #C98A77 46%, #8C6A8E 100%); mix-blend-mode:multiply;
+    opacity:var(--gl-tint,0); transition:opacity .2s linear; }
+  #events .gl-tile:hover{ transform:scale(1.07) translateY(-8px); z-index:30;
+    box-shadow:0 50px 90px -34px rgba(43,38,32,.7), 0 8px 22px rgba(43,38,32,.18); }
+  #events .gl-tile:hover img{ transform:scale(1.07); filter:saturate(1.08) contrast(1.04) brightness(1.02); }
   .hire-chip{ font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:#6B6358; border:1px solid #C9C2B4; border-radius:30px; padding:7px 15px; }
   .input-focus:focus{ outline:2px solid #B8624A; outline-offset:1px; }
-  @media (max-width:767px){
-    #events .rl-scroll{ height:380vh; }
-    #events .rl-track{ gap:5vw; padding:0 18vw; }
-    #events .rl-track figure{ width:64vw; height:52vh; }
-    #events .perf-row.top{ top:22vh; } #events .perf-row.bottom{ bottom:22vh; }
+  @media (max-width:680px){
+    #events .gl-stage{ grid-template-columns:repeat(2,1fr); width:92vw; gap:.7rem; }
+    #events .gl-stage .gl-col:nth-child(3){ display:none; }
   }
   @media (prefers-reduced-motion: reduce){
-    #events .rl-scroll{ height:auto; }
-    #events .rl-sticky{ position:static; height:auto; display:block; padding:64px 0 72px; }
-    #events .rl-bg, #events .film-rails, #events .caps, #events .rl-hint{ display:none; }
-    #events .rl-head{ position:static; margin-bottom:36px; }
-    #events .rl-track{ position:static; transform:none !important; flex-wrap:wrap; justify-content:center; gap:14px; padding:0 6vw; }
-    #events .rl-track figure{ width:min(300px,42vw); height:300px; transform:none !important; opacity:1 !important; filter:none !important; }
-    #events .rl-track .ken img{ animation:none; transform:none; }
-    #events .rl-track .chip{ opacity:1; transform:none; }
+    #events{ height:auto; }
+    #events .gl-sticky{ position:static; height:auto; display:block; padding:64px 0 72px; }
+    #events .gl-intro{ position:static; transform:none; margin:0 auto 36px; }
+    #events .gl-card{ opacity:1 !important; filter:none !important; transform:none !important; }
+    #events .gl-glow, #events .gl-grain{ display:none; }
+    #events .gl-stage{ transform:none !important; }
+    #events .gl-col{ transform:none !important; }
+    #events .gl-tile::after{ opacity:0 !important; }
   }
 </style>
 <style>
@@ -771,16 +801,23 @@
     </div>
   </section>
 
-  <!-- ============ GALLERY — photo reel film strip ============ -->
-  <section id="events" class="reel-section" aria-label="SAÏA women photo reel">
-    <div class="rl-scroll">
-      <div class="rl-sticky">
-        <div class="rl-bg"></div>
-        <div class="film-rails"><div class="perf-row top"></div><div class="perf-row bottom"></div></div>
-        <div class="rl-head"><div class="t">SAÏA women</div><h2>Gallery</h2></div>
-        <div class="caps" id="reelCaps"></div>
-        <div class="rl-track" id="reelTrack"></div>
-        <div class="rl-hint" aria-hidden="true">Grayscale off-centre · hover · scroll ↓</div>
+  <!-- ============ GALLERY — animated 3D photo grid ============ -->
+  <section id="events" aria-label="SAÏA women gallery">
+    <div class="gl-sticky">
+      <div class="gl-glow"></div>
+      <div class="gl-grain"></div>
+      <div class="gl-intro">
+        <div class="gl-card">
+          <div class="gl-kicker">SAÏA women · NW3</div>
+          <h2>The room, <em>full of women</em></h2>
+          <p>Community classes, retreats and the mornings in between — across North West London.</p>
+          <div class="gl-rule"></div>
+        </div>
+      </div>
+      <div class="gl-stage" id="glStage">
+        <div class="gl-col" data-y="-9,3"></div>
+        <div class="gl-col" data-y="13,5" style="margin-top:-42%"></div>
+        <div class="gl-col" data-y="-9,3"></div>
       </div>
     </div>
   </section>
@@ -883,12 +920,11 @@
 </div>
 
 <script>
-/* SAÏA — Gallery photo reel (film-strip, minimal rails) */
+/* SAÏA — Gallery: animated 3D photo grid (vanilla useScroll/useTransform port) */
 (function(){
   var sec = document.getElementById('events');
-  var track = document.getElementById('reelTrack');
-  var capsBox = document.getElementById('reelCaps');
-  if(!sec || !track || !capsBox) return;
+  var stage = document.getElementById('glStage');
+  if(!sec || !stage) return;
 
   var PHOTOS = [
     "Snapinsta.app_242292911_1079452836196028_3808565095717851061_n_1080.jpg",
@@ -904,63 +940,46 @@
     "Snapinsta.app_274042141_476998050588663_3300805879876636614_n_1080.jpg",
     "IMG_2392.jpg"
   ].map(function(f){ return "photos/" + f; });
-  var WORDS = ["A Woman Who Wins.","Fitness, community and mindset.","She speaks her truth.","Beautiful venues, real connection.","Sisterhood, celebrated."];
-  var VALUES = ["Community","Movement","Strength","Stillness","Together","Mindset"];
 
-  var clamp = function(v,a,b){ return Math.min(b,Math.max(a,v)); };
-  var lerp  = function(a,b,t){ return a+(b-a)*t; };
-
+  var cols = [].slice.call(stage.querySelectorAll('.gl-col'));
   PHOTOS.forEach(function(src,i){
-    var f = document.createElement('figure');
-    f.innerHTML = '<div class="ken"><img loading="lazy" src="'+src+'" alt="SAÏA London community photograph '+(i+1)+'"></div><span class="chip">'+VALUES[i%VALUES.length]+'</span>';
-    track.appendChild(f);
+    var fig = document.createElement('figure'); fig.className = 'gl-tile';
+    fig.innerHTML = '<img loading="lazy" src="'+src+'" alt="SAÏA London community photograph '+(i+1)+'">';
+    cols[i % cols.length].appendChild(fig);
   });
-  WORDS.forEach(function(w){ var d=document.createElement('div'); d.className='w'; d.textContent=w; capsBox.appendChild(d); });
-
-  var figs = [].slice.call(track.children);
-  var caps = [].slice.call(capsBox.children);
 
   if(window.matchMedia('(prefers-reduced-motion: reduce)').matches) return; // CSS lays it out statically
 
-  var scroll = sec.querySelector('.rl-scroll');
-  var rails = [].slice.call(sec.querySelectorAll('.perf-row'));
-  var cur = 0, tgt = 0, hot = null;
+  var clamp = function(v,a,b){ return Math.max(a,Math.min(b,v)); };
+  var map = function(v,iMin,iMax,oMin,oMax){ var t=clamp((v-iMin)/(iMax-iMin),0,1); return oMin+(oMax-oMin)*t; };
+  var ticking = false;
 
-  function setupRails(){ var w = track.scrollWidth + window.innerWidth; rails.forEach(function(r){ r.style.width = w + 'px'; }); }
-  setupRails(); window.addEventListener('resize', setupRails);
-
-  figs.forEach(function(f){
-    f.addEventListener('mouseenter', function(){ hot = f; f.classList.add('hot'); });
-    f.addEventListener('mouseleave', function(){ f.classList.remove('hot'); if(hot===f) hot=null; f.dataset.rx=0; f.dataset.ry=0; });
-    f.addEventListener('mousemove', function(e){ var r=f.getBoundingClientRect();
-      f.dataset.ry = (((e.clientX-r.left)/r.width-0.5)*9).toFixed(2);
-      f.dataset.rx = ((-((e.clientY-r.top)/r.height-0.5))*9).toFixed(2);
+  function frame(){
+    ticking = false;
+    var vh = window.innerHeight, total = sec.offsetHeight - vh;
+    var p = total>0 ? clamp(-sec.getBoundingClientRect().top/total, 0, 1) : 0;
+    // stand up + scale in, then a gentle drift once flat
+    var rx = map(p,0,0.45,62,0), scl = map(p,0.35,0.85,1.18,1), gy = map(p,0.55,1,0,-2.5);
+    stage.style.transform = 'translateY('+gy+'vh) rotateX('+rx+'deg) scale('+scl+')';
+    // column parallax
+    cols.forEach(function(col){
+      var yr = (col.getAttribute('data-y')||'0,0').split(',');
+      col.style.transform = 'translateY('+map(p,0.5,1,+yr[0],+yr[1])+'%)';
     });
-  });
-
-  function progress(){ var r=scroll.getBoundingClientRect(); var total=scroll.offsetHeight-window.innerHeight; return clamp((-r.top)/total,0,1); }
-  function showCap(p){ var i=clamp(Math.floor(p*caps.length),0,caps.length-1); caps.forEach(function(e,k){ e.classList.toggle('on', k===i); }); }
-
-  function tick(){
-    tgt = progress(); cur = lerp(cur, tgt, 0.12);
-    var max = track.scrollWidth - window.innerWidth, filmX = -cur*max;
-    track.style.transform = 'translateX('+filmX+'px)';
-    rails.forEach(function(r){ r.style.transform = 'translateX('+filmX+'px)'; });
-    var cx = window.innerWidth/2;
-    figs.forEach(function(f){
-      var r = f.getBoundingClientRect();
-      var d = Math.abs((r.left+r.width/2)-cx)/window.innerWidth;
-      var s=clamp(1-d*0.32,0.74,1), op=clamp(1-d*1.05,0.34,1), bl=clamp(d*4.2,0,3), g=clamp((d-0.04)*2.4,0,1), sat=lerp(1.08,0.9,clamp(d,0,1));
-      var ty=d*44, rx=0, ry=0;
-      if(f===hot){ s+=0.10; op=1; bl=0; g=0; sat=1.1; ty-=16; rx=+(f.dataset.rx||0); ry=+(f.dataset.ry||0); }
-      f.style.transform = 'perspective(1200px) translateY('+ty+'px) rotateX('+rx+'deg) rotateY('+ry+'deg) scale('+s.toFixed(3)+')';
-      f.style.opacity = op;
-      f.style.filter = 'blur('+bl.toFixed(2)+'px) grayscale('+g.toFixed(2)+') saturate('+sat.toFixed(2)+')';
-    });
-    showCap(cur);
-    requestAnimationFrame(tick);
+    // warm glow, theme-colour wash (1→0), glass strength (1→0), heading shrink/recolour (0→1)
+    sec.style.setProperty('--gl-warm', map(p,0.3,1,0,1).toFixed(3));
+    sec.style.setProperty('--gl-tint', (1 - map(p,0,0.5,0,1)).toFixed(3));
+    sec.style.setProperty('--gl-g',    (1 - map(p,0.55,0.9,0,1)).toFixed(3));
+    sec.style.setProperty('--gl-ht',   map(p,0.5,0.92,0,1).toFixed(3));
   }
-  requestAnimationFrame(tick);
+  function onScroll(){ if(!ticking){ ticking = true; requestAnimationFrame(frame); } }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  window.addEventListener('resize', onScroll);
+  frame();
+
+  // reveal the glass panel. The section's initial opacity:0 is already committed (this script runs
+  // at end of body), so adding the class now still animates the fade-in via the CSS transition.
+  sec.classList.add('gl-in');
 })();
 </script>
 <!-- Estimate-your-hire spotlight stage engine -->
