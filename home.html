@@ -147,6 +147,21 @@
   .hire-road .hr-pin.on b{ color:#B8624A; }
   .hire-road .hr-van{ position:absolute; top:13px; left:0; transform:translate(-50%,-50%); color:#B8624A; z-index:2; transition:left .12s linear; }
   .hire-road .hr-van svg{ width:28px; height:28px; display:block; filter:drop-shadow(0 4px 6px rgba(43,38,32,.2)); }
+
+  /* ===== Scroll cue (entry) ===== */
+  @keyframes homeCueBounce { 0%,100%{ transform:rotate(45deg) translate(0,0); opacity:.5; } 50%{ transform:rotate(45deg) translate(3px,3px); opacity:1; } }
+  .home-cue-arrow{ animation:homeCueBounce 1.4s ease-in-out infinite; }
+  @media (prefers-reduced-motion: reduce){ .home-cue-arrow{ animation:none; } }
+
+  /* ===== Hero entrance ===== */
+  @keyframes homeHeroIn { from{ opacity:0; transform:translateY(16px); } to{ opacity:1; transform:translateY(0); } }
+  .home-hero-in > *{ animation:homeHeroIn .7s cubic-bezier(.22,.61,.36,1) both; }
+  .home-hero-in > *:nth-child(1){ animation-delay:.05s; }
+  .home-hero-in > *:nth-child(2){ animation-delay:.15s; }
+  .home-hero-in > *:nth-child(3){ animation-delay:.27s; }
+  .home-hero-in > *:nth-child(4){ animation-delay:.39s; }
+  .home-hero-in > *:nth-child(5){ animation-delay:.5s; }
+  @media (prefers-reduced-motion: reduce){ .home-hero-in > *{ animation:none; } }
 </style>
 
 <!-- ============ Estimate-your-hire spotlight stage (Phase 4) ============ -->
@@ -550,7 +565,10 @@
 
       <!-- progress rail + scroll hint -->
       <div style="position:absolute; top:50%; right:4vw; transform:translateY(-50%); width:2px; height:190px; background:rgba(43,38,32,.16); z-index:4;"><span id="homeBar" style="position:absolute; top:0; left:0; width:100%; height:0%; background:#2B2620;"></span></div>
-      <div id="homeHint" style="position:absolute; bottom:4vh; right:4vw; font-size:11px; letter-spacing:.24em; text-transform:uppercase; color:#2B2620; z-index:4;">Scroll to unroll ↓</div>
+      <div id="homeHint" style="position:absolute; bottom:4vh; right:4vw; display:flex; flex-direction:column; align-items:center; gap:8px; z-index:4;">
+        <span style="font-size:11px; letter-spacing:.28em; text-transform:uppercase; color:#2B2620; font-weight:500;">Scroll to unroll</span>
+        <span class="home-cue-arrow" aria-hidden="true" style="width:18px; height:18px; border-right:2px solid #B8624A; border-bottom:2px solid #B8624A; transform:rotate(45deg);"></span>
+      </div>
     </div>
   </div>
 
