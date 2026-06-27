@@ -168,10 +168,11 @@
   .nw3-map svg{ width:100%; height:auto; display:block; overflow:visible; }
   .nw3-line{ fill:none; stroke-linecap:round; stroke-linejoin:round; }
   .nw3-line.northern{ stroke:#2B2620; stroke-width:5; }
-  .nw3-line.jubilee{ stroke:#B8624A; stroke-width:5; }
-  .nw3-line.gold{ stroke:#C99A5B; stroke-width:3.5; }
+  .nw3-line.jubilee{ stroke:#9A938A; stroke-width:5; }
   .nw3-stn{ font-family:'Inter',sans-serif; font-size:10px; font-weight:500; letter-spacing:.02em; fill:#2B2620; }
   .nw3-sub{ font-family:'Inter',sans-serif; font-size:8.5px; letter-spacing:.18em; text-transform:uppercase; fill:#B8624A; }
+  .nw3-llabel{ font-family:'Inter',sans-serif; font-size:8px; letter-spacing:.16em; text-transform:uppercase; fill:#A39A8C; }
+  .nw3-tickname{ font-family:'Inter',sans-serif; font-size:8px; letter-spacing:.02em; fill:#8C8478; }
   .nw3-ping{ fill:#B8624A; opacity:0; transform-box:fill-box; transform-origin:center; }
   /* draw-in: drawn (visible) at rest; replays each time the band goes live */
   .nw3-map .draw{ stroke-dasharray:1; stroke-dashoffset:0; }
@@ -583,25 +584,34 @@
             <h2 style="font-family:'Playfair Display',serif; font-weight:500; font-size:clamp(34px,4.6vw,58px); line-height:1.0; margin:0 0 22px; color:#2B2620;">NW3 &amp;<br>Hampstead.</h2>
             <p style="font-size:16px; line-height:1.75; color:#6B6358; margin:0; max-width:400px;">One-to-one in NW3, or group classes in Hampstead. Wherever you start, Cristina meets you there.</p>
             <div class="nw3-map" aria-hidden="true">
+              <!-- Geographically projected (WGS84 → SVG): Northern line Golders Green–Hampstead–Belsize Park–Chalk Farm; Jubilee line Finchley Road–Swiss Cottage–St John's Wood -->
               <svg viewBox="0 0 300 250" role="img">
-                <!-- lines -->
-                <path class="nw3-line gold draw d2" pathLength="1" d="M40 52 L150 86 L258 58"/>
-                <path class="nw3-line jubilee draw d3" pathLength="1" d="M36 108 L78 160 L162 232"/>
-                <path class="nw3-line northern draw" pathLength="1" d="M150 28 L150 86 L205 178 L226 238"/>
-                <!-- Belsize Park -->
-                <circle class="nw3-pop" cx="205" cy="178" r="7" fill="#FBF8F1" stroke="#2B2620" stroke-width="2.5"/>
-                <text class="nw3-stn" x="219" y="182">Belsize Park</text>
-                <!-- Swiss Cottage -->
-                <circle class="nw3-pop" cx="78" cy="160" r="7" fill="#FBF8F1" stroke="#B8624A" stroke-width="2.5"/>
-                <text class="nw3-stn" x="92" y="157">Swiss Cottage</text>
-                <!-- Hampstead (NW3) interchange -->
-                <g transform="translate(150,86)">
+                <!-- lines (real order + relative geography) -->
+                <path class="nw3-line northern draw" pathLength="1" d="M87 30 L136 111 L179 141 L213 174"/>
+                <path class="nw3-line jubilee draw d2" pathLength="1" d="M131 160 L149 177 L149 220"/>
+                <!-- neighbouring stations (context, faded) -->
+                <circle class="nw3-pop" cx="87" cy="30" r="3.5" fill="#FBF8F1" stroke="#2B2620" stroke-width="2"/>
+                <text class="nw3-tickname" x="96" y="27">Golders Green</text>
+                <circle class="nw3-pop" cx="213" cy="174" r="3.5" fill="#FBF8F1" stroke="#2B2620" stroke-width="2"/>
+                <text class="nw3-tickname" x="221" y="178">Chalk Farm</text>
+                <circle class="nw3-pop" cx="131" cy="160" r="3.5" fill="#FBF8F1" stroke="#9A938A" stroke-width="2"/>
+                <text class="nw3-tickname" x="124" y="151" text-anchor="end">Finchley Road</text>
+                <circle class="nw3-pop" cx="149" cy="220" r="3.5" fill="#FBF8F1" stroke="#9A938A" stroke-width="2"/>
+                <text class="nw3-tickname" x="159" y="224">St John's Wood</text>
+                <!-- Belsize Park (Northern) -->
+                <circle class="nw3-pop" cx="179" cy="141" r="6.5" fill="#FBF8F1" stroke="#2B2620" stroke-width="2.5"/>
+                <text class="nw3-stn" x="190" y="139">Belsize Park</text>
+                <!-- Swiss Cottage (Jubilee) -->
+                <circle class="nw3-pop" cx="149" cy="177" r="6.5" fill="#FBF8F1" stroke="#9A938A" stroke-width="2.5"/>
+                <text class="nw3-stn" x="136" y="190" text-anchor="end">Swiss Cottage</text>
+                <!-- Hampstead (NW3) — the focus -->
+                <g transform="translate(136,111)">
                   <circle class="nw3-ping" r="11"/>
-                  <circle class="nw3-pop" r="12" fill="#FBF8F1" stroke="#2B2620" stroke-width="3"/>
-                  <circle class="nw3-pop" r="5" fill="#B8624A"/>
+                  <circle class="nw3-pop" r="9.5" fill="#FBF8F1" stroke="#2B2620" stroke-width="3"/>
+                  <circle class="nw3-pop" r="4.5" fill="#B8624A"/>
                 </g>
-                <text class="nw3-stn" x="167" y="82">Hampstead</text>
-                <text class="nw3-sub" x="167" y="96">NW3</text>
+                <text class="nw3-stn" x="120" y="106" text-anchor="end">Hampstead</text>
+                <text class="nw3-sub" x="120" y="119" text-anchor="end">NW3</text>
               </svg>
             </div>
           </div>
