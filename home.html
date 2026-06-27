@@ -162,6 +162,34 @@
   .home-hero-in > *:nth-child(4){ animation-delay:.39s; }
   .home-hero-in > *:nth-child(5){ animation-delay:.5s; }
   @media (prefers-reduced-motion: reduce){ .home-hero-in > *{ animation:none; } }
+
+  /* ===== NW3 & Hampstead tube-map (Flow Level 3) ===== */
+  .nw3-map{ width:100%; max-width:340px; margin:30px 0 0; pointer-events:none; }
+  .nw3-map svg{ width:100%; height:auto; display:block; overflow:visible; }
+  .nw3-line{ fill:none; stroke-linecap:round; stroke-linejoin:round; }
+  .nw3-line.northern{ stroke:#2B2620; stroke-width:5; }
+  .nw3-line.jubilee{ stroke:#B8624A; stroke-width:5; }
+  .nw3-line.gold{ stroke:#C99A5B; stroke-width:3.5; }
+  .nw3-stn{ font-family:'Inter',sans-serif; font-size:10px; font-weight:500; letter-spacing:.02em; fill:#2B2620; }
+  .nw3-sub{ font-family:'Inter',sans-serif; font-size:8.5px; letter-spacing:.18em; text-transform:uppercase; fill:#B8624A; }
+  .nw3-ping{ fill:#B8624A; opacity:0; transform-box:fill-box; transform-origin:center; }
+  /* draw-in: drawn (visible) at rest; replays each time the band goes live */
+  .nw3-map .draw{ stroke-dasharray:1; stroke-dashoffset:0; }
+  .flow-rail.band-live .nw3-map .draw{ animation:nw3draw 1.2s cubic-bezier(.5,0,.2,1) both; }
+  .flow-rail.band-live .nw3-map .draw.d2{ animation-delay:.16s; }
+  .flow-rail.band-live .nw3-map .draw.d3{ animation-delay:.32s; }
+  @keyframes nw3draw{ from{ stroke-dashoffset:1; } to{ stroke-dashoffset:0; } }
+  .nw3-pop{ transform-box:fill-box; transform-origin:center; }
+  .flow-rail.band-live .nw3-map .nw3-pop{ animation:nw3pop .5s cubic-bezier(.2,.9,.3,1.3) both; animation-delay:.5s; }
+  @keyframes nw3pop{ from{ opacity:0; transform:scale(.1); } to{ opacity:1; transform:scale(1); } }
+  .flow-rail.band-live .nw3-map .nw3-ping{ animation:nw3ping 2.4s ease-out infinite; animation-delay:1.1s; }
+  @keyframes nw3ping{ 0%{ opacity:.4; transform:scale(.5); } 100%{ opacity:0; transform:scale(2.8); } }
+  @media (prefers-reduced-motion: reduce){
+    .flow-rail.band-live .nw3-map .draw,
+    .flow-rail.band-live .nw3-map .nw3-pop,
+    .flow-rail.band-live .nw3-map .nw3-ping{ animation:none; }
+    .nw3-map .nw3-pop{ opacity:1; transform:none; }
+  }
 </style>
 
 <!-- ============ Estimate-your-hire spotlight stage (Phase 4) ============ -->
@@ -554,6 +582,28 @@
             <div style="font-size:12px; letter-spacing:.3em; text-transform:uppercase; color:#6B6358; margin-bottom:16px;">Where</div>
             <h2 style="font-family:'Playfair Display',serif; font-weight:500; font-size:clamp(34px,4.6vw,58px); line-height:1.0; margin:0 0 22px; color:#2B2620;">NW3 &amp;<br>Hampstead.</h2>
             <p style="font-size:16px; line-height:1.75; color:#6B6358; margin:0; max-width:400px;">One-to-one in NW3, or group classes in Hampstead. Wherever you start, Cristina meets you there.</p>
+            <div class="nw3-map" aria-hidden="true">
+              <svg viewBox="0 0 300 250" role="img">
+                <!-- lines -->
+                <path class="nw3-line gold draw d2" pathLength="1" d="M40 52 L150 86 L258 58"/>
+                <path class="nw3-line jubilee draw d3" pathLength="1" d="M36 108 L78 160 L162 232"/>
+                <path class="nw3-line northern draw" pathLength="1" d="M150 28 L150 86 L205 178 L226 238"/>
+                <!-- Belsize Park -->
+                <circle class="nw3-pop" cx="205" cy="178" r="7" fill="#FBF8F1" stroke="#2B2620" stroke-width="2.5"/>
+                <text class="nw3-stn" x="219" y="182">Belsize Park</text>
+                <!-- Swiss Cottage -->
+                <circle class="nw3-pop" cx="78" cy="160" r="7" fill="#FBF8F1" stroke="#B8624A" stroke-width="2.5"/>
+                <text class="nw3-stn" x="92" y="157">Swiss Cottage</text>
+                <!-- Hampstead (NW3) interchange -->
+                <g transform="translate(150,86)">
+                  <circle class="nw3-ping" r="11"/>
+                  <circle class="nw3-pop" r="12" fill="#FBF8F1" stroke="#2B2620" stroke-width="3"/>
+                  <circle class="nw3-pop" r="5" fill="#B8624A"/>
+                </g>
+                <text class="nw3-stn" x="167" y="82">Hampstead</text>
+                <text class="nw3-sub" x="167" y="96">NW3</text>
+              </svg>
+            </div>
           </div>
         </div>
 

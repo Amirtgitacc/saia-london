@@ -355,6 +355,7 @@
         inner.style.filter = blur > 0.05 ? 'blur(' + blur.toFixed(2) + 'px)' : 'none';
       }
       e.style.pointerEvents = k > 0.5 ? 'auto' : 'none';
+      e.classList.toggle('band-live', k > 0.5);   // hook for per-band reveal animations (e.g. the NW3 map)
     }
   }
 
