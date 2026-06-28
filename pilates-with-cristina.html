@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pilates with Cristina · SAÏA London</title>
+  <meta name="description" content="Pilates with Cristina, founder of SAÏA London. One-to-one classes for women in NW3 and group classes in Hampstead — Classical method and Reformer Pilates. Get in touch to work out together.">
+  <script>document.documentElement.className="js";</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/buttons.css">
+  <style>
+    body{ font-family:'Inter',system-ui,sans-serif; background:var(--saia-cream); color:var(--saia-ink); -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility; }
+    a{ color:inherit; }
+    img{ display:block; max-width:100%; }
+
+    /* ---------- nav (matches index.html) ---------- */
+    .nav{ position:sticky; top:0; z-index:50; background:rgba(245,241,232,.92); backdrop-filter:blur(10px); border-bottom:1px solid var(--saia-line); }
+    .nav-desk{ display:grid; grid-template-columns:1fr auto 1fr; align-items:center; padding:22px 48px; max-width:1480px; margin:0 auto; }
+    .nav-desk nav{ display:flex; gap:30px; font-size:12px; letter-spacing:.18em; text-transform:uppercase; white-space:nowrap; }
+    .nav-desk nav a{ color:var(--saia-ink); text-decoration:none; }
+    .nav-desk nav a[aria-current]{ color:var(--saia-accent); }
+    .brand{ text-align:center; text-decoration:none; color:var(--saia-ink); }
+    .brand .mark{ font-family:'Playfair Display',serif; font-size:30px; letter-spacing:.2em; line-height:1; }
+    .brand .sub{ font-size:9px; letter-spacing:.52em; text-transform:uppercase; color:var(--saia-ink-soft); margin-top:3px; }
+    .nav-mob{ display:none; }
+    .nav-mob-in{ display:flex; align-items:center; justify-content:space-between; padding:16px 20px; }
+    .drawer{ display:none; position:fixed; inset:0; z-index:60; background:var(--saia-cream); padding:24px 28px; }
+    .drawer-top{ display:flex; justify-content:space-between; align-items:center; margin-bottom:48px; }
+    .drawer nav{ display:flex; flex-direction:column; gap:6px; }
+    .drawer nav a{ font-family:'Playfair Display',serif; font-size:34px; color:var(--saia-ink); text-decoration:none; padding:10px 0; border-bottom:1px solid var(--saia-line); }
+    .drawer nav a[aria-current]{ color:var(--saia-accent); }
+    .iconbtn{ background:none; border:none; padding:6px; cursor:pointer; display:flex; }
+
+    /* ---------- hero (editorial · soft arch portrait) ---------- */
+    .hero{ max-width:1280px; margin:0 auto; padding:clamp(52px,8vw,108px) 6vw clamp(36px,5vw,64px);
+      display:grid; grid-template-columns:1.05fr .95fr; gap:clamp(36px,6vw,88px); align-items:center; }
+    .eyebrow{ font-size:12px; letter-spacing:.34em; text-transform:uppercase; color:var(--saia-accent); }
+    .hero .eyebrow{ margin-bottom:24px; }
+    .hero h1{ font-family:'Playfair Display',serif; font-weight:500; font-size:clamp(46px,7.4vw,100px); line-height:.95; letter-spacing:-.015em; margin:0 0 30px; }
+    .hero h1 em{ font-style:italic; color:var(--saia-accent); }
+    .hero .lede{ font-size:clamp(16px,1.4vw,18.5px); line-height:1.85; color:var(--saia-ink-soft); max-width:46ch; margin:0; }
+
+    .arch{ position:relative; justify-self:center; width:min(100%,440px); }
+    .arch img{ width:100%; aspect-ratio:4/5; object-fit:cover; object-position:center 18%;
+      border-radius:220px 220px 28px 28px; box-shadow:0 34px 78px -30px rgba(43,38,32,.45); }
+    .arch .ring{ position:absolute; inset:-16px; border:1px solid rgba(184,98,74,.45);
+      border-radius:236px 236px 40px 40px; z-index:-1; }
+    .arch figcaption{ position:absolute; left:0; right:0; bottom:18px; text-align:center; color:#F5F1E8;
+      font-size:11px; letter-spacing:.22em; text-transform:uppercase; text-shadow:0 1px 10px rgba(0,0,0,.5); }
+
+    /* ---------- the "Five Simple Rules" — reads like a blog, not a list ---------- */
+    .principles{ max-width:720px; margin:0 auto; padding:clamp(48px,8vw,104px) 6vw; }
+    .principles .head{ margin:0 0 clamp(30px,4vw,48px); }
+    .principles .head .eyebrow{ margin-bottom:18px; }
+    .principles .head h2{ font-family:'Playfair Display',serif; font-weight:500; font-size:clamp(28px,4vw,48px); line-height:1.08; margin:0; max-width:18ch; }
+    .rule-line{ margin:0 0 clamp(22px,2.6vw,32px); font-size:clamp(16.5px,1.5vw,19px); line-height:1.9; color:#43403A; }
+    .rule-line:last-child{ margin-bottom:0; }
+    .rule-line .t{ font-family:'Playfair Display',serif; font-weight:500; color:var(--saia-ink); }
+
+    /* ---------- philosophy pull-quote ---------- */
+    .philosophy{ max-width:960px; margin:0 auto; padding:clamp(40px,7vw,96px) 6vw; text-align:center; }
+    .philosophy .mark{ font-family:'Playfair Display',serif; font-size:72px; line-height:.3; color:var(--saia-accent); opacity:.45; display:block; }
+    .philosophy p{ font-family:'Playfair Display',serif; font-style:italic; font-weight:400;
+      font-size:clamp(24px,3.4vw,42px); line-height:1.34; color:var(--saia-ink); max-width:21ch; margin:24px auto 0; }
+
+    /* ---------- mission + contact ---------- */
+    .mission{ max-width:680px; margin:0 auto; padding:0 6vw clamp(8px,2vw,24px); }
+    .mission p{ font-size:clamp(16px,1.45vw,18.5px); line-height:1.9; color:#43403A; margin:0; text-align:center; }
+
+    .contact{ max-width:760px; margin:0 auto; padding:clamp(48px,7vw,96px) 6vw clamp(56px,8vw,104px); }
+    .contact .eyebrow{ text-align:center; margin-bottom:18px; }
+    .contact h2{ font-family:'Playfair Display',serif; font-weight:500; font-size:clamp(28px,4vw,46px); line-height:1.05; text-align:center; margin:0 0 18px; }
+    .contact .invite{ font-size:16px; line-height:1.8; color:var(--saia-ink-soft); text-align:center; max-width:48ch; margin:0 auto clamp(30px,4vw,46px); }
+    .contact .invite .sign{ font-family:'Playfair Display',serif; font-style:italic; color:var(--saia-ink); }
+    .cform{ display:grid; gap:18px; }
+    .cform .row{ display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+    .cfield{ display:block; }
+    .cfield .lbl{ display:block; font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--saia-ink-soft); margin-bottom:8px; }
+    .cfield input, .cfield textarea{ width:100%; font-family:'Inter',sans-serif; font-size:15.5px; color:var(--saia-ink);
+      background:#fff; border:1px solid var(--saia-line); border-radius:4px; padding:14px 16px;
+      transition:border-color .3s ease, box-shadow .3s ease; }
+    .cfield textarea{ min-height:132px; resize:vertical; }
+    .cfield input:focus, .cfield textarea:focus{ outline:none; border-color:var(--saia-accent); box-shadow:0 0 0 3px rgba(184,98,74,.12); }
+    .cform .send{ justify-self:center; margin-top:8px; cursor:pointer; border:none; font-family:'Inter',sans-serif;
+      font-size:12px; letter-spacing:.2em; text-transform:uppercase; color:var(--saia-cream); background:var(--saia-ink);
+      padding:16px 46px; border-radius:2px;
+      transition:transform .14s cubic-bezier(.34,1.56,.64,1), background .3s ease, box-shadow .3s ease; }
+    .cform .send:hover{ background:var(--saia-accent); transform:scale(1.03); box-shadow:0 12px 24px -12px rgba(184,98,74,.6); }
+    .cform .send:active{ transform:scale(.97); }
+    .cform .note{ grid-column:1 / -1; justify-self:center; font-size:12px; color:var(--saia-ink-soft); min-height:1.1em; margin:4px 0 0; text-align:center; }
+    .cform.done{ place-items:center; text-align:center; gap:10px; }
+    .cform .tick{ width:54px; height:54px; border-radius:50%; border:1px solid var(--saia-accent); display:grid; place-items:center; }
+
+    /* ---------- scroll reveal (gated behind .js so content shows if scripts fail) ---------- */
+    .js .reveal{ opacity:0; transform:translateY(24px); transition:opacity .9s cubic-bezier(.2,.7,.2,1), transform .9s cubic-bezier(.2,.7,.2,1); }
+    .js .reveal.in{ opacity:1; transform:none; }
+
+    /* ---------- footer (matches index.html) ---------- */
+    footer{ background:var(--saia-ink); color:#F5F1E8; padding:clamp(64px,8vw,100px) 6vw 40px; }
+    .foot-in{ max-width:1320px; margin:0 auto; }
+    .foot-top{ display:flex; flex-wrap:wrap; gap:48px; justify-content:space-between; }
+    .foot-brand{ flex:1 1 280px; max-width:360px; }
+    .foot-brand .mark{ font-family:'Playfair Display',serif; font-size:34px; letter-spacing:.2em; line-height:1; }
+    .foot-brand .sub{ font-size:10px; letter-spacing:.5em; text-transform:uppercase; color:rgba(245,241,232,.55); margin:6px 0 22px; }
+    .foot-brand p{ font-size:14px; line-height:1.75; color:rgba(245,241,232,.65); margin:0 0 24px; max-width:300px; }
+    .foot-social{ display:flex; gap:18px; margin-top:24px; }
+    .foot-social a{ color:rgba(245,241,232,.7); text-decoration:none; }
+    .foot-cols{ flex:0 1 auto; display:flex; flex-wrap:wrap; gap:48px; }
+    .foot-col h4{ font-size:11px; letter-spacing:.22em; text-transform:uppercase; color:rgba(245,241,232,.5); margin:0 0 18px; font-weight:500; }
+    .foot-col .links{ display:flex; flex-direction:column; gap:12px; font-size:14px; }
+    .foot-col .links a{ color:rgba(245,241,232,.78); text-decoration:none; }
+    .foot-col .links a:hover{ color:#F5F1E8; }
+    .foot-bottom{ display:flex; flex-wrap:wrap; gap:14px; justify-content:space-between; align-items:center; margin-top:56px; padding-top:26px; border-top:1px solid rgba(245,241,232,.16); font-size:12px; color:rgba(245,241,232,.5); }
+
+    /* ---------- responsive ---------- */
+    @media (max-width:860px){
+      .hero{ grid-template-columns:1fr; gap:36px; padding-top:40px; }
+      .arch{ order:-1; max-width:380px; }
+    }
+    @media (max-width:760px){
+      .nav-desk{ display:none; }
+      .nav-mob{ display:block; position:sticky; top:0; z-index:50; background:rgba(245,241,232,.94); backdrop-filter:blur(10px); border-bottom:1px solid var(--saia-line); }
+    }
+    @media (max-width:560px){
+      .cform .row{ grid-template-columns:1fr; }
+    }
+    @media (prefers-reduced-motion:reduce){
+      .js .reveal{ opacity:1; transform:none; transition:none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ============ HEADER (desktop) ============ -->
+  <header class="nav">
+    <div class="nav-desk">
+      <nav>
+        <a href="index.html#estimate" class="saia-link">Mat Hire</a>
+        <a href="pilates-with-cristina.html" class="saia-link" aria-current="page">Pilates with Cristina</a>
+        <a href="index.html#events" class="saia-link">Gallery</a>
+        <a href="story.html" class="saia-link">Our Story</a>
+      </nav>
+      <a class="brand" href="index.html#top">
+        <div class="mark">SAÏA</div>
+        <div class="sub">London</div>
+      </a>
+      <div class="nav-spacer"></div>
+    </div>
+  </header>
+
+  <!-- ============ HEADER (mobile) ============ -->
+  <header class="nav-mob">
+    <div class="nav-mob-in">
+      <button class="iconbtn" id="navToggle" aria-label="Open menu"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2B2620" stroke-width="1.3"><line x1="3" y1="7" x2="21" y2="7"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="17" x2="21" y2="17"/></svg></button>
+      <a class="brand" href="index.html#top"><div class="mark" style="font-size:25px;">SAÏA</div></a>
+      <span style="width:22px;"></span>
+    </div>
+  </header>
+  <div class="drawer" id="drawer">
+    <div class="drawer-top">
+      <div style="font-family:'Playfair Display',serif; font-size:26px; letter-spacing:.2em;">SAÏA</div>
+      <button class="iconbtn" id="navClose" aria-label="Close menu"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2B2620" stroke-width="1.3"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg></button>
+    </div>
+    <nav>
+      <a href="index.html#estimate">Mat Hire</a>
+      <a href="pilates-with-cristina.html" aria-current="page">Pilates with Cristina</a>
+      <a href="index.html#events">Gallery</a>
+      <a href="story.html">Our Story</a>
+    </nav>
+  </div>
+
+  <main>
+    <!-- ============ HERO ============ -->
+    <section class="hero">
+      <div>
+        <div class="eyebrow">Pilates · NW3 &amp; Hampstead</div>
+        <h1>Pilates with<br><em>Cristina</em></h1>
+        <p class="lede">Hello and welcome! My name is Cristina and I am the founder of SAÏA. If you are on this page it's probably because we have a shared interest and love for Pilates. I offer 1-2-1 classes for women in NW3 and group classes in Hampstead, London. I am trained in the Classical method and I am also a Reformer Pilates instructor.</p>
+      </div>
+      <figure class="arch reveal">
+        <span class="ring" aria-hidden="true"></span>
+        <img src="photos/IMG_5106_3.jpg" alt="Cristina, founder of SAÏA London and Pilates instructor" loading="eager">
+        <figcaption>Cristina · Pilates Instructor</figcaption>
+      </figure>
+    </section>
+
+    <!-- ============ FIVE SIMPLE RULES (editorial principles) ============ -->
+    <section class="principles">
+      <div class="head reveal">
+        <div class="eyebrow">My approach to exercise</div>
+        <h2>Five simple rules I live and teach by.</h2>
+      </div>
+      <p class="rule-line reveal"><span class="t">It Has to Be Fun.</span> Enjoyment is key to sustaining any fitness routine.</p>
+      <p class="rule-line reveal"><span class="t">It Has to Be Rewarding.</span> Every session should leave you feeling accomplished.</p>
+      <p class="rule-line reveal"><span class="t">Keep It Balanced.</span> Indulge wisely — keep it lean during the week but treat yourself on the weekend! ;)</p>
+      <p class="rule-line reveal"><span class="t">Do It for the Right Reasons.</span> Focus on health and well-being, not just appearance.</p>
+      <p class="rule-line reveal"><span class="t">Always Show Up.</span> Consistency is crucial. If you miss one session, don't miss two.</p>
+    </section>
+
+    <!-- ============ PHILOSOPHY ============ -->
+    <section class="philosophy reveal">
+      <span class="mark" aria-hidden="true">“</span>
+      <p>I believe that the body is the vessel that takes us through life. It's the only thing you can truly rely on, designed to do incredible things if you let it. The body is the greatest investment we can make in ourselves, deserving of love and respect through listening, strengthening, and nourishing.</p>
+    </section>
+
+    <!-- ============ MISSION ============ -->
+    <section class="mission reveal">
+      <p>As a Pilates instructor, my mission is to encourage women to live healthy, balanced lifestyles and to share the transformative practice of Joseph Pilates. Through his method, Contrology, Pilates empowers individuals to strengthen, heal, and realign their bodies from within. Pilates is a beautiful, powerful, and accessible practice for every body. It's versatile, inclusive, and sustainable for long-term health. No matter your level, I am here to support you every step of the way and help you achieve your personal fitness goals.</p>
+    </section>
+
+    <!-- ============ CONTACT ============ -->
+    <section class="contact reveal">
+      <div class="eyebrow">Get in touch</div>
+      <h2>Work out together</h2>
+      <p class="invite">If you want to work out together, please get in touch by filling out the contact form below. I can't wait to hear from you. <span class="sign">With love, Cristina</span></p>
+      <form class="cform" novalidate>
+        <div class="row">
+          <label class="cfield"><span class="lbl">Name</span><input type="text" name="name" autocomplete="name" required placeholder="Your name"></label>
+          <label class="cfield"><span class="lbl">Email</span><input type="email" name="email" autocomplete="email" required placeholder="you@email.com"></label>
+        </div>
+        <label class="cfield"><span class="lbl">Message</span><textarea name="message" placeholder="Tell me a little about what you're looking for…"></textarea></label>
+        <button type="submit" class="send">Send</button>
+        <p class="note" aria-live="polite"></p>
+      </form>
+    </section>
+  </main>
+
+  <!-- ============ FOOTER (matches index.html) ============ -->
+  <footer>
+    <div class="foot-in">
+      <div class="foot-top">
+        <div class="foot-brand">
+          <div class="mark">SAÏA</div>
+          <div class="sub">London</div>
+          <p>A female-led club empowering women through fitness, community &amp; mindset. Premium yoga-mat hire across London.</p>
+          <a href="index.html#estimate" class="saia-btn saia-btn--terra" style="text-decoration:none;">Hire mats for your event</a>
+          <div class="foot-social">
+            <a href="https://www.instagram.com/saialondon" aria-label="SAÏA on Instagram"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg></a>
+            <a href="https://www.facebook.com/saialondon" aria-label="SAÏA on Facebook"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M15 8h-2a2 2 0 0 0-2 2v11"/><path d="M8 13h6"/><path d="M11 21V10a3 3 0 0 1 3-3h1"/></svg></a>
+            <a href="https://www.pinterest.com/saialondon" aria-label="SAÏA on Pinterest"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M9 19c-.5-2 .5-5 1-7"/><circle cx="12" cy="10" r="7"/><path d="M9.5 13c.5 1 3 1.5 4.5-.5S15 8 13 8s-3 1.5-2.5 3"/></svg></a>
+          </div>
+        </div>
+        <div class="foot-cols">
+          <div class="foot-col">
+            <h4>Customer care</h4>
+            <div class="links">
+              <a href="https://www.saialondon.com/pages/contact-us">Contact us</a>
+              <a href="https://www.saialondon.com/pages/terms-and-conditions">Terms &amp; conditions</a>
+            </div>
+          </div>
+          <div class="foot-col">
+            <h4>About us</h4>
+            <div class="links">
+              <a href="story.html">Our story</a>
+              <a href="pilates-with-cristina.html">Pilates with Cristina</a>
+              <a href="index.html#estimate">Yoga mat hire</a>
+              <a href="index.html#events">Gallery</a>
+            </div>
+          </div>
+          <div class="foot-col" style="max-width:240px;">
+            <h4>Subscribe</h4>
+            <p style="font-size:13px; line-height:1.6; color:rgba(245,241,232,.6); margin:0 0 14px;">Get on the guest list of our upcoming events.</p>
+            <div style="display:flex; border-bottom:1px solid rgba(245,241,232,.35);"><input type="email" name="newsletter-email" placeholder="Email" aria-label="Email address" style="flex:1; background:none; border:none; color:#F5F1E8; font-family:'Inter',sans-serif; font-size:14px; padding:8px 0; outline:none;"><span style="font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:#B8624A; padding:8px 0; cursor:pointer;">Join</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="foot-bottom">
+        <span>© 2026 SAÏA London</span>
+        <span style="letter-spacing:.16em; text-transform:uppercase;">A Woman Who Wins.</span>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      // mobile drawer
+      var d = document.getElementById('drawer');
+      var open = document.getElementById('navToggle');
+      var close = document.getElementById('navClose');
+      if (open) open.addEventListener('click', function () { d.style.display = 'block'; });
+      if (close) close.addEventListener('click', function () { d.style.display = 'none'; });
+      Array.prototype.slice.call(d.querySelectorAll('a')).forEach(function (a) {
+        a.addEventListener('click', function () { d.style.display = 'none'; });
+      });
+
+      // scroll reveal
+      var els = document.querySelectorAll('.reveal');
+      if ('IntersectionObserver' in window) {
+        var io = new IntersectionObserver(function (entries) {
+          entries.forEach(function (e) {
+            if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+          });
+        }, { threshold: 0.14, rootMargin: '0px 0px -8% 0px' });
+        els.forEach(function (el, i) { el.style.transitionDelay = (Math.min(i, 6) * 55) + 'ms'; io.observe(el); });
+      } else {
+        els.forEach(function (el) { el.classList.add('in'); });
+      }
+
+      // contact form — front-end mockup (no backend yet)
+      var form = document.querySelector('.cform');
+      if (form) form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        var name = (form.name.value || '').trim();
+        var email = (form.email.value || '').trim();
+        if (!name || !email) { form.querySelector('.note').textContent = 'Please add your name and email.'; return; }
+        var safe = name.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        form.innerHTML = '<div class="tick" aria-hidden="true"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#B8624A" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg></div>'
+          + '<p style="font-family:\'Playfair Display\',serif; font-size:24px; margin:6px 0 0;">Thank you, ' + safe + '.</p>'
+          + '<p class="note">Mockup confirmation — no message was actually sent yet.</p>';
+        form.classList.add('done');
+      });
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pilates with Cristina — style lab · SAÏA</title>
+<meta name="description" content="Lab: three modern layout directions for the Pilates with Cristina page.">
+<script>document.documentElement.className="js";</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   PILATES WITH CRISTINA — STYLE LAB
+   3 directions, identical content (rendered from one source).
+   A · Editorial serif    B · Soft spa/organic    C · Scroll-story
+   Brand: cream #F5F1E8 · ink #2B2620 · terracotta #B8624A
+   ============================================================ */
+:root{
+  --cream:#F5F1E8; --stone:#E9E6DF; --ink:#2B2620; --ink-soft:#6B6358;
+  --line:#DAD4C8; --accent:#B8624A; --night:#16130f;
+  --serif:'Playfair Display',Georgia,serif; --sans:'Inter',system-ui,sans-serif;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{font-family:var(--sans);background:var(--cream);color:var(--ink);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;}
+img{display:block;max-width:100%;}
+a{color:inherit;}
+::selection{background:var(--accent);color:var(--cream);}
+
+/* ---------- lab switcher (not part of the design) ---------- */
+.lab-bar{position:fixed;top:0;left:0;right:0;z-index:1000;display:flex;align-items:center;gap:14px;
+  padding:10px 18px;background:rgba(22,19,15,.92);backdrop-filter:blur(8px);color:#F5F1E8;
+  font:500 12px/1 var(--sans);letter-spacing:.06em;}
+.lab-bar .lab-title{letter-spacing:.22em;text-transform:uppercase;font-size:11px;opacity:.7;margin-right:auto;}
+.lab-bar button{font-family:var(--sans);cursor:pointer;border:1px solid rgba(245,241,232,.25);background:transparent;
+  color:#F5F1E8;padding:8px 16px;border-radius:99px;font-size:12px;letter-spacing:.04em;transition:all .25s ease;}
+.lab-bar button:hover{border-color:rgba(245,241,232,.6);}
+.lab-bar button.on{background:var(--accent);border-color:var(--accent);color:#fff;}
+.lab-bar .lab-hint{font-size:11px;opacity:.55;margin-left:6px;}
+.stage{display:none;padding-top:46px;}
+.stage.show{display:block;}
+@media (max-width:560px){ .lab-bar .lab-hint{display:none;} .lab-bar{gap:8px;padding:10px 12px;} .lab-bar button{padding:7px 12px;} }
+
+/* reveal base (shared) — gated behind .js so content is visible if scripts fail */
+.js .rv{opacity:0;transform:translateY(26px);transition:opacity .9s cubic-bezier(.22,.61,.36,1),transform .9s cubic-bezier(.22,.61,.36,1);}
+.js .rv.in{opacity:1;transform:none;}
+@media (prefers-reduced-motion:reduce){ .rv{opacity:1!important;transform:none!important;transition:none!important;} }
+
+/* =========================================================================
+   DIRECTION A — EDITORIAL SERIF
+   ========================================================================= */
+.A{background:var(--cream);}
+.A .wrap{max-width:1240px;margin:0 auto;padding:0 6vw;}
+.A .eyebrow{font-size:12px;letter-spacing:.34em;text-transform:uppercase;color:var(--accent);}
+.A-hero{display:grid;grid-template-columns:1.05fr .95fr;gap:clamp(36px,6vw,90px);align-items:center;
+  padding:clamp(56px,9vw,120px) 0 clamp(40px,6vw,80px);}
+.A-hero .eyebrow{margin-bottom:24px;}
+.A-hero h1{font-family:var(--serif);font-weight:500;font-size:clamp(46px,7.5vw,104px);line-height:.95;
+  letter-spacing:-.015em;margin:0 0 30px;}
+.A-hero h1 em{font-style:italic;color:var(--accent);}
+.A-hero .lede{font-size:clamp(16px,1.4vw,18.5px);line-height:1.85;color:var(--ink-soft);max-width:46ch;margin:0;}
+.A-portrait{position:relative;}
+.A-portrait img{width:100%;aspect-ratio:3/4;object-fit:cover;}
+.A-portrait::before{content:"";position:absolute;inset:14px -14px -14px 14px;border:1px solid var(--accent);z-index:-1;}
+.A-rule{height:1px;background:var(--line);margin:0;}
+
+.A-rules{padding:clamp(56px,8vw,104px) 0;}
+.A-rules .head{display:flex;align-items:baseline;justify-content:space-between;gap:24px;flex-wrap:wrap;margin-bottom:clamp(28px,4vw,52px);}
+.A-rules .head h2{font-family:var(--serif);font-weight:500;font-size:clamp(28px,3.6vw,44px);line-height:1.05;margin:0;max-width:18ch;}
+.A-rules .head .eyebrow{white-space:nowrap;}
+.A-row{display:grid;grid-template-columns:auto 1fr;gap:clamp(20px,4vw,56px);align-items:baseline;
+  padding:clamp(22px,3vw,34px) 0;border-top:1px solid var(--line);}
+.A-row:last-child{border-bottom:1px solid var(--line);}
+.A-row .num{font-family:var(--serif);font-size:clamp(30px,4vw,52px);color:var(--accent);line-height:1;font-style:italic;}
+.A-row .rt{font-family:var(--serif);font-weight:500;font-size:clamp(20px,2.4vw,28px);color:var(--ink);margin:0 0 6px;}
+.A-row .rd{font-size:15.5px;line-height:1.7;color:var(--ink-soft);margin:0;max-width:60ch;}
+
+.A-quote{padding:clamp(48px,7vw,96px) 0;text-align:center;}
+.A-quote p{font-family:var(--serif);font-style:italic;font-weight:400;font-size:clamp(24px,3.4vw,42px);
+  line-height:1.35;color:var(--ink);max-width:20ch;margin:0 auto;}
+.A-quote .mark{font-family:var(--serif);font-size:64px;color:var(--accent);line-height:.4;opacity:.5;}
+.A-mission{padding:0 0 clamp(56px,8vw,104px);}
+.A-mission p{font-size:clamp(16px,1.4vw,18px);line-height:1.95;color:var(--ink-soft);max-width:62ch;margin:0 auto;
+  columns:1;text-align:center;}
+
+/* =========================================================================
+   DIRECTION B — SOFT SPA / ORGANIC
+   ========================================================================= */
+.B{position:relative;overflow:hidden;
+  background:radial-gradient(120% 80% at 80% -10%,#FBF4EC 0%,var(--cream) 45%,#EFE9DD 100%);}
+.B .blob{position:absolute;border-radius:50%;filter:blur(40px);opacity:.5;pointer-events:none;z-index:0;}
+.B .blob.b1{width:480px;height:480px;background:rgba(184,98,74,.20);top:-120px;right:-80px;animation:bFloat 14s ease-in-out infinite;}
+.B .blob.b2{width:420px;height:420px;background:rgba(201,138,46,.16);bottom:10%;left:-120px;animation:bFloat 18s ease-in-out infinite reverse;}
+@keyframes bFloat{0%,100%{transform:translate(0,0) scale(1);}50%{transform:translate(30px,-26px) scale(1.08);}}
+@media (prefers-reduced-motion:reduce){ .B .blob{animation:none;} }
+.B .wrap{position:relative;z-index:1;max-width:1120px;margin:0 auto;padding:0 6vw;}
+.B .eyebrow{font-size:12px;letter-spacing:.3em;text-transform:uppercase;color:var(--accent);}
+.B-hero{display:grid;grid-template-columns:.9fr 1.1fr;gap:clamp(32px,5vw,72px);align-items:center;
+  padding:clamp(60px,9vw,120px) 0 clamp(40px,6vw,72px);}
+.B-portrait{position:relative;justify-self:center;width:min(100%,420px);}
+.B-portrait img{width:100%;aspect-ratio:4/5;object-fit:cover;border-radius:210px 210px 28px 28px;
+  box-shadow:0 30px 70px -28px rgba(43,38,32,.4);}
+.B-portrait .ring{position:absolute;inset:-16px;border:1px solid rgba(184,98,74,.4);
+  border-radius:226px 226px 40px 40px;z-index:-1;}
+.B-hero .copy .eyebrow{margin-bottom:18px;}
+.B-hero h1{font-family:var(--serif);font-weight:500;font-size:clamp(40px,5.6vw,74px);line-height:1.0;margin:0 0 24px;}
+.B-hero .lede{font-size:clamp(16px,1.4vw,18px);line-height:1.85;color:var(--ink-soft);margin:0;max-width:48ch;}
+
+.B-rules{padding:clamp(40px,6vw,80px) 0 clamp(20px,3vw,40px);text-align:center;}
+.B-rules h2{font-family:var(--serif);font-weight:500;font-size:clamp(26px,3.4vw,40px);margin:0 auto clamp(36px,4vw,52px);max-width:16ch;}
+.B-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:clamp(16px,2vw,24px);text-align:left;}
+.B-card{background:rgba(255,255,255,.62);backdrop-filter:blur(6px);border:1px solid rgba(218,212,200,.8);
+  border-radius:22px;padding:clamp(24px,3vw,34px);transition:transform .4s ease,box-shadow .4s ease;}
+.B-card:hover{transform:translateY(-6px);box-shadow:0 22px 44px -22px rgba(43,38,32,.28);}
+.B-card .badge{display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;border-radius:50%;
+  background:var(--accent);color:#fff;font-family:var(--serif);font-size:18px;margin-bottom:18px;}
+.B-card h3{font-family:var(--serif);font-weight:500;font-size:clamp(19px,2vw,23px);margin:0 0 8px;}
+.B-card p{font-size:14.5px;line-height:1.7;color:var(--ink-soft);margin:0;}
+.B-card:last-child{grid-column:1 / -1;}
+
+.B-soft{margin:clamp(48px,7vw,90px) auto;max-width:860px;background:rgba(255,255,255,.5);border:1px solid rgba(218,212,200,.8);
+  border-radius:28px;padding:clamp(36px,5vw,64px);text-align:center;}
+.B-soft .q{font-family:var(--serif);font-style:italic;font-size:clamp(21px,2.6vw,32px);line-height:1.4;color:var(--ink);margin:0 0 28px;}
+.B-soft .m{font-size:16px;line-height:1.9;color:var(--ink-soft);margin:0;}
+
+/* =========================================================================
+   DIRECTION C — MODERN SCROLL-STORY
+   ========================================================================= */
+.C{background:var(--cream);}
+.C-hero{position:relative;height:92vh;min-height:560px;overflow:hidden;display:flex;align-items:flex-end;}
+.C-hero .bg{position:absolute;inset:-12% 0;background-size:cover;background-position:center 22%;will-change:transform;z-index:0;}
+.C-hero .scrim{position:absolute;inset:0;z-index:1;
+  background:linear-gradient(to top,rgba(22,19,15,.78) 0%,rgba(22,19,15,.18) 46%,rgba(22,19,15,.32) 100%);}
+.C-hero .inner{position:relative;z-index:2;color:var(--cream);max-width:1240px;margin:0 auto;width:100%;
+  padding:0 6vw clamp(48px,7vw,90px);}
+.C-hero .eyebrow{font-size:12px;letter-spacing:.36em;text-transform:uppercase;color:#E7C9B8;margin-bottom:20px;}
+.C-hero h1{font-family:var(--serif);font-weight:500;font-size:clamp(48px,9vw,128px);line-height:.92;letter-spacing:-.02em;margin:0;}
+.C-hero h1 em{font-style:italic;color:#E8B79F;}
+.C-hero .cue{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);z-index:2;
+  width:22px;height:34px;border:1.5px solid rgba(245,241,232,.7);border-radius:12px;}
+.C-hero .cue::after{content:"";position:absolute;left:50%;top:7px;width:3px;height:6px;border-radius:2px;
+  background:var(--cream);transform:translateX(-50%);animation:cWheel 1.5s ease-in-out infinite;}
+@keyframes cWheel{0%{opacity:0;transform:translate(-50%,0);}30%{opacity:1;}100%{opacity:0;transform:translate(-50%,9px);}}
+@media (prefers-reduced-motion:reduce){ .C-hero .cue::after{animation:none;} }
+
+.C .wrap{max-width:1100px;margin:0 auto;padding:0 6vw;}
+.C-intro{padding:clamp(64px,9vw,120px) 0 clamp(40px,5vw,64px);}
+.C-intro .eyebrow{font-size:12px;letter-spacing:.34em;text-transform:uppercase;color:var(--accent);margin-bottom:22px;}
+.C-intro p{font-family:var(--serif);font-weight:400;font-size:clamp(22px,3vw,38px);line-height:1.4;color:var(--ink);margin:0;max-width:24ch;}
+
+.C-rules{padding:clamp(20px,3vw,40px) 0 clamp(48px,7vw,88px);}
+.C-rule{display:grid;grid-template-columns:minmax(120px,.5fr) 1fr;gap:clamp(20px,5vw,72px);align-items:start;
+  padding:clamp(34px,5vw,60px) 0;border-top:1px solid var(--line);}
+.C-rule .num{font-family:var(--serif);font-size:clamp(64px,11vw,150px);line-height:.8;color:transparent;
+  -webkit-text-stroke:1.2px var(--accent);font-style:italic;}
+.C-rule h3{font-family:var(--serif);font-weight:500;font-size:clamp(26px,3.6vw,46px);line-height:1.04;margin:0 0 12px;}
+.C-rule p{font-size:clamp(15px,1.5vw,18px);line-height:1.7;color:var(--ink-soft);margin:0;max-width:46ch;}
+
+.C-interrupt{background:var(--night);color:var(--cream);padding:clamp(72px,11vw,150px) 6vw;text-align:center;}
+.C-interrupt .inner{max-width:900px;margin:0 auto;}
+.C-interrupt .q{font-family:var(--serif);font-style:italic;font-weight:400;font-size:clamp(26px,4vw,52px);
+  line-height:1.32;margin:0;}
+.C-interrupt .q span{color:#E8B79F;}
+.C-mission{padding:clamp(64px,9vw,120px) 0;}
+.C-mission p{font-size:clamp(16px,1.5vw,19px);line-height:1.95;color:var(--ink-soft);max-width:60ch;margin:0;}
+
+/* =========================================================================
+   CONTACT (shared shell, themed per direction)
+   ========================================================================= */
+.contact{border-top:1px solid var(--line);}
+.A .contact,.C .contact{background:var(--cream);}
+.contact .wrap{max-width:760px;margin:0 auto;padding:clamp(56px,8vw,104px) 6vw;}
+.contact .eyebrow{font-size:12px;letter-spacing:.3em;text-transform:uppercase;color:var(--accent);text-align:center;margin-bottom:18px;}
+.contact h2{font-family:var(--serif);font-weight:500;font-size:clamp(28px,4vw,46px);line-height:1.05;text-align:center;margin:0 0 18px;}
+.contact .invite{font-size:16px;line-height:1.8;color:var(--ink-soft);text-align:center;max-width:48ch;margin:0 auto clamp(32px,4vw,48px);}
+.contact .invite .sign{font-family:var(--serif);font-style:italic;color:var(--ink);}
+.cform{display:grid;gap:18px;}
+.cform .row{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+.cfield{display:block;}
+.cfield .lbl{display:block;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:8px;}
+.cfield input,.cfield textarea{width:100%;font-family:var(--sans);font-size:15.5px;color:var(--ink);background:#fff;
+  border:1px solid var(--line);border-radius:4px;padding:14px 16px;transition:border-color .3s ease,box-shadow .3s ease;}
+.cfield textarea{min-height:130px;resize:vertical;}
+.cfield input:focus,.cfield textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(184,98,74,.12);}
+.cform .send{justify-self:center;margin-top:8px;cursor:pointer;border:none;font-family:var(--sans);
+  font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--cream);background:var(--ink);
+  padding:16px 44px;border-radius:2px;transition:transform .14s cubic-bezier(.34,1.56,.64,1),background .3s ease,box-shadow .3s ease;}
+.cform .send:hover{background:var(--accent);transform:scale(1.03);box-shadow:0 12px 24px -12px rgba(184,98,74,.6);}
+.cform .send:active{transform:scale(.97);}
+.cform .note{grid-column:1 / -1;justify-self:center;font-size:12px;color:var(--ink-soft);min-height:1.1em;margin:4px 0 0;text-align:center;}
+.cform.done{place-items:center;text-align:center;gap:10px;}
+.cform .tick{width:54px;height:54px;border-radius:50%;border:1px solid var(--accent);display:grid;place-items:center;}
+/* B contact softens the shell */
+.B .contact{border-top:none;background:transparent;position:relative;z-index:1;}
+.B .contact .cfield input,.B .contact .cfield textarea{background:rgba(255,255,255,.7);border-radius:14px;}
+.B .cform .send{border-radius:99px;background:var(--accent);}
+.B .cform .send:hover{background:#9c4f3a;}
+
+@media (max-width:860px){
+  .A-hero,.B-hero{grid-template-columns:1fr;}
+  .A-portrait{order:-1;max-width:440px;}
+  .C-rule{grid-template-columns:1fr;gap:6px;}
+  .C-rule .num{font-size:84px;}
+}
+@media (max-width:600px){
+  .B-grid{grid-template-columns:1fr;} .B-card:last-child{grid-column:auto;}
+  .cform .row{grid-template-columns:1fr;}
+  .A-rules .head h2{font-size:30px;}
+}
+</style>
+</head>
+<body>
+
+<div class="lab-bar">
+  <span class="lab-title">Pilates page · style lab</span>
+  <button data-dir="A" class="on">A · Editorial</button>
+  <button data-dir="B">B · Soft spa</button>
+  <button data-dir="C">C · Scroll-story</button>
+  <span class="lab-hint">same content & photo — only layout & motion differ</span>
+</div>
+
+<section class="stage show" id="stageA"><div class="A"></div></section>
+<section class="stage" id="stageB"><div class="B"></div></section>
+<section class="stage" id="stageC"><div class="C"></div></section>
+
+<script>
+/* ---------- single source of content (verbatim from saialondon.com) ---------- */
+const PHOTO = "../../photos/IMG_5106_3.jpg";
+const C = {
+  eyebrow:"Pilates · NW3 & Hampstead",
+  title:"Pilates with Cristina",
+  intro:"Hello and welcome! My name is Cristina and I am the founder of SAÏA. If you are on this page it's probably because we have a shared interest and love for Pilates. I offer 1-2-1 classes for women in NW3 and group classes in Hampstead, London. I am trained in the Classical method and I am also a Reformer Pilates instructor.",
+  rulesHead:"My Approach to Exercise: Five Simple Rules",
+  rules:[
+    ["It Has to Be Fun","Enjoyment is key to sustaining any fitness routine."],
+    ["It Has to Be Rewarding","Every session should leave you feeling accomplished."],
+    ["Keep It Balanced","Indulge wisely — keep it lean during the week but treat yourself on the weekend! ;)"],
+    ["Do It for the Right Reasons","Focus on health and well-being, not just appearance."],
+    ["Always Show Up","Consistency is crucial. If you miss one session, don't miss two."]
+  ],
+  philosophy:"I believe that the body is the vessel that takes us through life. It's the only thing you can truly rely on, designed to do incredible things if you let it. The body is the greatest investment we can make in ourselves, deserving of love and respect through listening, strengthening, and nourishing.",
+  mission:"As a Pilates instructor, my mission is to encourage women to live healthy, balanced lifestyles and to share the transformative practice of Joseph Pilates. Through his method, Contrology, Pilates empowers individuals to strengthen, heal, and realign their bodies from within. Pilates is a beautiful, powerful, and accessible practice for every body. It's versatile, inclusive, and sustainable for long-term health. No matter your level, I am here to support you every step of the way and help you achieve your personal fitness goals.",
+  invite:"If you want to work out together, please get in touch by filling out the contact form below. I can't wait to hear from you.",
+  sign:"With love, Cristina"
+};
+const esc = s => s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+const num = i => String(i+1).padStart(2,"0");
+
+/* ---------- shared contact form markup ---------- */
+function contactHTML(){
+  return `
+  <section class="contact"><div class="wrap rv">
+    <div class="eyebrow">Get in touch</div>
+    <h2>Work out together</h2>
+    <p class="invite">${esc(C.invite)} <span class="sign">${esc(C.sign)}</span></p>
+    <form class="cform" novalidate>
+      <div class="row">
+        <label class="cfield"><span class="lbl">Name</span><input type="text" name="name" autocomplete="name" required placeholder="Your name"></label>
+        <label class="cfield"><span class="lbl">Email</span><input type="email" name="email" autocomplete="email" required placeholder="you@email.com"></label>
+      </div>
+      <label class="cfield"><span class="lbl">Message</span><textarea name="message" placeholder="Tell me a little about what you're looking for…"></textarea></label>
+      <button type="submit" class="send">Send</button>
+      <p class="note" aria-live="polite"></p>
+    </form>
+  </div></section>`;
+}
+
+/* ---------- A · editorial ---------- */
+function renderA(){
+  const rows = C.rules.map((r,i)=>`
+    <div class="A-row rv"><div class="num">${num(i)}</div>
+      <div><p class="rt">${esc(r[0])}</p><p class="rd">${esc(r[1])}</p></div></div>`).join("");
+  return `
+  <div class="wrap">
+    <div class="A-hero">
+      <div class="rv"><div class="eyebrow">${esc(C.eyebrow)}</div>
+        <h1>Pilates with<br><em>Cristina</em></h1>
+        <p class="lede">${esc(C.intro)}</p></div>
+      <div class="A-portrait rv"><img src="${PHOTO}" alt="Cristina, founder of SAÏA and Pilates instructor"></div>
+    </div>
+  </div>
+  <div class="wrap"><div class="A-rule"></div>
+    <section class="A-rules">
+      <div class="head rv"><h2>${esc(C.rulesHead)}</h2><div class="eyebrow">Five simple rules</div></div>
+      ${rows}
+    </section>
+  </div>
+  <div class="wrap">
+    <section class="A-quote rv"><div class="mark">“</div><p>${esc(C.philosophy)}</p></section>
+    <section class="A-mission rv"><p>${esc(C.mission)}</p></section>
+  </div>
+  ${contactHTML()}`;
+}
+
+/* ---------- B · soft spa ---------- */
+function renderB(){
+  const cards = C.rules.map((r,i)=>`
+    <div class="B-card rv"><div class="badge">${num(i)}</div>
+      <h3>${esc(r[0])}</h3><p>${esc(r[1])}</p></div>`).join("");
+  return `
+  <span class="blob b1"></span><span class="blob b2"></span>
+  <div class="wrap">
+    <div class="B-hero">
+      <div class="B-portrait rv"><span class="ring"></span><img src="${PHOTO}" alt="Cristina, founder of SAÏA and Pilates instructor"></div>
+      <div class="copy rv"><div class="eyebrow">${esc(C.eyebrow)}</div>
+        <h1>Pilates with Cristina</h1>
+        <p class="lede">${esc(C.intro)}</p></div>
+    </div>
+    <section class="B-rules">
+      <h2 class="rv">${esc(C.rulesHead)}</h2>
+      <div class="B-grid">${cards}</div>
+    </section>
+    <section class="B-soft rv">
+      <p class="q">${esc(C.philosophy)}</p>
+      <p class="m">${esc(C.mission)}</p>
+    </section>
+  </div>
+  ${contactHTML()}`;
+}
+
+/* ---------- C · scroll-story ---------- */
+function renderC(){
+  const rules = C.rules.map((r,i)=>`
+    <div class="C-rule rv"><div class="num">${num(i)}</div>
+      <div><h3>${esc(r[0])}</h3><p>${esc(r[1])}</p></div></div>`).join("");
+  return `
+  <header class="C-hero">
+    <div class="bg" style="background-image:url('${PHOTO}')"></div>
+    <div class="scrim"></div>
+    <div class="inner rv"><div class="eyebrow">${esc(C.eyebrow)}</div>
+      <h1>Pilates with<br><em>Cristina</em></h1></div>
+    <span class="cue" aria-hidden="true"></span>
+  </header>
+  <div class="wrap">
+    <section class="C-intro rv"><div class="eyebrow">Welcome</div><p>${esc(C.intro)}</p></section>
+    <section class="C-rules"><div class="C-rule rv" style="border-top:none;padding-bottom:0;">
+        <div></div><div><div class="eyebrow" style="color:var(--accent);letter-spacing:.3em;text-transform:uppercase;font-size:12px;">${esc(C.rulesHead)}</div></div></div>
+      ${rules}</section>
+  </div>
+  <section class="C-interrupt"><div class="inner rv"><p class="q">${esc(C.philosophy)}</p></div></section>
+  <div class="wrap"><section class="C-mission rv"><p>${esc(C.mission)}</p></section></div>
+  ${contactHTML()}`;
+}
+
+document.querySelector("#stageA .A").innerHTML = renderA();
+document.querySelector("#stageB .B").innerHTML = renderB();
+document.querySelector("#stageC .C").innerHTML = renderC();
+
+/* ---------- reveal on scroll ---------- */
+const io = new IntersectionObserver((es)=>{
+  es.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add("in"); io.unobserve(e.target);} });
+},{threshold:.12, rootMargin:"0px 0px -8% 0px"});
+function observe(root){ root.querySelectorAll(".rv").forEach((el,i)=>{ el.style.transitionDelay=(Math.min(i,6)*60)+"ms"; io.observe(el);}); }
+["A","B","C"].forEach(d=>observe(document.querySelector("#stage"+d)));
+
+/* ---------- switcher ---------- */
+const bar = document.querySelector(".lab-bar");
+bar.addEventListener("click", e=>{
+  const b = e.target.closest("button[data-dir]"); if(!b) return;
+  const d = b.dataset.dir;
+  bar.querySelectorAll("button").forEach(x=>x.classList.toggle("on", x===b));
+  ["A","B","C"].forEach(x=>document.querySelector("#stage"+x).classList.toggle("show", x===d));
+  window.scrollTo({top:0,behavior:"instant"});
+  // re-fire reveals for the now-visible stage
+  document.querySelectorAll("#stage"+d+" .rv").forEach(el=>{ el.classList.remove("in"); io.observe(el); });
+});
+
+/* ---------- C hero parallax ---------- */
+let ticking=false;
+const reduce = matchMedia("(prefers-reduced-motion:reduce)").matches;
+window.addEventListener("scroll", ()=>{
+  if(reduce || ticking) return; ticking=true;
+  requestAnimationFrame(()=>{
+    const bg=document.querySelector("#stageC .C-hero .bg");
+    if(bg && document.querySelector("#stageC").classList.contains("show")){
+      bg.style.transform="translateY("+(window.scrollY*0.18)+"px)";
+    }
+    ticking=false;
+  });
+},{passive:true});
+
+/* ---------- contact form mockup ---------- */
+document.addEventListener("submit", e=>{
+  if(!e.target.classList.contains("cform")) return;
+  e.preventDefault();
+  const f=e.target, name=(f.name?.value||"").trim();
+  if(!name || !f.email.value.trim()){ f.querySelector(".note").textContent="Please add your name and email."; return; }
+  f.innerHTML=`<div class="tick" aria-hidden="true"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#B8624A" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg></div>
+    <p style="font-family:var(--serif);font-size:24px;margin:6px 0 0;">Thank you, ${esc(name)}.</p>
+    <p class="note">Mockup confirmation — no message was actually sent yet.</p>`;
+  f.classList.add("done");
+});
+</script>
+</body>
+</html>
