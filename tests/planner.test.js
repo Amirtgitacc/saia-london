@@ -45,18 +45,32 @@ test('after method=deliver, asks for postcode', () => {
   assert.ok(r.actions.some(a => a.tool === 'set_method' && a.args.method === 'deliver'));
 });
 
-test('postcode completes priced slots → quote + asks date', () => {
+test('postcode given but no date → asks date, no quote yet', () => {
   const r = Planner.localPlan('EC2Y 8DS', { mats: 50, days: 2, method: 'deliver', zone: null, date: null, awaiting: 'postcode' });
   assert.strictEqual(r.awaiting, 'date');
   assert.ok(r.actions.some(a => a.tool === 'set_postcode'));
-  assert.ok(r.actions.some(a => a.tool === 'quote'));
+  assert.ok(!r.actions.some(a => a.tool === 'quote'));      // no quote until the date is in
 });
 
-test('pickup skips postcode → quote + asks date', () => {
+test('pickup but no date → asks date, no quote yet', () => {
   const r = Planner.localPlan('I will collect from NW3', { mats: 20, days: 2, method: null, date: null, awaiting: 'method' });
   assert.strictEqual(r.awaiting, 'date');
   assert.ok(r.actions.some(a => a.tool === 'set_method' && a.args.method === 'pickup'));
+  assert.ok(!r.actions.some(a => a.tool === 'quote'));
+});
+
+test('all slots in (date answers the last question) → ready: quote + Book prompt', () => {
+  const r = Planner.localPlan('saturday', { mats: 15, days: 2, method: 'deliver', zone: 'central', date: null, awaiting: 'date' });
+  assert.strictEqual(r.awaiting, null);
+  assert.ok(r.actions.some(a => a.tool === 'set_date'));
   assert.ok(r.actions.some(a => a.tool === 'quote'));
+  assert.ok(/Book this hire/i.test(r.say));
+});
+test('ready state outside London points to Cristina', () => {
+  const r = Planner.localPlan('saturday', { mats: 15, days: 2, method: 'deliver', zone: 'outside', date: null, awaiting: 'date' });
+  assert.strictEqual(r.awaiting, null);
+  assert.ok(r.actions.some(a => a.tool === 'quote'));
+  assert.ok(/Cristina/.test(r.say) && /Book this hire/i.test(r.say));
 });
 
 test('confirm books it', () => {

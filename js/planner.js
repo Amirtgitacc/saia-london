@@ -163,16 +163,16 @@
       if (need === 'method') return mk('Shall we deliver by courier, or will you collect from our NW3 warehouse?', actions, 'method');
       if (need === 'postcode') return mk("What's the event postcode? I'll work out the courier from there.", actions, 'postcode');
 
-      // priced slots complete → quote
+      // need the date before we quote anything
+      if (need === 'date') return mk('And what date is your event? We deliver the day before and collect the day after.', actions, 'date');
+
+      // everything gathered → compute the quote (for the card) and reveal it with the Book button
       actions.push({ tool: 'quote' });
-      const q = KB.priceHire ? KB.priceHire(h) : { total: null, deposit: 0, quoteOnly: false };
-      const headline = q.quoteOnly
-        ? (money(q.matCost) + ' for the mats, plus a courier quote for outside London'
-            + (h.postcode ? ' — WhatsApp ' + KB.contact.person + ' on ' + KB.contact.whatsapp + " and she'll confirm it" : ''))
-        : ('from ' + money(q.total) + ' all in — ' + money(q.deposit) + ' of that is a refundable deposit, returned after collection');
-      const lead = "Here's your estimate: " + headline + '. ';
-      if (need === 'date') return mk(lead + "What date is your event? I'll line up delivery the day before.", actions, 'date');
-      return mk(lead + 'Shall I pencil it in for ' + h.date + ' and make your checkout link?', actions, 'confirm');
+      const q = KB.priceHire ? KB.priceHire(h) : { total: null, matCost: 0, deposit: 0, quoteOnly: false };
+      const ready = q.quoteOnly
+        ? "That's everything I need. Your mats and deposit come to " + money(q.matCost + q.deposit) + "; as you're outside London, Cristina will confirm the courier. Press Book this hire and I'll pass your details to her."
+        : "That's everything — your full quote is below: " + money(q.total) + " all in, including a " + money(q.deposit) + " refundable deposit returned after collection. Press Book this hire when you're ready.";
+      return mk(ready, actions, null);
     }
 
     // ===== everything below: the existing scripted FAQ intents (unchanged behaviour) =====
