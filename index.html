@@ -87,7 +87,7 @@
             <div style="font-size:11px; letter-spacing:.34em; text-transform:uppercase; color:#F0BD9C; margin-bottom:18px;">Act III · Mindset</div>
             <h2 style="font-family:'Cormorant Garamond',serif; font-weight:500; font-size:clamp(44px,6vw,86px); line-height:.98; margin:0; color:#F5F1E8; text-shadow:0 2px 50px rgba(0,0,0,.55);">Roll it up.<br>Take it home.</h2>
             <p style="font-size:16px; line-height:1.75; color:rgba(245,241,232,.84); margin:24px auto 0; max-width:430px; text-shadow:0 1px 20px rgba(0,0,0,.5);">As the light goes gold, the mat rolls back into a single ritual you can keep. Hiring a SAÏA mat isn't a transaction. It's how you join.</p>
-            <button data-open-hire class="saia-btn saia-btn--terra" style="pointer-events:auto; margin-top:32px; font-family:'Hanken Grotesk',sans-serif; letter-spacing:.22em;">Hire a mat with the concierge →</button>
+            <button data-open-hire class="saia-btn saia-btn--terra" style="pointer-events:auto; margin-top:32px; font-family:'Hanken Grotesk',sans-serif; letter-spacing:.22em;">Hire mats for your event →</button>
           </div>
         </div>
       </div>
@@ -121,7 +121,7 @@
         <div style="font-family:'Cormorant Garamond',serif; font-size:32px; letter-spacing:.2em;">SAÏA</div>
         <div style="font-size:10px; letter-spacing:.5em; text-transform:uppercase; color:rgba(245,241,232,.55); margin:6px 0 22px;">London</div>
         <p style="font-size:14px; line-height:1.75; color:rgba(245,241,232,.62); margin:0 0 22px; max-width:300px;">A female-led club empowering women through fitness, community &amp; mindset. Premium yoga-mat hire across London.</p>
-        <button data-open-hire class="saia-btn saia-btn--terra" style="font-family:'Hanken Grotesk',sans-serif;">Hire a mat</button>
+        <button data-open-hire class="saia-btn saia-btn--terra" style="font-family:'Hanken Grotesk',sans-serif;">Hire mats for your event</button>
       </div>
       <div style="display:flex; flex-wrap:wrap; gap:46px;">
         <div><div style="font-size:11px; letter-spacing:.22em; text-transform:uppercase; color:rgba(245,241,232,.5); margin-bottom:16px;">The club</div><div style="display:flex; flex-direction:column; gap:11px; font-size:14px;"><a href="#fitness" class="saia-link" style="color:rgba(245,241,232,.78);">Pilates</a><a href="#community" class="saia-link" style="color:rgba(245,241,232,.78);">Events</a><a href="#founder" class="saia-link" style="color:rgba(245,241,232,.78);">Our story</a></div></div>
@@ -138,7 +138,7 @@
   <div style="position:fixed; right:30px; bottom:30px; z-index:60; display:flex; align-items:center; gap:12px;">
     <!-- closed -->
     <div id="conciergeClosed" style="display:flex; align-items:center; gap:12px;">
-      <span style="font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:rgba(245,241,232,.82); background:rgba(20,17,13,.5); backdrop-filter:blur(8px); padding:9px 14px; border-radius:30px; white-space:nowrap;">Ask the concierge</span>
+      <span style="font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:rgba(245,241,232,.82); background:rgba(20,17,13,.5); backdrop-filter:blur(8px); padding:9px 14px; border-radius:30px; white-space:nowrap;">Ask the assistant</span>
       <button id="conciergeOpen" class="saia-fab" style="flex:none;"><span class="saia-fab-s">S</span><span class="saia-fab-orbit"></span></button>
     </div>
 
@@ -147,7 +147,7 @@
       <div style="padding:16px 18px; border-bottom:1px solid #ECE7DC; display:flex; align-items:center; gap:12px; flex:none;">
         <span style="width:40px; height:40px; border-radius:50%; background:radial-gradient(circle at 38% 34%, #e7c39a, #b8624a 78%); color:#fff5ec; display:flex; align-items:center; justify-content:center; font-family:'Cormorant Garamond',serif; font-size:21px;">S</span>
         <div style="flex:1;">
-          <div style="font-size:12px; letter-spacing:.18em; text-transform:uppercase; color:#2B2620;">Noor · SAÏA concierge</div>
+          <div style="font-size:12px; letter-spacing:.18em; text-transform:uppercase; color:#2B2620;">SAÏA Assistant</div>
           <div style="font-size:11px; color:#6B6358; margin-top:3px; display:flex; align-items:center; gap:6px;"><span style="width:6px; height:6px; border-radius:50%; background:#7FA67F;"></span>Your host · online</div>
         </div>
         <button id="conciergeClose" style="background:none; border:none; cursor:pointer; padding:4px; display:flex;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#9b9384" stroke-width="1.5"><line x1="5" y1="5" x2="19" y2="19"></line><line x1="19" y1="5" x2="5" y2="19"></line></svg></button>
@@ -156,6 +156,7 @@
         <span style="font-size:11px; color:#2B2620; background:#fff; border:1px solid #E2DCCF; border-radius:30px; padding:6px 12px;"><span data-hire="mats">0</span> mats</span>
         <span style="font-size:11px; color:#2B2620; background:#fff; border:1px solid #E2DCCF; border-radius:30px; padding:6px 12px;" data-hire="date">No date</span>
         <span style="font-size:11px; color:#fff; background:#2B2620; border-radius:30px; padding:6px 12px;" data-hire="total">£—</span>
+        <span style="font-size:11px; color:#6B6358; background:#fff; border:1px solid #E2DCCF; border-radius:30px; padding:6px 12px; display:none;" data-hire="deposit"></span>
         <span style="font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:#B8624A; padding:6px 4px;" data-hire="status">No hire yet</span>
       </div>
       <div id="thread" class="saia-thread" style="flex:1; overflow-y:auto; padding:18px 15px; display:flex; flex-direction:column; gap:11px;"></div>
@@ -166,7 +167,7 @@
         <button data-q="Is the club right for me?" class="saia-chip">Is it for me?</button>
       </div>
       <div style="padding:11px 13px; border-top:1px solid #ECE7DC; display:flex; gap:10px; align-items:center; flex:none;">
-        <input id="conciergeInput" type="text" placeholder="Ask Noor anything…" style="flex:1; border:none; background:transparent; font-family:'Hanken Grotesk',sans-serif; font-size:13.5px; color:#2B2620; outline:none;">
+        <input id="conciergeInput" type="text" placeholder="Ask the assistant anything…" style="flex:1; border:none; background:transparent; font-family:'Hanken Grotesk',sans-serif; font-size:13.5px; color:#2B2620; outline:none;">
         <button id="conciergeSend" class="saia-send">Send<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7Z"/></svg></button>
       </div>
     </div>

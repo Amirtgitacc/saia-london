@@ -26,7 +26,7 @@
     const state = {
       msgs: [],
       typing: false,
-      hire: { mats: 0, guests: null, date: null, total: null, status: 'No hire yet' },
+      hire: { mats: 0, guests: null, date: null, days: null, method: null, postcode: null, zone: null, total: null, deposit: null, status: 'No hire yet', awaiting: null },
     };
     let replyTimer = null, greeted = false;
 
@@ -56,6 +56,10 @@
       if (v.mats) v.mats.textContent = String(h.mats || 0);
       if (v.date) v.date.textContent = h.date || 'No date';
       if (v.total) v.total.textContent = h.total != null ? '£' + h.total.toFixed(2) : '£—';
+      if (v.deposit) {
+        v.deposit.textContent = h.deposit != null ? '+£' + h.deposit.toFixed(2) + ' deposit (refundable)' : '';
+        v.deposit.style.display = h.deposit != null ? '' : 'none';
+      }
       if (v.status) v.status.textContent = h.status;
     }
 
@@ -64,10 +68,11 @@
       e.style.animation = 'none'; void e.offsetWidth; e.style.animation = 'saiaFlash .85s ease';
     }
 
-    function applyAndRender(say, actions) {
+    function applyAndRender(say, actions, awaiting) {
       const res = Planner.applyActions(state.hire, actions || []);
       state.typing = false;
       state.hire = res.hire;
+      if (awaiting !== undefined) state.hire.awaiting = awaiting;
       state.msgs.push({ from: 'bot', text: say });
       res.acts.forEach((a) => state.msgs.push({ from: 'act', text: a }));
       renderThread(); renderHire(); flashHire();
@@ -97,11 +102,11 @@
       const t = text.trim();
       state.msgs.push({ from: 'user', text: t });
       state.typing = true; renderThread();
-      const plan = Planner.localPlan(t);
+      const plan = Planner.localPlan(t, state.hire);
       if (plan.matched) {
         // Tier 1 — instant, scripted, on-brand (keep the natural reply beat)
         clearTimeout(replyTimer);
-        replyTimer = setTimeout(() => applyAndRender(plan.say, plan.actions), opts.replyDelay || 720);
+        replyTimer = setTimeout(() => applyAndRender(plan.say, plan.actions, plan.awaiting), opts.replyDelay || 720);
         return;
       }
       askAssist(plan); // long tail → Claude assist (network is the delay)
