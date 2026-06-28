@@ -231,12 +231,9 @@
     state.msgs.push({ from: 'user', text: 'From my estimate: ' + (parts.join(' ') || 'mat hire') + '.' });
     state.turns++;
     // ask the brain for the next missing slot, seeded with what we already know
-    const plan = (NS.Planner && NS.Planner.localPlan)
-      ? NS.Planner.localPlan('continue', state.hire)
-      : { say: "Tell me your event date and I’ll finish your quote.", actions: [], awaiting: null };
-    state.hire.awaiting = plan.awaiting || state.hire.awaiting;
-    state.msgs.push({ from: 'bot', text: plan.say });
-    render();
+    applyAndShow((NS.Planner && NS.Planner.localPlan)
+      ? NS.Planner.localPlan("hire", state.hire)
+      : { say: "Tell me your event date and I’ll finish your quote.", actions: [], matched: false, awaiting: null });
   }
 
   function open(opts) {

@@ -113,3 +113,24 @@ test('no cancels the confirm step instead of looping', () => {
   assert.ok(!r.actions.some(a => a.tool === 'checkout' || a.tool === 'confirm'), 'should not fire checkout or confirm');
   assert.ok(!r.awaiting, 'awaiting should be null — user stepped back out');
 });
+
+// === Fix: standalone checkout/confirm intents (basket buttons) ===
+test('basket checkout button fires checkout action', () => {
+  const r = Planner.localPlan('checkout', { mats: 50, days: 2, method: 'deliver', zone: 'central', date: 'Saturday', awaiting: 'confirm' });
+  assert.ok(r.actions.some(a => a.tool === 'checkout'), 'checkout action must be present');
+});
+
+test('basket confirm button fires confirm action', () => {
+  const r = Planner.localPlan('confirm', { mats: 50, days: 2, method: 'deliver', zone: 'central', date: 'Saturday', status: 'Checkout link ready', awaiting: null });
+  assert.ok(r.actions.some(a => a.tool === 'confirm'), 'confirm action must be present');
+});
+
+test('regression: typed yes at confirm still fires checkout', () => {
+  const r = Planner.localPlan('yes please', { mats: 50, days: 2, method: 'deliver', zone: 'central', date: 'Saturday', awaiting: 'confirm' });
+  assert.ok(r.actions.some(a => a.tool === 'checkout'), 'yes at confirm step must fire checkout');
+});
+
+test('checkout intent does not emit a quote action', () => {
+  const r = Planner.localPlan('checkout', { mats: 50, days: 2, method: 'deliver', zone: 'central', date: 'Saturday', awaiting: 'confirm' });
+  assert.ok(!r.actions.some(a => a.tool === 'quote'), 'checkout must not loop the quote');
+});

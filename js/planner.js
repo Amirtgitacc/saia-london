@@ -116,6 +116,12 @@
     if (aw === 'confirm' && has(/^(yes|yep|yeah|sure|go ahead|do it|lock it|confirm|book it|sounds good|please|ok|okay|perfect)\b/))
       return mk("Wonderful. Your secure checkout link is in the panel — that's you booked. Delivery the day before, collection after. Welcome to SAÏA.", [{ tool: 'checkout' }], null);
 
+    // explicit booking actions — also fired by the home basket buttons
+    if (has(/^checkout\b|^pay\b|payment link|secure (checkout )?link/))
+      return mk("Your secure checkout link is ready in the panel. That's you joining the club — anything else for your day?", [{ tool: 'checkout' }], null);
+    if (has(/^confirm\b|^confirm booking|^book it now\b/))
+      return mk('Confirmed. Delivery the day before, collection after. Welcome to SAÏA.', [{ tool: 'confirm' }], null);
+
     // ===== build / continue the hire flow =====
     // Trigger: mid-flow, or a fresh hire signal (a count, “hire”, “book”, “rent”, “event with mats”)
     // isProcessQ: “how does hire work?” etc. — these are FAQ questions, not booking signals
