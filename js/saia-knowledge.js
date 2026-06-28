@@ -31,6 +31,8 @@
       hireDays: 2,                          // day before the event → end of event
       minMats: 10,
       extraDayPerMat: 1.5,                  // £ per mat per additional day
+      depositPerMat: 1.5,                   // £ per mat, REFUNDABLE — returned after mats come back
+      depositRefundable: true,
       bulkThreshold: 60,                    // 60+ → reduced quote, get in touch
       delivery: 'Same-day courier (Addison Lee) from our Central London warehouse, roughly £35 to £55 each way across London.',
       collection: 'We collect the day after your event, or you can drop them back at our NW3 warehouse in working hours. No need to clean them. We handle that.',
@@ -78,6 +80,31 @@
     ],
   };
 
+  /* ---- delivery zones + pricing (single source, lifted from the home estimator) ---- */
+  KB.delivery = {
+    zones: {
+      central: { key: 'central', label: 'Zone 1 · Central London', round: 35 },
+      greater: { key: 'greater', label: 'Zone 2 · Greater London', round: 45 },
+    },
+    central: ['EC1', 'EC2', 'EC3', 'EC4', 'WC1', 'WC2', 'W1', 'SW1', 'SE1', 'N1', 'NW1', 'E1', 'W2'],
+    london: ['E', 'EC', 'N', 'NW', 'SE', 'SW', 'W', 'WC'],
+    outer: ['BR', 'CR', 'DA', 'EN', 'HA', 'IG', 'KT', 'RM', 'SM', 'TW', 'UB', 'WD'],
+  };
+
+  // postcode -> zone object (or null if it can't be read)
+  KB.classify = function (raw) {
+    var D = KB.delivery;
+    var pc = (raw || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+    if (pc.length < 2) return null;
+    var ow = pc.length > 3 ? pc.slice(0, pc.length - 3) : pc;
+    var m = ow.match(/^([A-Z]{1,2})(\d{1,2})?/);
+    if (!m) return null;
+    var area = m[1], key = area + (m[2] ? m[2] : '');
+    if (D.central.indexOf(key) !== -1) return D.zones.central;
+    if (D.london.indexOf(area) !== -1 || D.outer.indexOf(area) !== -1) return D.zones.greater;
+    return { key: 'outside', label: 'outside', round: null };
+  };
+
   /* A compact markdown fact-sheet for the Tier-2 system prompt.
      Built from the structured fields above so it can never disagree. */
   KB.factSheet = [
@@ -89,6 +116,7 @@
     '- Mats are for HIRE ONLY. Never for sale.',
     '- ' + KB.hire.currency + KB.hire.pricePerMat.toFixed(2) + ' per mat for a ' + KB.hire.hireDays + '-day hire (the day before the event through the end of it).',
     '- Minimum ' + KB.hire.minMats + ' mats. Extra days are ' + KB.hire.currency + KB.hire.extraDayPerMat.toFixed(2) + ' per mat per day. ' + KB.hire.bulkThreshold + '+ mats → reduced quote, get in touch.',
+    '- A ' + KB.hire.currency + KB.hire.depositPerMat.toFixed(2) + ' per mat REFUNDABLE deposit is taken upfront and returned once the mats come back. It is not a hire cost.',
     '- Delivery: ' + KB.hire.delivery,
     '- Collection: ' + KB.hire.collection,
     '- The mat: ' + KB.hire.mat.size + ', ' + KB.hire.mat.colour + ', ' + KB.hire.mat.material + '; ' + KB.hire.mat.features + '. (Retail value ~' + KB.hire.currency + KB.hire.retailReference + ' each, for reference only, still hire-only.)',
