@@ -76,7 +76,7 @@
     } else if (mode === 'estimate') {
       text = 'Let’s turn your estimate into a booking.';
     } else {
-      text = 'Hello, lovely. I’m Noor, the SAÏA concierge. I can plan mat hire for your event, share what’s on, or book Pilates with Cristina. What brings you in?';
+      text = "Hello, lovely. I can plan mat hire for your event, share what’s on, or book Pilates with Cristina. What brings you in?";
       chips = INTENT_CHIPS;
     }
     state.msgs = [{ from: 'bot', text: text, chips: chips }];
@@ -95,6 +95,7 @@
       ? NS.Planner.applyActions(state.hire, plan.actions || [])
       : { hire: state.hire, acts: [] };
     state.hire = exec.hire;
+    state.hire.awaiting = (plan && 'awaiting' in plan) ? plan.awaiting : state.hire.awaiting;
     state.msgs.push({ from: 'bot', text: plan.say });
     (exec.acts || []).forEach((a) => state.msgs.push({ from: 'act', text: a }));
     render();
@@ -122,8 +123,8 @@
     state.typing = true;
     render();
     const plan = (NS.Planner && NS.Planner.localPlan)
-      ? NS.Planner.localPlan(text)
-      : { say: GENERIC, actions: [], matched: false };
+      ? NS.Planner.localPlan(text, state.hire)
+      : { say: GENERIC, actions: [], matched: false, awaiting: null };
     if (plan.matched) {
       clearTimeout(replyTimer);
       replyTimer = setTimeout(() => applyAndShow(plan), 650);
@@ -137,13 +138,29 @@
     const h = state.hire;
     if (!h.mats && !h.status) return null;
     const days = h.days || H.hireDays;
+    const q = (NS.KB && NS.KB.priceHire) ? NS.KB.priceHire(h)
+      : { matCost: (h.mats || 0) * H.pricePerMat, deposit: (h.mats || 0) * (H.depositPerMat || 1.5), deliveryCost: null, deliveryLabel: null, total: h.total, quoteOnly: false };
     const wrap = el('div', BASKET);
     wrap.appendChild(el('div', BASKET_T, 'Your hire'));
-    const line = el('div', BASKET_LINE);
-    line.appendChild(el('span', '', (h.mats || 0) + ' mats · ' + days + '-day hire'));
-    line.appendChild(el('span', BASKET_TOTAL, h.total != null ? 'from ' + money(h.total) : '—'));
-    wrap.appendChild(line);
+
+    const row = (label, value) => {
+      const r = el('div', BASKET_LINE);
+      r.appendChild(el('span', '', label));
+      r.appendChild(el('span', '', value));
+      return r;
+    };
+
+    wrap.appendChild(row((h.mats || 0) + ' mats · ' + days + '-day hire', money(q.matCost)));
+    if (q.deliveryLabel) wrap.appendChild(row(q.deliveryLabel, q.deliveryCost == null ? 'by quote' : (q.deliveryCost === 0 ? 'free' : 'from ' + money(q.deliveryCost))));
+    if (h.mats) wrap.appendChild(row('Refundable deposit', money(q.deposit)));
+
+    const totalLine = el('div', BASKET_LINE);
+    totalLine.appendChild(el('span', BASKET_T, q.quoteOnly ? 'Mats + courier quote' : 'Total to pay'));
+    totalLine.appendChild(el('span', BASKET_TOTAL, q.total != null ? 'from ' + money(q.total) : money(q.matCost) + ' + quote'));
+    wrap.appendChild(totalLine);
+    if (q.total != null && h.mats) wrap.appendChild(el('div', BASKET_STATUS, money(q.deposit) + ' of that is returned after collection'));
     if (h.status) wrap.appendChild(el('div', BASKET_STATUS, h.status));
+
     if (h.status === 'Confirmed') {
       wrap.appendChild(el('div', BASKET_DONE, '✓ Confirmed. Welcome to SAÏA.'));
     } else if (h.mats) {
@@ -199,25 +216,26 @@
     seed = seed || {};
     const mats = parseInt(seed.mats, 10) || 0;
     const days = parseInt(seed.days, 10) || null;
-    if (days) state.hire.days = days;
+    const acts = [];
+    if (mats) acts.push({ tool: 'add_mats', args: { n: mats } });
+    if (days) acts.push({ tool: 'set_days', args: { n: days } });
+    if (seed.postcode) acts.push({ tool: 'set_postcode', args: { pc: seed.postcode } });
+    if (acts.length && NS.Planner && NS.Planner.applyActions) {
+      const exec = NS.Planner.applyActions(state.hire, acts);
+      state.hire = exec.hire;
+    }
     const parts = [];
     if (mats) parts.push(mats + ' mats');
     if (days) parts.push('for ' + days + ' days');
     if (seed.postcode) parts.push('delivering to ' + seed.postcode);
     state.msgs.push({ from: 'user', text: 'From my estimate: ' + (parts.join(' ') || 'mat hire') + '.' });
     state.turns++;
-    // deterministic seed — route the booking math through applyActions, not localPlan
-    // (a natural sentence with "delivering to…" would trip the planner's delivery branch first)
-    if (mats && NS.Planner && NS.Planner.applyActions) {
-      const exec = NS.Planner.applyActions(state.hire, [{ tool: 'add_mats', args: { n: mats } }, { tool: 'quote' }]);
-      state.hire = exec.hire;
-    }
-    state.msgs.push({
-      from: 'bot',
-      text: mats
-        ? 'Lovely. I’ve carried your estimate across: ' + mats + ' mats' + (days ? ' for ' + days + ' days' : '') + (seed.postcode ? ', delivering to ' + seed.postcode : '') + '. Your quote’s below. Say “checkout” when you’re ready and I’ll make your payment link.'
-        : 'Tell me how many mats and your event date, and I’ll price it up.',
-    });
+    // ask the brain for the next missing slot, seeded with what we already know
+    const plan = (NS.Planner && NS.Planner.localPlan)
+      ? NS.Planner.localPlan('continue', state.hire)
+      : { say: "Tell me your event date and I’ll finish your quote.", actions: [], awaiting: null };
+    state.hire.awaiting = plan.awaiting || state.hire.awaiting;
+    state.msgs.push({ from: 'bot', text: plan.say });
     render();
   }
 
