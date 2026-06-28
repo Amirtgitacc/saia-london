@@ -136,40 +136,31 @@
   /* ---- live hire basket ---- */
   function basketEl() {
     const h = state.hire;
-    if (!h.mats && !h.status) return null;
-    const days = h.days || H.hireDays;
-    const q = (NS.KB && NS.KB.priceHire) ? NS.KB.priceHire(h)
-      : { matCost: (h.mats || 0) * H.pricePerMat, deposit: (h.mats || 0) * (H.depositPerMat || 1.5), deliveryCost: null, deliveryLabel: null, total: h.total, quoteOnly: false };
+    if (!NS.KB || !NS.KB.hireComplete || !NS.KB.hireComplete(h)) return null;   // nothing until complete
+    const q = NS.KB.quoteLines(h);
     const wrap = el('div', BASKET);
     wrap.appendChild(el('div', BASKET_T, 'Your hire'));
+    wrap.appendChild(el('div', BASKET_STATUS, (h.mats || 0) + ' mats · ' + (h.days || H.hireDays) + '-day hire' + (h.date ? ' · ' + h.date : '')));
 
-    const row = (label, value) => {
+    q.lines.forEach((l) => {
       const r = el('div', BASKET_LINE);
-      r.appendChild(el('span', '', label));
-      r.appendChild(el('span', '', value));
-      return r;
-    };
-
-    wrap.appendChild(row((h.mats || 0) + ' mats · ' + days + '-day hire', money(q.matCost)));
-    if (q.deliveryLabel) wrap.appendChild(row(q.deliveryLabel, q.deliveryCost == null ? 'by quote' : (q.deliveryCost === 0 ? 'free' : 'from ' + money(q.deliveryCost))));
-    if (h.mats) wrap.appendChild(row('Refundable deposit', money(q.deposit)));
+      r.appendChild(el('span', '', l.label));
+      r.appendChild(el('span', '', l.value));
+      wrap.appendChild(r);
+    });
 
     const totalLine = el('div', BASKET_LINE);
-    totalLine.appendChild(el('span', BASKET_T, q.quoteOnly ? 'Mats + courier quote' : 'Total to pay'));
-    totalLine.appendChild(el('span', BASKET_TOTAL, q.total != null ? 'from ' + money(q.total) : money(q.matCost) + ' + quote'));
+    totalLine.appendChild(el('span', BASKET_T, q.quoteOnly ? 'Subtotal (excl. courier)' : 'Total to pay'));
+    totalLine.appendChild(el('span', BASKET_TOTAL, q.quoteOnly ? money(q.subtotal) : money(q.total)));
     wrap.appendChild(totalLine);
-    if (q.total != null && h.mats) wrap.appendChild(el('div', BASKET_STATUS, money(q.deposit) + ' of that is returned after collection'));
-    if (h.status) wrap.appendChild(el('div', BASKET_STATUS, h.status));
+    wrap.appendChild(el('div', BASKET_STATUS, q.quoteOnly
+      ? 'Cristina will confirm your courier and total.'
+      : money(q.deposit) + ' of that is returned after collection.'));
 
-    if (h.status === 'Confirmed') {
-      wrap.appendChild(el('div', BASKET_DONE, '✓ Confirmed. Welcome to SAÏA.'));
-    } else if (h.mats) {
-      const isCheckout = h.status === 'Checkout link ready';
-      const btn = el('button', BASKET_BTN, isCheckout ? 'Confirm booking →' : 'To checkout →');
-      btn.setAttribute('type', 'button');
-      btn.addEventListener('click', () => send(isCheckout ? 'confirm' : 'checkout'));
-      wrap.appendChild(btn);
-    }
+    const btn = el('button', BASKET_BTN, q.quoteOnly ? 'Book — confirm with Cristina →' : 'Book this hire →');
+    btn.setAttribute('type', 'button');
+    btn.addEventListener('click', () => { if (NS.bookHire) NS.bookHire(state.hire); });
+    wrap.appendChild(btn);
     return wrap;
   }
 
