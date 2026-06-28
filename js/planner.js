@@ -33,8 +33,6 @@
   const money = (v) => H.currency + Number(v).toFixed(2);
 
   function total(h) { return KB.priceHire ? KB.priceHire(h).total : (h.mats ? h.mats * H.pricePerMat : null); }
-  // Refundable deposit — taken upfront, returned when mats come back. Tracked apart from the hire total.
-  function deposit(h) { return h.mats ? h.mats * H.depositPerMat : null; }
 
   /* ---- booking executor — deterministic, shared by both tiers (unchanged) ---- */
   function applyActions(hireState, actions) {
@@ -83,43 +81,115 @@
     return { hire, acts };
   }
 
-  /* ---- Noor's brain: recognise the situation, script the reply ---- */
-  function localPlan(text) {
-    const t = (text || '').toLowerCase();
+  /* ---- the brain: stateful for the hire flow, scripted for everything else ---- */
+  function localPlan(text, hire) {
+    const t = (text || '').toLowerCase().trim();
+    hire = hire || {};
     const has = (re) => re.test(t);
-    const nb = (re) => { const m = t.match(re); return m ? parseInt(m[1], 10) : null; };
+    const nb = (re) => { const mm = t.match(re); return mm ? parseInt(mm[1], 10) : null; };
+    const rec = (g) => Math.max(H.minMats, Math.ceil(g * 1.1));
+    const m = (say, actions) => ({ say, actions: actions || [], matched: true, awaiting: null });
+    const mk = (say, actions, awaiting) => ({ say, actions: actions || [], matched: true, awaiting: awaiting || null });
+
+    // --- parse signals from this message ---
     const guests = nb(/(\d+)\s*(?:people|guests|persons|pax|attendees|women|ladies|of us|girls)/);
     const matsN = nb(/(\d+)\s*mats?/);
-    const day = (t.match(/\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday|tomorrow|this weekend|next week|next month)\b/) || [])[1];
-    const rec = (g) => Math.max(H.minMats, Math.ceil(g * 1.1));
-    const m = (say, actions) => ({ say, actions: actions || [], matched: true });
+    const daysN = nb(/(\d+)\s*(?:day|days|nights?)/);
+    const dateWord = (t.match(/\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday|tomorrow|this weekend|next weekend|next week|next month)\b/) || [])[1];
+    const wantsDeliver = has(/deliver|drop ?off|courier|bring them|ship/);
+    const wantsPickup = has(/pick.?up|collect|warehouse|\bnw3\b/);
+    const pcMatch = (text || '').match(/\b([A-Za-z]{1,2}\d[A-Za-z\d]?(?:\s*\d[A-Za-z]{2})?)\b/);
+    const looksPostcode = pcMatch && KB.classify && KB.classify(pcMatch[1]);
 
-    // greeting / thanks — keep it human
+    const aw = hire.awaiting;
+    const inHireFlow = !!(aw && /^(mats|days|method|postcode|date|confirm)$/.test(aw));
+
+    // --- bare answers interpreted in the context of what we just asked ---
+    const bareNum = (t.match(/^(?:just\s+)?(?:the\s+)?(\d+)\b/) || [])[1];
+
+    // ===== confirm step =====
+    if (aw === 'confirm' && has(/^(yes|yep|yeah|sure|go ahead|do it|lock it|confirm|book it|sounds good|please|ok|okay|perfect)\b/))
+      return mk("Wonderful. Your secure checkout link is in the panel — that's you booked. Delivery the day before, collection after. Welcome to SAÏA.", [{ tool: 'checkout' }], null);
+
+    // ===== build / continue the hire flow =====
+    // Trigger: mid-flow, or a fresh hire signal (a count, “hire”, “book”, “rent”, “event with mats”)
+    const freshHire = (matsN != null) || (guests != null) || has(/\bhire\b|\brent\b|book .*mats|mat hire|quote/);
+    if (inHireFlow || freshHire) {
+      const h = Object.assign({}, hire);
+      const actions = [];
+
+      // mats / guests
+      if (matsN != null) { h.mats = matsN; actions.push({ tool: 'add_mats', args: { n: matsN } }); }
+      else if (guests != null && !h.mats) { h.guests = guests; h.mats = rec(guests); actions.push({ tool: 'recommend', args: { guests } }); }
+      else if (aw === 'mats' && bareNum) { h.mats = parseInt(bareNum, 10); actions.push({ tool: 'add_mats', args: { n: h.mats } }); }
+
+      // days
+      if (daysN != null) { h.days = Math.max(H.hireDays, daysN); actions.push({ tool: 'set_days', args: { n: h.days } }); }
+      else if (aw === 'days' && bareNum) { h.days = Math.max(H.hireDays, parseInt(bareNum, 10)); actions.push({ tool: 'set_days', args: { n: h.days } }); }
+
+      // delivery method + postcode (pickup takes priority over postcode detection)
+      if (wantsPickup) { h.method = 'pickup'; h.zone = null; h.postcode = null; actions.push({ tool: 'set_method', args: { method: 'pickup' } }); }
+      else if (looksPostcode) { h.method = 'deliver'; h.postcode = pcMatch[1]; h.zone = looksPostcode.key; actions.push({ tool: 'set_postcode', args: { pc: pcMatch[1] } }); }
+      else if (wantsDeliver) { h.method = 'deliver'; actions.push({ tool: 'set_method', args: { method: 'deliver' } }); }
+
+      // date
+      if (dateWord) { h.date = dateWord; actions.push({ tool: 'set_date', args: { date: dateWord } }); }
+
+      // decide the next missing slot
+      const need = (function (x) {
+        if (!x.mats) return 'mats';
+        if (!x.days) return 'days';
+        if (!x.method) return 'method';
+        if (x.method === 'deliver' && !x.zone) return 'postcode';
+        if (!x.date) return 'date';
+        return 'confirm';
+      })(h);
+
+      if (need === 'mats') return mk("Lovely — let's plan your hire. How many mats do you need? (Minimum " + H.minMats + '.)', actions, 'mats');
+      if (need === 'days') return mk((h.mats ? h.mats + ' mats — perfect. ' : '') + 'How many days do you need them? Our standard hire is ' + H.hireDays + ' days.', actions, 'days');
+      if (need === 'method') return mk('Shall we deliver by courier, or will you collect from our NW3 warehouse?', actions, 'method');
+      if (need === 'postcode') return mk("What's the event postcode? I'll work out the courier from there.", actions, 'postcode');
+
+      // priced slots complete → quote
+      actions.push({ tool: 'quote' });
+      const q = KB.priceHire ? KB.priceHire(h) : { total: null, deposit: 0, quoteOnly: false };
+      const headline = q.quoteOnly
+        ? (money(q.matCost) + ' for the mats, plus a courier quote for outside London'
+            + (h.postcode ? ' — WhatsApp ' + KB.contact.person + ' on ' + KB.contact.whatsapp + " and she'll confirm it" : ''))
+        : ('from ' + money(q.total) + ' all in — ' + money(q.deposit) + ' of that is a refundable deposit, returned after collection');
+      const lead = "Here's your estimate: " + headline + '. ';
+      if (need === 'date') return mk(lead + "What date is your event? I'll line up delivery the day before.", actions, 'date');
+      return mk(lead + 'Shall I pencil it in for ' + h.date + ' and make your checkout link?', actions, 'confirm');
+    }
+
+    // ===== everything below: the existing scripted FAQ intents (unchanged behaviour) =====
+
+    // greeting / thanks
     if (has(/^(hi|hey|hello|good (morning|afternoon|evening)|yo|hiya)\b/))
-      return m('Hello, lovely. I’m Noor. I can plan mat hire for an event, share what’s on, or book you in for Pilates with Cristina. What brings you in?');
+      return m("Hello, lovely. I can plan mat hire for an event, share what's on, or book you in for Pilates with Cristina. What brings you in?");
     if (has(/\b(thanks|thank you|cheers|ta)\b/))
       return m('Any time. Anything else I can sort for your day?');
 
     // who we are / founder / the name
-    if (has(/who (runs|started|made|owns|is behind|founded)|founder|sa[ïi]a mean|meaning of|story behind|who'?s cristina|about cristina/))
+    if (has(/who (runs|started|made|owns|is behind|founded)|founder|sa[ïi]a mean|meaning of|story behind|who.{0,4}cristina|about cristina/))
       return m(KB.founder.bio + ' ' + KB.founder.meaning);
     if (has(/what is sa[ïi]a|what'?s sa[ïi]a|about sa[ïi]a|tell me about (you|saia|saïa)|what do you (do|offer)/))
       return m((KB.club.what || 'SAÏA is a female-led club for women in London.') + ' Mostly I help with mat hire for events, plus community gatherings and Pilates with Cristina. Where shall we start?');
 
-    // Pilates / classes / yoga
+    // Pilates / classes
     if (has(/pilates|reformer|class(es)?|yoga session|work ?out|sessions?\b/) && !has(/mat/)) {
-      return m('Pilates with Cristina is ' + KB.pilates.method + '. ' + KB.pilates.format + '. Shall I hold you a place' + (day ? ' for ' + day : '') + '?',
-        [{ tool: 'book_pilates', args: { date: day || null } }]);
+      return m('Pilates with Cristina is ' + KB.pilates.method + '. ' + KB.pilates.format + '. Shall I hold you a place' + (dateWord ? ' for ' + dateWord : '') + '?',
+        [{ tool: 'book_pilates', args: { date: dateWord || null } }]);
     }
 
-    // events / what's on / community  (require event-interest phrasing, not any stray "event")
+    // events / community
     if (has(/what'?s on|whats on|upcoming|any events?|events\b|this month|brunch|book club|watercolou?r|gathering|community/))
       return m('This season: ' + KB.events.slice(0, 3).join(', ') + '. Want me to reserve you a place?',
         [{ tool: 'rsvp_event', args: { event: KB.events[0] } }]);
 
-    // membership / join / "is it for me"
+    // membership / join
     if (has(/right for me|is (it|this) for me|join\b|member|belong|guest list|newsletter|sign ?up/))
-      return m('If you want to move, gather and breathe with ' + KB.club.ethos + '. Yes, it’s for you. No pressure, no performing. ' + KB.club.join + ' and I’ll send the next gathering.',
+      return m("If you want to move, gather and breathe with women who lift each other up, yes — it's for you. No pressure, no performing. " + KB.club.join + " and I'll send the next gathering.",
         [{ tool: 'join_newsletter', args: {} }]);
 
     // mat spec
@@ -128,63 +198,28 @@
 
     // how hire works
     if (has(/how (does|do|to)\s?(it|this|the hire|i|we)?\s?(work|hire|rent)|how does (it|hire) work|process/))
-      return m('Simple: tell me your date and numbers, we deliver the day before (min ' + H.minMats + ' mats, from ' + money(H.pricePerMat) + ' each for a ' + H.hireDays + '-day hire) and collect after. Shall I start a quote?');
+      return m('Simple: tell me your numbers and date, we deliver the day before (min ' + H.minMats + ' mats, from ' + money(H.pricePerMat) + ' each for a ' + H.hireDays + '-day hire) and collect after. Shall I start a quote?');
 
-    // delivery
-    if (has(/deliver|courier|ship|drop ?off|bring them/)) {
-      if (day) return m('Delivery scheduled for ' + day + ', the day before your event.', [{ tool: 'book_delivery', args: { date: day } }]);
-      return m(H.delivery + ' Tell me your date and I’ll book it in.');
-    }
-
-    // collection / return / cleaning
+    // delivery / collection facts
+    if (has(/deliver|courier|ship|drop ?off|bring them/))
+      return m(H.delivery + " Tell me your numbers and postcode and I'll price it.");
     if (has(/collect|return|pick.?up|pick them|after the event|clean|wash/))
       return m(H.collection);
 
     // location / contact
     if (has(/where|location|nw3|warehouse|address|whats ?app|phone|number|contact|call|reach|email/))
-      return m('We’re ' + (KB.contact.pickup || 'in London') + '. For the quickest service, WhatsApp ' + KB.contact.person + ' on ' + KB.contact.whatsapp + '. Or tell me your numbers and I’ll start your hire right here.');
+      return m("We're " + (KB.contact.pickup || 'in London') + '. For the quickest service, WhatsApp ' + KB.contact.person + ' on ' + KB.contact.whatsapp + '. Or tell me your numbers and I\'ll start your hire right here.');
 
-    // recommend for a headcount
-    if (has(/recommend|how many|enough|need\b/) && guests)
-      return m('For ' + guests + ' I’d allow a few spares. I’ve set ' + rec(guests) + ' mats. Want me to price it and arrange delivery?',
-        [{ tool: 'recommend', args: { guests } }]);
-
-    // a headcount → plan the whole hire
-    if (guests) {
-      const actions = [{ tool: 'set_event', args: { guests, date: day || null } }, { tool: 'recommend', args: { guests } }];
-      if (day) actions.push({ tool: 'book_delivery', args: { date: day } });
-      actions.push({ tool: 'quote' });
-      return m('Done. ' + rec(guests) + ' mats for ' + guests + (day ? ', delivered ' + day : '') + '. Quote’s in the panel; say “checkout” and I’ll make your payment link.', actions);
-    }
-
-    // explicit mat count
-    if (matsN) {
-      const wantsPrice = has(/price|quote|cost|how much|rate/);
-      const actions = [{ tool: 'add_mats', args: { n: matsN } }];
-      if (wantsPrice) actions.push({ tool: 'quote' });
-      return m(wantsPrice ? matsN + ' mats at ' + money(H.pricePerMat) + ' each for a ' + H.hireDays + '-day hire, priced above. Shall I arrange delivery?' : 'Added ' + matsN + ' mats. Want a price?', actions);
-    }
-
-    // pricing
+    // pricing FAQ (no count yet)
     if (has(/price|quote|cost|how much|rate|charge/))
-      return m(money(H.pricePerMat) + ' per mat for a ' + H.hireDays + '-day hire, minimum ' + H.minMats + '. Extra days are ' + money(H.extraDayPerMat) + ' a mat, plus courier delivery across London. There’s also a ' + money(H.depositPerMat) + ' refundable deposit per mat, returned once they’re back with us. Over ' + H.bulkThreshold + ' mats and I’ll arrange a reduced rate. Want me to price your numbers?',
-        [{ tool: 'quote' }]);
+      return mk(money(H.pricePerMat) + ' per mat for a ' + H.hireDays + '-day hire, minimum ' + H.minMats + ', plus a refundable ' + money(H.depositPerMat) + '/mat deposit and courier across London. How many mats do you need?', [], 'mats');
 
-    // checkout / pay
-    if (has(/checkout|pay|payment|link|invoice/))
-      return m('Your secure checkout link is ready in the panel. That’s you joining the club. Anything else for your day?',
-        [{ tool: 'checkout' }]);
-
-    // confirm
-    if (has(/^(yes|yep|yeah|go ahead|do it|lock it|confirm|book it|sounds good|please)\b|confirm|book now/))
-      return m('Confirmed. Delivery the day before, collection after. Welcome to SAÏA.',
-        [{ tool: 'confirm' }]);
-
-    // not recognised → let Tier 2 (Claude assist) take it
+    // not recognised → Tier 2
     return {
-      say: 'I can plan your mat hire and make a checkout link, share what’s on, book Pilates with Cristina, or help you decide if SAÏA is for you. Where shall we start?',
+      say: "I can plan your mat hire and make a checkout link, share what's on, book Pilates with Cristina, or help you decide if SAÏA is for you. Where shall we start?",
       actions: [],
       matched: false,
+      awaiting: null,
     };
   }
 
