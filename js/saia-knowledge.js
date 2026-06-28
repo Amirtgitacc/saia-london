@@ -129,6 +129,55 @@
     return { matCost: matCost, deliveryCost: deliveryCost, deliveryLabel: deliveryLabel, deposit: deposit, total: total, quoteOnly: quoteOnly };
   };
 
+  // is the hire ready to quote/book? (all required slots collected)
+  KB.hireComplete = function (hire) {
+    hire = hire || {};
+    var H = KB.hire;
+    var mats = parseInt(hire.mats, 10) || 0;
+    var days = parseInt(hire.days, 10) || 0;
+    if (mats < H.minMats) return false;
+    if (days < H.hireDays) return false;
+    if (hire.method === 'pickup') { /* no zone needed */ }
+    else if (hire.method === 'deliver') { if (!hire.zone) return false; }
+    else return false;
+    if (!hire.date) return false;
+    return true;
+  };
+
+  // itemised display rows for the quote card + checkout page (built from priceHire)
+  KB.quoteLines = function (hire) {
+    var H = KB.hire;
+    hire = hire || {};
+    var q = KB.priceHire(hire);
+    var mats = parseInt(hire.mats, 10) || 0;
+    var days = parseInt(hire.days, 10) || H.hireDays;
+    var money = function (v) { return H.currency + Number(v).toFixed(2); };
+    var lines = [];
+    lines.push({ label: 'Mats (' + H.hireDays + '-day hire)', detail: mats + ' × ' + money(H.pricePerMat), value: money(mats * H.pricePerMat) });
+    if (days > H.hireDays) {
+      lines.push({ label: 'Extra days', detail: mats + ' × ' + money(H.extraDayPerMat) + ' × ' + (days - H.hireDays), value: money(mats * H.extraDayPerMat * (days - H.hireDays)) });
+    }
+    if (q.deliveryLabel) {
+      lines.push({ label: 'Delivery & collection', detail: q.deliveryLabel, value: q.deliveryCost == null ? 'confirmed by Cristina' : (q.deliveryCost === 0 ? 'free' : money(q.deliveryCost)) });
+    }
+    lines.push({ label: 'Refundable deposit', detail: mats + ' × ' + money(H.depositPerMat), value: money(q.deposit) });
+    return { lines: lines, total: q.total, subtotal: q.matCost + q.deposit, deposit: q.deposit, quoteOnly: q.quoteOnly, deliveryLabel: q.deliveryLabel };
+  };
+
+  // a pre-filled WhatsApp enquiry for hires we can't price firmly (outside London)
+  KB.buildWhatsAppText = function (hire) {
+    var H = KB.hire;
+    hire = hire || {};
+    var q = KB.quoteLines(hire);
+    var money = function (v) { return H.currency + Number(v).toFixed(2); };
+    var mats = parseInt(hire.mats, 10) || 0;
+    var days = parseInt(hire.days, 10) || H.hireDays;
+    var loc = hire.method === 'pickup' ? 'collecting from NW3' : ('delivery to ' + String(hire.postcode || '').toUpperCase());
+    var sum = q.total != null ? (money(q.total) + ' total') : (money(q.subtotal) + ' plus courier to confirm');
+    return 'Hi Cristina! I would like to book ' + mats + ' mats for ' + days + ' days, ' + loc +
+      (hire.date ? (', on ' + hire.date) : '') + '. ' + sum + '. Please confirm availability.';
+  };
+
   /* A compact markdown fact-sheet for the Tier-2 system prompt.
      Built from the structured fields above so it can never disagree. */
   KB.factSheet = [
