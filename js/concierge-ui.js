@@ -53,14 +53,24 @@
 
     function renderHire() {
       const h = state.hire, v = opts.hireValueEls || {};
+      const complete = !!(NS.KB && NS.KB.hireComplete && NS.KB.hireComplete(h));
+      const q = complete && NS.KB.quoteLines ? NS.KB.quoteLines(h) : null;   // total/deposit from the single source
       if (v.mats) v.mats.textContent = String(h.mats || 0);
       if (v.date) v.date.textContent = h.date || 'No date';
-      if (v.total) v.total.textContent = h.total != null ? '£' + h.total.toFixed(2) : '£—';
-      if (v.deposit) {
-        v.deposit.textContent = h.deposit != null ? '+£' + h.deposit.toFixed(2) + ' deposit (refundable)' : '';
-        v.deposit.style.display = h.deposit != null ? '' : 'none';
+      // priced chips appear only when the hire is complete
+      if (v.total) {
+        const showTotal = !!(q && q.total != null);
+        v.total.textContent = showTotal ? '£' + q.total.toFixed(2) : '£—';
+        v.total.style.display = showTotal ? '' : 'none';
       }
-      if (v.status) v.status.textContent = h.status;
+      if (v.deposit) {
+        const showDep = !!(q && q.deposit != null);
+        v.deposit.textContent = showDep ? '+£' + q.deposit.toFixed(2) + ' deposit (refundable)' : '';
+        v.deposit.style.display = showDep ? '' : 'none';
+      }
+      if (v.status) v.status.textContent = complete ? (q && q.quoteOnly ? 'Ready — confirm with Cristina' : 'Ready to book') : (h.mats ? 'Collecting your details…' : h.status);
+      const bookEl = opts.bookEl || document.querySelector('[data-hire-book]');
+      if (bookEl) bookEl.style.display = complete ? '' : 'none';
     }
 
     function flashHire() {
@@ -126,6 +136,9 @@
       if (e.key === 'Enter') { send(opts.inputEl.value); opts.inputEl.value = ''; }
     });
     (opts.chipEls || []).forEach((c) => c.addEventListener('click', () => send(c.getAttribute('data-q'))));
+
+    const bookBtn = opts.bookEl || document.querySelector('[data-hire-book]');
+    if (bookBtn) bookBtn.addEventListener('click', () => { if (window.SAIA && window.SAIA.bookHire) window.SAIA.bookHire(state.hire); });
 
     renderHire();
     return { send, greet, state };
