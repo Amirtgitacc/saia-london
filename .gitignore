@@ -5,3 +5,9 @@ node_modules/
 # figbake debug overlays (tooling only)
 assets/figure/*.debug.png
 tools/figbaked/
+
+# scratch / tooling output (kept local, never committed)
+tmp/
+output/
+**/__pycache__/
+.superpowers/
