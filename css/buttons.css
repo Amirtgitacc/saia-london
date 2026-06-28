@@ -1,0 +1,137 @@
+/* ============================================================
+   SAÏA — unified button system (single source of truth)
+   Linked by home.html, index.html, hero.html.
+   Per-page fonts flow in via `inherit`
+   (home = Inter, index/hero = Hanken Grotesk).
+   Brand vars come from base.css where present; hex fallbacks
+   keep home.html (which has no vars) working.
+   ============================================================ */
+:root{ --saia-btn-spring:cubic-bezier(.34,1.56,.64,1); }
+
+/* ---- base ---- */
+.saia-btn{
+  font-family:inherit; cursor:pointer; border:none; background:none; color:inherit;
+  display:inline-flex; align-items:center; justify-content:center; gap:10px;
+  position:relative; overflow:hidden; text-decoration:none; white-space:nowrap; line-height:1;
+  font-size:12px; letter-spacing:.18em; text-transform:uppercase;
+  -webkit-tap-highlight-color:transparent;
+}
+.saia-btn svg{ width:16px; height:16px; flex:none; }
+
+/* shared diagonal shine glint (ink + terracotta) */
+.saia-btn--ink::after,
+.saia-btn--terra::after{
+  content:""; position:absolute; top:0; left:-130%; width:60%; height:100%;
+  background:linear-gradient(100deg,transparent,rgba(255,255,255,.5),transparent);
+  transform:skewX(-18deg); transition:left .9s ease; pointer-events:none;
+}
+.saia-btn--ink:hover::after,
+.saia-btn--terra:hover::after{ left:140%; }
+
+/* ---- 1 · INK primary — shine + springy scale + click ripple ---- */
+.saia-btn--ink{
+  background:var(--saia-ink,#2B2620); color:var(--saia-cream,#F5F1E8);
+  padding:16px 34px; border-radius:2px;
+  transition:transform .14s var(--saia-btn-spring), box-shadow .3s ease;
+}
+.saia-btn--ink:hover{ transform:scale(1.04); box-shadow:0 12px 24px -12px rgba(43,38,32,.55); }
+.saia-btn--ink:active{ transform:scale(.96); }
+
+/* ---- 2 · GHOST / outline — border draws itself around all four sides ---- */
+.saia-btn--ghost{
+  background-color:transparent; color:var(--saia-ink,#2B2620);
+  padding:16px 30px; border-radius:2px;
+  box-shadow:inset 0 0 0 1px rgba(43,38,32,.25);
+  background-image:
+    linear-gradient(var(--saia-ink,#2B2620),var(--saia-ink,#2B2620)),
+    linear-gradient(var(--saia-ink,#2B2620),var(--saia-ink,#2B2620)),
+    linear-gradient(var(--saia-ink,#2B2620),var(--saia-ink,#2B2620)),
+    linear-gradient(var(--saia-ink,#2B2620),var(--saia-ink,#2B2620));
+  background-repeat:no-repeat;
+  background-position:0 0, 100% 0, 100% 100%, 0 100%;
+  background-size:0 1px, 1px 0, 0 1px, 1px 0;
+  transition:background-size .45s ease;
+}
+.saia-btn--ghost:hover{ background-size:100% 1px, 1px 100%, 100% 1px, 1px 100%; }
+
+/* ---- 3 · TERRACOTTA primary — shine + spring pop + click ripple ---- */
+.saia-btn--terra{
+  background:var(--saia-accent,#B8624A); color:#fff;
+  padding:15px 32px; border-radius:9px;
+  transition:transform .14s var(--saia-btn-spring), box-shadow .3s ease, background .3s ease;
+}
+.saia-btn--terra:hover{ transform:scale(1.03); box-shadow:0 14px 28px -10px rgba(184,98,74,.6); }
+.saia-btn--terra:active{ transform:scale(.96); }
+
+/* ---- 4 · CREAM inverse (on dark) — inverts to a clean cream-outline ghost ---- */
+.saia-btn--cream{
+  background:var(--saia-cream,#F5F1E8); color:var(--saia-ink,#2B2620);
+  padding:16px 30px; border-radius:2px; border:1px solid var(--saia-cream,#F5F1E8);
+  transition:background .35s ease, color .35s ease, border-color .35s ease;
+}
+.saia-btn--cream:hover{ background:transparent; color:var(--saia-cream,#F5F1E8); border-color:var(--saia-cream,#F5F1E8); }
+
+/* ---- 5 · ICON (WhatsApp) — cream fill wipes across, label + icon invert ---- */
+.saia-btn--icon{
+  background:var(--saia-ink,#2B2620); color:var(--saia-cream,#F5F1E8);
+  padding:15px 30px; border-radius:2px; z-index:0;
+  transition:color .4s ease;
+}
+.saia-btn--icon::before{
+  content:""; position:absolute; inset:0; background:var(--saia-cream,#F5F1E8);
+  transform:scaleX(0); transform-origin:left; z-index:-1;
+  transition:transform .4s cubic-bezier(.4,0,.2,1);
+}
+.saia-btn--icon:hover{ color:var(--saia-ink,#2B2620); }
+.saia-btn--icon:hover::before{ transform:scaleX(1); }
+
+/* ---- 6 · QUICK-REPLY CHIP — fills terracotta, text→white, springy pop ---- */
+.saia-chip{
+  font-family:inherit; cursor:pointer;
+  background:none; color:var(--saia-accent,#B8624A);
+  border:1px solid #DDB8A9; border-radius:30px; padding:7px 14px;
+  font-size:11.5px; letter-spacing:.02em; line-height:1.2;
+  transition:background .25s var(--saia-btn-spring), color .3s ease,
+             transform .25s var(--saia-btn-spring), border-color .3s ease;
+}
+.saia-chip:hover{ background:var(--saia-accent,#B8624A); color:#fff; border-color:var(--saia-accent,#B8624A); transform:scale(1.06); }
+.saia-chip:active{ transform:scale(.96); }
+
+/* ---- 7 · CONCIERGE "SEND" — paper-plane lifts off ---- */
+.saia-send{
+  font-family:inherit; cursor:pointer; background:none; border:none;
+  display:inline-flex; align-items:center; gap:6px;
+  color:var(--saia-accent,#B8624A); font-size:11px; letter-spacing:.16em; text-transform:uppercase;
+  transition:color .3s ease;
+}
+.saia-send svg{ width:13px; height:13px; transition:transform .35s var(--saia-btn-spring); }
+.saia-send:hover{ color:#9c4f3a; }
+.saia-send:hover svg{ transform:translate(4px,-4px) rotate(8deg); }
+
+/* ---- 8 · LAUNCHER FAB — orbiting dot (80px) ---- */
+.saia-fab{
+  width:80px; height:80px; border-radius:50%;
+  display:inline-flex; align-items:center; justify-content:center;
+  border:none; cursor:pointer; position:relative;
+  background:var(--saia-ink,#2B2620); color:var(--saia-cream,#F5F1E8);
+  box-shadow:0 12px 28px rgba(43,38,32,.34);
+  transition:transform .3s var(--saia-btn-spring), background .3s ease;
+}
+.saia-fab .saia-fab-s{ font-family:'Playfair Display','Cormorant Garamond',serif; font-size:32px; line-height:1; }
+.saia-fab .saia-fab-orbit{ position:absolute; inset:-8px; border-radius:50%; pointer-events:none; animation:saiaOrbit 3.4s linear infinite; }
+.saia-fab .saia-fab-orbit::after{
+  content:""; position:absolute; top:-4px; left:50%; transform:translateX(-50%);
+  width:11px; height:11px; border-radius:50%; background:var(--saia-accent,#B8624A);
+  box-shadow:0 0 9px rgba(184,98,74,.85);
+}
+.saia-fab:hover{ transform:scale(1.06); background:var(--saia-accent,#B8624A); }
+.saia-fab:hover .saia-fab-orbit{ animation-duration:1.2s; }
+@keyframes saiaOrbit{ to{ transform:rotate(360deg); } }
+
+/* ---- shared click ripple (ink + terracotta playful) ---- */
+@keyframes saiaRipple{ to{ transform:translate(-50%,-50%) scale(4); opacity:0; } }
+
+@media (prefers-reduced-motion: reduce){
+  .saia-btn, .saia-btn::after, .saia-btn::before,
+  .saia-chip, .saia-send svg, .saia-fab, .saia-fab-orbit{ transition:none !important; animation:none !important; }
+}

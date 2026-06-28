@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SAÏA — Button Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=Inter:wght@400;500;600&family=Hanken+Grotesk:wght@400;500;600&family=Cormorant+Garamond:ital,wght@0,500;1,500&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --cream:#F5F1E8; --stone:#E9E6DF; --ink:#2B2620; --ink-soft:#6B6358;
+    --line:#DAD4C8; --night:#16130f; --terra:#B8624A; --terra-dk:#9c4f3a;
+    --t:.4s;                          /* master transition time — slow-mo multiplies this */
+    --spring:cubic-bezier(.34,1.56,.64,1);
+  }
+  *{ box-sizing:border-box; }
+  body.slowmo{ --t:1.4s; }
+
+  body{
+    margin:0; background:var(--cream); color:var(--ink);
+    font-family:'Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased;
+  }
+
+  /* ---------- page chrome ---------- */
+  .lab-head{
+    position:sticky; top:0; z-index:50;
+    display:flex; align-items:center; justify-content:space-between; gap:24px; flex-wrap:wrap;
+    padding:18px clamp(20px,5vw,64px);
+    background:rgba(245,241,232,.86); backdrop-filter:blur(12px);
+    border-bottom:1px solid var(--line);
+  }
+  .lab-head h1{
+    margin:0; font-family:'Playfair Display',serif; font-weight:500;
+    font-size:clamp(18px,2.4vw,26px); letter-spacing:.01em;
+  }
+  .lab-head .sub{ font-size:12px; color:var(--ink-soft); letter-spacing:.04em; margin-top:2px; }
+  .lab-toggle{ display:flex; align-items:center; gap:10px; font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--ink-soft); cursor:pointer; user-select:none; }
+  .switch{ width:42px; height:24px; border-radius:30px; background:var(--line); position:relative; transition:background var(--t) ease; flex:none; }
+  .switch::after{ content:""; position:absolute; top:3px; left:3px; width:18px; height:18px; border-radius:50%; background:#fff; box-shadow:0 1px 4px rgba(0,0,0,.25); transition:transform var(--t) ease; }
+  body.slowmo .switch{ background:var(--terra); }
+  body.slowmo .switch::after{ transform:translateX(18px); }
+
+  .lab-intro{ padding:34px clamp(20px,5vw,64px) 6px; max-width:880px; }
+  .lab-intro p{ font-size:14px; line-height:1.7; color:var(--ink-soft); margin:0; }
+
+  .locked{ margin:18px clamp(20px,5vw,64px) 0; padding:16px 20px; background:#fff; border:1px solid var(--line); border-radius:12px; max-width:880px; }
+  .locked h3{ margin:0 0 10px; font-size:11px; letter-spacing:.2em; text-transform:uppercase; color:var(--terra); }
+  .locked ul{ margin:0; padding:0; list-style:none; display:grid; grid-template-columns:repeat(2,1fr); gap:4px 24px; }
+  @media(max-width:680px){ .locked ul{ grid-template-columns:1fr; } }
+  .locked li{ font-size:12.5px; color:var(--ink-soft); display:flex; justify-content:space-between; gap:12px; border-bottom:1px dotted var(--line); padding:5px 0; }
+  .locked li b{ color:var(--ink); font-weight:500; }
+  .locked li.open b{ color:var(--terra); }
+
+  /* ---------- family rows ---------- */
+  .family{ padding:30px clamp(20px,5vw,64px) 38px; border-bottom:1px solid var(--line); }
+  .family-head{ display:flex; align-items:baseline; gap:14px; flex-wrap:wrap; margin-bottom:26px; }
+  .family-head .idx{ font-family:'Playfair Display',serif; font-size:13px; color:var(--terra); }
+  .family-head h2{ margin:0; font-size:15px; letter-spacing:.2em; text-transform:uppercase; font-weight:600; }
+  .family-head .where{ font-size:11px; color:var(--ink-soft); letter-spacing:.04em; }
+  .family-head .fonttag{ margin-left:auto; font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-soft); border:1px solid var(--line); border-radius:30px; padding:4px 11px; }
+
+  .variants{ display:grid; grid-template-columns:repeat(3,1fr); gap:18px; }
+  @media(max-width:860px){ .variants{ grid-template-columns:1fr; } }
+  .variant{ background:#fff; border:1px solid var(--line); border-radius:14px; padding:30px 22px 18px; display:flex; flex-direction:column; align-items:center; gap:20px; }
+  .variant .stage{ min-height:74px; display:flex; align-items:center; justify-content:center; width:100%; }
+  .variant .cap{ text-align:center; }
+  .variant .cap .mood{ font-size:10px; letter-spacing:.2em; text-transform:uppercase; color:var(--terra); display:block; margin-bottom:4px; }
+  .variant .cap .desc{ font-size:12px; color:var(--ink-soft); line-height:1.5; }
+
+  /* dark band variants render on night bg */
+  .family.dark{ background:var(--night); border-bottom-color:#2a241d; }
+  .family.dark h2,.family.dark .family-head .idx{ color:var(--cream); }
+  .family.dark .family-head h2{ color:var(--cream); }
+  .family.dark .where,.family.dark .fonttag{ color:#a59a8c; border-color:#3a3228; }
+  .family.dark .variant{ background:#1f1a14; border-color:#352d23; }
+  .family.dark .variant .cap .desc{ color:#a59a8c; }
+
+  /* ============================================================
+     BUTTON BASE + FONTS
+     ============================================================ */
+  .btn{
+    font-family:inherit; cursor:pointer; border:none; background:none; color:inherit;
+    display:inline-flex; align-items:center; justify-content:center; gap:10px;
+    position:relative; overflow:hidden; text-decoration:none; white-space:nowrap;
+    font-size:12px; letter-spacing:.18em; text-transform:uppercase; line-height:1;
+  }
+  .btn svg{ width:16px; height:16px; flex:none; }
+  .f-home{ font-family:'Inter',sans-serif; }
+  .f-idx{ font-family:'Hanken Grotesk',sans-serif; }
+
+  /* shared sweep pseudo for shine */
+  .shine::after{
+    content:""; position:absolute; top:0; left:-130%; width:60%; height:100%;
+    background:linear-gradient(100deg,transparent,rgba(255,255,255,.55),transparent);
+    transform:skewX(-18deg); transition:left calc(var(--t)*1.6) ease;
+  }
+  .shine:hover::after{ left:140%; }
+
+  /* ===========================================================
+     FAMILY 1 — PRIMARY INK CTA
+     =========================================================== */
+  .ink-warm{ background:var(--ink); color:var(--cream); padding:16px 34px; border-radius:2px;
+    transition:transform var(--t) ease, box-shadow var(--t) ease; }
+  .ink-warm::before{ content:""; position:absolute; inset:0; background:var(--terra); transform:translateX(-101%); transition:transform var(--t) cubic-bezier(.4,0,.2,1); z-index:-1; }
+  .ink-warm > span{ position:relative; z-index:1; }
+  .ink-warm{ z-index:0; }
+  .ink-warm:hover{ transform:translateY(-2px); box-shadow:0 14px 26px -12px rgba(43,38,32,.6); }
+  .ink-warm:hover::before{ transform:translateX(0); }
+
+  .ink-crisp{ background:var(--ink); color:var(--cream); padding:16px 34px; border-radius:2px; z-index:0;
+    transition:color var(--t) ease, letter-spacing var(--t) ease; }
+  .ink-crisp::before{ content:""; position:absolute; inset:0; background:var(--cream); transform:scaleY(0); transform-origin:bottom; transition:transform var(--t) cubic-bezier(.4,0,.2,1); z-index:-1; }
+  .ink-crisp{ border:1px solid var(--ink); }
+  .ink-crisp:hover{ color:var(--ink); letter-spacing:.24em; }
+  .ink-crisp:hover::before{ transform:scaleY(1); }
+
+  .ink-play{ background:var(--ink); color:var(--cream); padding:16px 34px; border-radius:2px;
+    transition:transform .12s var(--spring); }
+  .ink-play:hover{ transform:scale(1.04); }
+  .ink-play:active{ transform:scale(.95); }
+
+  /* ===========================================================
+     FAMILY 2 — GHOST / OUTLINE CTA
+     =========================================================== */
+  .ghost-warm{ background:none; color:var(--ink); border:1px solid var(--ink); padding:15px 30px; border-radius:2px;
+    transition:background var(--t) ease, color var(--t) ease, transform var(--t) ease; }
+  .ghost-warm:hover{ background:var(--ink); color:var(--cream); transform:translateY(-2px); }
+
+  .ghost-crisp{ background:none; color:var(--ink); padding:16px 32px; border-radius:2px; }
+  .ghost-crisp .edge{ position:absolute; background:var(--ink); transition:transform var(--t) ease; }
+  .ghost-crisp .e-t{ top:0; left:0; height:1px; width:100%; transform:scaleX(0); transform-origin:left; }
+  .ghost-crisp .e-r{ top:0; right:0; width:1px; height:100%; transform:scaleY(0); transform-origin:top; }
+  .ghost-crisp .e-b{ bottom:0; right:0; height:1px; width:100%; transform:scaleX(0); transform-origin:right; }
+  .ghost-crisp .e-l{ bottom:0; left:0; width:1px; height:100%; transform:scaleY(0); transform-origin:bottom; }
+  .ghost-crisp .base{ position:absolute; inset:0; border:1px solid var(--line); border-radius:2px; }
+  .ghost-crisp:hover .edge{ transform:scale(1); }
+
+  .ghost-play{ background:none; color:var(--ink); border:1px solid var(--ink); padding:15px 30px; border-radius:2px;
+    transition:transform .25s var(--spring), background var(--t) ease, color var(--t) ease; }
+  .ghost-play:hover{ background:var(--terra); border-color:var(--terra); color:#fff; }
+
+  /* ===========================================================
+     FAMILY 3 — TERRACOTTA PRIMARY CTA
+     =========================================================== */
+  .terra-warm{ background:var(--terra); color:#fff; padding:15px 32px; border-radius:9px;
+    transition:transform var(--t) ease, background var(--t) ease, box-shadow var(--t) ease; }
+  .terra-warm:hover{ transform:translateY(-2px); background:var(--terra-dk); box-shadow:0 16px 30px -10px rgba(184,98,74,.7); }
+
+  .terra-crisp{ background:var(--terra); color:#fff; padding:15px 32px; border-radius:9px; overflow:visible;
+    transition:background var(--t) ease; }
+  .terra-crisp::before{ content:""; position:absolute; inset:-2px; border-radius:11px; padding:2px;
+    background:conic-gradient(from 0deg, var(--cream), var(--terra), var(--cream), var(--terra), var(--cream));
+    -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite:xor; mask-composite:exclude;
+    opacity:0; transition:opacity var(--t) ease; animation:spin 4s linear infinite; }
+  .terra-crisp:hover{ background:var(--terra-dk); }
+  .terra-crisp:hover::before{ opacity:1; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+
+  .terra-play{ background:var(--terra); color:#fff; padding:15px 32px; border-radius:9px;
+    transition:transform .12s var(--spring); }
+  .terra-play:hover{ transform:scale(1.03); }
+  .terra-play:active{ transform:scale(.95); }
+
+  /* ===========================================================
+     FAMILY 4 — CREAM INVERSE CTA (dark band)
+     =========================================================== */
+  .cream-warm{ background:var(--cream); color:var(--ink); padding:16px 32px; border-radius:2px; z-index:0;
+    transition:transform var(--t) ease, color var(--t) ease; }
+  .cream-warm::before{ content:""; position:absolute; inset:0; background:var(--terra); transform:translateY(101%); transition:transform var(--t) cubic-bezier(.4,0,.2,1); z-index:-1; }
+  .cream-warm:hover{ color:#fff; transform:translateY(-2px); }
+  .cream-warm:hover::before{ transform:translateY(0); }
+
+  .cream-crisp{ background:var(--cream); color:var(--ink); padding:16px 32px; border-radius:2px; border:1px solid var(--cream);
+    transition:background var(--t) ease, color var(--t) ease, border-color var(--t) ease; }
+  .cream-crisp:hover{ background:transparent; color:var(--cream); border-color:var(--cream); }
+
+  .cream-play{ background:var(--cream); color:var(--ink); padding:16px 32px; border-radius:2px;
+    transition:transform .12s var(--spring); }
+  .cream-play:hover{ transform:scale(1.04); }
+  .cream-play:active{ transform:scale(.95); }
+
+  /* ===========================================================
+     FAMILY 5 — ICON CTA (leading SVG, WhatsApp)
+     =========================================================== */
+  .icon-warm{ background:var(--ink); color:var(--cream); padding:15px 30px; border-radius:2px; z-index:0;
+    transition:transform var(--t) ease, box-shadow var(--t) ease; }
+  .icon-warm::before{ content:""; position:absolute; inset:0; background:var(--terra); transform:translateX(-101%); transition:transform var(--t) cubic-bezier(.4,0,.2,1); z-index:-1; }
+  .icon-warm:hover{ transform:translateY(-2px); box-shadow:0 14px 26px -12px rgba(43,38,32,.55); }
+  .icon-warm:hover::before{ transform:translateX(0); }
+
+  .icon-crisp{ background:var(--ink); color:var(--cream); padding:15px 30px; border-radius:2px; z-index:0;
+    transition:color var(--t) ease; border:1px solid var(--ink); }
+  .icon-crisp::before{ content:""; position:absolute; inset:0; background:var(--cream); transform:scaleX(0); transform-origin:left; transition:transform var(--t) cubic-bezier(.4,0,.2,1); z-index:-1; }
+  .icon-crisp:hover{ color:var(--ink); }
+  .icon-crisp:hover::before{ transform:scaleX(1); }
+
+  .icon-play{ background:var(--ink); color:var(--cream); padding:15px 30px; border-radius:2px;
+    transition:transform .12s var(--spring); }
+  .icon-play svg{ transition:transform var(--t) var(--spring); }
+  .icon-play:hover svg{ transform:translateX(-3px) rotate(-8deg); }
+  .icon-play:hover{ transform:scale(1.03); }
+  .icon-play:active{ transform:scale(.95); }
+
+  /* ===========================================================
+     FAMILY 6 — QUICK-REPLY CHIP (pill)
+     =========================================================== */
+  .chip-warm{ background:none; color:var(--terra); border:1px solid #DDB8A9; padding:9px 16px; border-radius:30px; font-size:11.5px; letter-spacing:.02em; text-transform:none;
+    transition:background var(--t) ease, transform var(--t) ease, border-color var(--t) ease; }
+  .chip-warm:hover{ background:rgba(184,98,74,.1); border-color:var(--terra); transform:translateY(-1px); }
+
+  .chip-crisp{ background:none; color:var(--terra); border:1px solid #DDB8A9; padding:9px 16px; border-radius:30px; font-size:11.5px; letter-spacing:.02em; text-transform:none;
+    transition:border-color var(--t) ease, color var(--t) ease; }
+  .chip-crisp .uline{ position:absolute; left:16px; right:16px; bottom:6px; height:1px; background:var(--terra); transform:scaleX(0); transform-origin:left; transition:transform var(--t) ease; }
+  .chip-crisp:hover{ border-color:var(--terra); color:var(--terra-dk); }
+  .chip-crisp:hover .uline{ transform:scaleX(1); }
+
+  .chip-play{ background:none; color:var(--terra); border:1px solid #DDB8A9; padding:9px 16px; border-radius:30px; font-size:11.5px; letter-spacing:.02em; text-transform:none;
+    transition:background .25s var(--spring), color var(--t) ease, transform .25s var(--spring), border-color var(--t) ease; }
+  .chip-play:hover{ background:var(--terra); color:#fff; border-color:var(--terra); transform:scale(1.06); }
+  .chip-play:active{ transform:scale(.96); }
+
+  /* ===========================================================
+     FAMILY 7 — CONCIERGE "SEND" TEXT BUTTON
+     =========================================================== */
+  .send-warm{ background:none; color:var(--terra); padding:8px 4px; font-size:11px; letter-spacing:.16em; }
+  .send-warm svg{ width:13px; height:13px; opacity:0; transform:translateX(-6px); transition:opacity var(--t) ease, transform var(--t) ease; }
+  .send-warm:hover{ color:var(--terra-dk); }
+  .send-warm:hover svg{ opacity:1; transform:translateX(0); }
+
+  .send-crisp{ background:none; color:var(--terra); padding:8px 4px; font-size:11px; letter-spacing:.16em; overflow:visible; }
+  .send-crisp::after{ content:""; position:absolute; left:4px; right:4px; bottom:2px; height:1px; background:var(--terra); transform:scaleX(0); transform-origin:left; transition:transform var(--t) ease; }
+  .send-crisp:hover::after{ transform:scaleX(1); }
+
+  .send-play{ background:none; color:var(--terra); padding:8px 4px; font-size:11px; letter-spacing:.16em; }
+  .send-play svg{ width:13px; height:13px; transition:transform .35s var(--spring); }
+  .send-play:hover svg{ transform:translate(4px,-4px) rotate(8deg); }
+  .send-play:hover{ color:var(--terra-dk); }
+
+  /* ===========================================================
+     FAMILY 8 — LAUNCHER FAB (round)
+     =========================================================== */
+  .fab{ width:60px; height:60px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center;
+    border:none; cursor:pointer; position:relative; }
+  .fab .s{ font-family:'Playfair Display',serif; font-size:24px; line-height:1; }
+  .fab .dot{ position:absolute; top:8px; right:8px; width:9px; height:9px; border-radius:50%; background:var(--terra); border:2px solid #fff; }
+
+  .fab-warm{ background:var(--ink); color:var(--cream); box-shadow:0 12px 28px rgba(43,38,32,.34);
+    transition:transform var(--t) ease, background var(--t) ease, box-shadow var(--t) ease; }
+  .fab-warm:hover{ transform:translateY(-3px); background:var(--terra); box-shadow:0 18px 36px rgba(184,98,74,.4); }
+
+  .fab-crisp{ background:var(--ink); color:var(--cream); transition:transform var(--t) ease; }
+  .fab-crisp::before{ content:""; position:absolute; inset:0; border-radius:50%; border:1px solid var(--terra); transform:scale(1); opacity:0; transition:transform var(--t) ease, opacity var(--t) ease; }
+  .fab-crisp:hover{ transform:rotate(8deg); }
+  .fab-crisp:hover::before{ transform:scale(1.28); opacity:1; }
+
+  .fab-play{ color:#fff5ec; background:radial-gradient(circle at 38% 34%, #e7c39a, #b8624a 78%); box-shadow:0 14px 36px rgba(0,0,0,.3);
+    animation:breath 7s ease-in-out infinite; transition:transform .2s var(--spring); }
+  .fab-play:hover{ transform:scale(1.1); }
+  .fab-play:active{ transform:scale(.92); }
+  @keyframes breath{ 0%,100%{ box-shadow:0 14px 36px rgba(184,98,74,.3);} 50%{ box-shadow:0 14px 48px rgba(184,98,74,.55);} }
+
+  /* ===========================================================
+     FAMILY 8b — LAUNCHER FAB EXPLORATIONS (bigger + more active)
+     =========================================================== */
+  .fab-lg{ width:80px; height:80px; }
+  .fab-lg .s{ font-size:32px; }
+  .fab-lg .dot{ top:11px; right:11px; width:11px; height:11px; }
+
+  /* A — Sonar pulse: continuous radar rings, faster on hover */
+  .fab-sonar{ background:var(--ink); color:var(--cream); box-shadow:0 12px 28px rgba(43,38,32,.34); transition:transform .2s var(--spring), background var(--t) ease; }
+  .fab-sonar .ring{ position:absolute; inset:0; border-radius:50%; border:1.5px solid var(--terra); opacity:0; animation:sonar 2.4s ease-out infinite; }
+  .fab-sonar .ring:nth-child(2){ animation-delay:.8s; }
+  .fab-sonar .ring:nth-child(3){ animation-delay:1.6s; }
+  @keyframes sonar{ 0%{ transform:scale(1); opacity:.65; } 100%{ transform:scale(2.2); opacity:0; } }
+  .fab-sonar:hover{ transform:scale(1.08); background:var(--terra); }
+  .fab-sonar:hover .ring{ animation-duration:1.1s; }
+
+  /* B — Rotating gradient halo */
+  .fab-halo{ background:var(--ink); color:var(--cream); box-shadow:0 12px 28px rgba(43,38,32,.34); transition:transform .3s var(--spring); }
+  .fab-halo::before{ content:""; position:absolute; inset:-6px; border-radius:50%;
+    background:conic-gradient(from 0deg,var(--terra),#e7c39a,var(--terra),#e7c39a,var(--terra));
+    -webkit-mask:radial-gradient(closest-side, transparent 79%, #000 81%); mask:radial-gradient(closest-side, transparent 79%, #000 81%);
+    animation:spin 4s linear infinite; transition:filter var(--t) ease; }
+  .fab-halo:hover{ transform:scale(1.1); }
+  .fab-halo:hover::before{ filter:drop-shadow(0 0 9px rgba(184,98,74,.75)); }
+
+  /* C — Orbiting satellite dot */
+  .fab-orbit{ background:var(--ink); color:var(--cream); box-shadow:0 12px 28px rgba(43,38,32,.34); transition:transform .3s var(--spring); }
+  .fab-orbit .orbit{ position:absolute; inset:-8px; border-radius:50%; animation:spin 3.4s linear infinite; }
+  .fab-orbit .orbit::after{ content:""; position:absolute; top:-4px; left:50%; transform:translateX(-50%); width:11px; height:11px; border-radius:50%; background:var(--terra); box-shadow:0 0 9px rgba(184,98,74,.85); }
+  .fab-orbit:hover .orbit{ animation-duration:1.2s; }
+  .fab-orbit:hover{ transform:scale(1.06); background:var(--terra); }
+
+  /* D — Expands into a label pill */
+  .fab-expand{ background:var(--terra); color:#fff5ec; border-radius:44px; height:80px; width:80px; overflow:hidden; justify-content:flex-start; white-space:nowrap;
+    box-shadow:0 12px 30px rgba(184,98,74,.4); transition:width .45s var(--spring), box-shadow var(--t) ease; }
+  .fab-expand .ico{ width:80px; flex:none; display:flex; align-items:center; justify-content:center; font-family:'Playfair Display',serif; font-size:32px; }
+  .fab-expand .lbl{ font-family:'Hanken Grotesk',sans-serif; font-size:13px; letter-spacing:.16em; text-transform:uppercase; opacity:0; transform:translateX(-8px); transition:opacity .3s ease .05s, transform .3s ease .05s; }
+  .fab-expand:hover{ width:288px; box-shadow:0 18px 40px rgba(184,98,74,.55); }
+  .fab-expand:hover .lbl{ opacity:1; transform:translateX(0); }
+
+  /* E — Breathing aura halo */
+  .fab-aura{ color:#fff5ec; background:radial-gradient(circle at 38% 34%,#e7c39a,#b8624a 78%);
+    animation:auraGlow 3.4s ease-in-out infinite; transition:transform .2s var(--spring); }
+  @keyframes auraGlow{ 0%,100%{ box-shadow:0 0 0 0 rgba(184,98,74,0), 0 10px 30px rgba(184,98,74,.3); } 50%{ box-shadow:0 0 0 15px rgba(184,98,74,.12), 0 12px 42px rgba(184,98,74,.6); } }
+  .fab-aura:hover{ transform:scale(1.1); }
+  .fab-aura:active{ transform:scale(.93); }
+
+  /* F — Heartbeat + click ripple */
+  .fab-beat{ background:var(--ink); color:var(--cream); box-shadow:0 12px 28px rgba(43,38,32,.34); animation:beat 2.4s ease-in-out infinite; transition:transform .15s var(--spring), background var(--t) ease; }
+  @keyframes beat{ 0%,30%,100%{ transform:scale(1); } 8%{ transform:scale(1.09); } 16%{ transform:scale(1); } 22%{ transform:scale(1.05); } }
+  .fab-beat:hover{ animation:none; transform:scale(1.12); background:var(--terra); }
+  .fab-beat:active{ transform:scale(.94); }
+
+  /* ripple (playful) */
+  .ripple{ position:relative; overflow:hidden; }
+  .ripple span.rp{ position:absolute; border-radius:50%; background:rgba(255,255,255,.5); transform:translate(-50%,-50%) scale(0); animation:rp .6s ease-out; pointer-events:none; }
+  @keyframes rp{ to{ transform:translate(-50%,-50%) scale(4); opacity:0; } }
+
+  .lab-foot{ padding:30px clamp(20px,5vw,64px) 80px; font-size:12px; color:var(--ink-soft); line-height:1.7; }
+  .lab-foot strong{ color:var(--ink); font-weight:600; }
+</style>
+</head>
+<body>
+
+<header class="lab-head">
+  <div>
+    <h1>SAÏA · Button Lab</h1>
+    <div class="sub">8 button families × 3 moods — hover each, then pick your winners</div>
+  </div>
+  <label class="lab-toggle">
+    <span>Slow-mo</span>
+    <span class="switch" id="slowmoSwitch" role="switch" aria-checked="false" tabindex="0" aria-label="Slow-motion preview"></span>
+  </label>
+</header>
+
+<section class="lab-intro">
+  <p>Every clickable CTA on the site, shown three ways: <strong>① Warm &amp; organic</strong> (colour washes, gentle lift), <strong>② Crisp &amp; modern</strong> (border-draws, inversions, underline reveals), <strong>③ Playful &amp; tactile</strong> (shine sweeps, springy press, ripples). Fonts stay native per page. Flip <em>Slow-mo</em> to study the motion. Tell me which mood you want per family and I'll roll the winners into the live site.</p>
+</section>
+
+<div class="locked">
+  <h3>Decided so far</h3>
+  <ul>
+    <li>01 · Primary Ink <b>③ Playful</b></li>
+    <li>02 · Ghost / Outline <b>② Crisp</b></li>
+    <li>03 · Terracotta <b>③ Playful</b></li>
+    <li>04 · Cream inverse <b>② Crisp</b></li>
+    <li>05 · Icon (WhatsApp) <b>② Crisp</b></li>
+    <li>06 · Quick-reply chip <b>③ Playful</b></li>
+    <li>07 · Send <b>③ Playful</b></li>
+    <li class="open">08 · Launcher FAB <b>choosing ↓</b></li>
+  </ul>
+</div>
+
+<!-- FAMILY 1 -->
+<section class="family">
+  <div class="family-head">
+    <span class="idx">01</span><h2>Primary Ink CTA</h2>
+    <span class="where">home · index · hero — the workhorse dark button</span>
+    <span class="fonttag">Inter</span>
+  </div>
+  <div class="variants">
+    <div class="variant"><div class="stage"><button class="btn f-home ink-warm"><span>Hire a mat</span></button></div><div class="cap"><span class="mood">① Warm</span><span class="desc">Terracotta wash slides in + 2px lift + soft shadow</span></div></div>
+    <div class="variant"><div class="stage"><button class="btn f-home ink-crisp"><span>Hire a mat</span></button></div><div class="cap"><span class="mood">② Crisp</span><span class="desc">Cream fill wipes up, label inverts to ink, tracking opens</span></div></div>
+    <div class="variant"><div class="stage"><button class="btn f-home ink-play shine ripple"><span>Hire a mat</span></button></div><div class="cap"><span class="mood">③ Playful</span><span class="desc">Shine sweep + springy scale + click ripple</span></div></div>
+  </div>
+</section>
+
+<!-- FAMILY 2 -->
+<section class="family">
+  <div class="family-head">
+    <span class="idx">02</span><h2>Ghost / Outline CTA</h2>
+    <span class="where">home · index · hero — the secondary partner</span>
+    <span class="fonttag">Inter</span>
+  </div>
+  <div class="variants">
+    <div class="variant"><div class="stage"><button class="btn f-home ghost-warm">Talk to us</button></div><div class="cap"><span class="mood">① Warm</span><span class="desc">Fills ink, text turns cream, gentle lift</span></div></div>
+    <div class="variant"><div class="stage"><button class="btn f-home ghost-crisp"><span class="base"></span><span class="edge e-t"></span><span class="edge e-r"></span><span class="edge e-b"></span><span class="edge e-l"></span>Talk to us</button></div><div class="cap"><span class="mood">② Crisp</span><span class="desc">Border draws itself around all four sides</span></div></div>
+    <div class="variant"><div class="stage"><button class="btn f-home ghost-play magnetic">Talk to us</button></div><div class="cap"><span class="mood">③ Playful</span><span class="desc">Magnetic pull toward cursor + terracotta fill</span></div></div>
+  </div>
+</section>
+
+<!-- FAMILY 3 -->
+<section class="family">
+  <div class="family-head">
+    <span class="idx">03</span><h2>Terracotta Primary CTA</h2>
+    <span class="where">home hire bands · estimator — the accent action</span>
+    <span class="fonttag">Inter</span>
+  </div>
+  <div class="variants">
+    <div class="variant"><div class="stage"><button class="btn f-home terra-warm">Book with concierge</button></div><div class="cap"><span class="mood">① Warm</span><span class="desc">Deepens + lifts + warm glow shadow (refined estimator look)</span></div></div>
+    <div class="variant"><div class="stage"><button class="btn f-home terra-crisp">Book with concierge</button></div><div class="cap"><span class="mood">② Crisp</span><span class="desc">Rotating gradient border ignites on hover</span></div></div>
+    <div class="variant"><div class="stage"><button class="btn f-home terra-play shine ripple">Book with concierge</button></div><div class="cap"><span class="mood">③ Playful</span><span class="desc">Shine sweep + spring pop + click ripple</span></div></div>
+  </div>
+</section>
+
+<!-- FAMILY 4 — DARK BAND -->
+<section class="family dark">
+  <div class="family-head">
+    <span class="idx">04</span><h2>Cream Inverse CTA</h2>
+    <span class="where">index · hero — light button over dark hero photography</span>
+    <span class="fonttag">Hanken Grotesk</span>
+  </div>
+  <div class="variants">
+    <div class="variant"><div class="stage"><button class="btn f-idx cream-warm"><span>Start a booking</span></button></div><div class="cap"><span class="mood">① Warm</span><span class="desc">Terracotta wash rises up, text turns white, lift</span></div></div>
+    <div class="variant"><div class="stage"><button class="btn f-idx cream-crisp">Start a booking</button></div><div class="cap"><span class="mood">② Crisp</span><span class="desc">Inverts to a clean cream-outline ghost</span></div></div>
+    <div class="variant"><div class="stage"><button class="btn f-idx cream-play shine ripple"><span>Start a booking</span></button></div><div class="cap"><span class="mood">③ Playful</span><span class="desc">Shine sweep + springy scale + ripple</span></div></div>
+  </div>
+</section>
+
+<!-- FAMILY 5 -->
+<section class="family">
+  <div class="family-head">
+    <span class="idx">05</span><h2>Icon CTA — WhatsApp</h2>
+    <span class="where">home · hero — leading-icon contact button</span>
+    <span class="fonttag">Inter</span>
+  </div>
+  <div class="variants">
+    <div class="variant"><div class="stage"><button class="btn f-home icon-warm"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15l-1.3 4.7 4.8-1.3A10 10 0 1 0 12 2Zm5.4 14c-.2.6-1.2 1.2-1.7 1.2-.4 0-1 .1-3.2-.8-2.7-1.1-4.4-3.9-4.5-4-.1-.2-1-1.4-1-2.6 0-1.3.6-1.9.9-2.1.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.8 2c.1.2.1.4 0 .5l-.4.6c-.2.2-.3.4-.1.7.2.3.8 1.3 1.7 2.1 1.2 1 2 1.3 2.3 1.5.2.1.4.1.5-.1l.7-.8c.2-.2.4-.2.6-.1l1.9.9c.2.1.4.2.4.3.1.1.1.6-.1 1.1Z"/></svg><span>WhatsApp Cristina</span></button></div><div class="cap"><span class="mood">① Warm</span><span class="desc">Terracotta wash slides in + lift</span></div></div>
+    <div class="variant"><div class="stage"><button class="btn f-home icon-crisp"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15l-1.3 4.7 4.8-1.3A10 10 0 1 0 12 2Zm5.4 14c-.2.6-1.2 1.2-1.7 1.2-.4 0-1 .1-3.2-.8-2.7-1.1-4.4-3.9-4.5-4-.1-.2-1-1.4-1-2.6 0-1.3.6-1.9.9-2.1.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.8 2c.1.2.1.4 0 .5l-.4.6c-.2.2-.3.4-.1.7.2.3.8 1.3 1.7 2.1 1.2 1 2 1.3 2.3 1.5.2.1.4.1.5-.1l.7-.8c.2-.2.4-.2.6-.1l1.9.9c.2.1.4.2.4.3.1.1.1.6-.1 1.1Z"/></svg><span>WhatsApp Cristina</span></button></div><div class="cap"><span class="mood">② Crisp</span><span class="desc">Cream fill wipes across, label + icon invert to ink</span></div></div>
+    <div class="variant"><div class="stage"><button class="btn f-home icon-play ripple"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15l-1.3 4.7 4.8-1.3A10 10 0 1 0 12 2Zm5.4 14c-.2.6-1.2 1.2-1.7 1.2-.4 0-1 .1-3.2-.8-2.7-1.1-4.4-3.9-4.5-4-.1-.2-1-1.4-1-2.6 0-1.3.6-1.9.9-2.1.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.8 2c.1.2.1.4 0 .5l-.4.6c-.2.2-.3.4-.1.7.2.3.8 1.3 1.7 2.1 1.2 1 2 1.3 2.3 1.5.2.1.4.1.5-.1l.7-.8c.2-.2.4-.2.6-.1l1.9.9c.2.1.4.2.4.3.1.1.1.6-.1 1.1Z"/></svg><span>WhatsApp Cristina</span></button></div><div class="cap"><span class="mood">③ Playful</span><span class="desc">Icon nudges + tilts, spring scale + ripple</span></div></div>
+  </div>
+</section>
+
+<!-- FAMILY 6 -->
+<section class="family">
+  <div class="family-head">
+    <span class="idx">06</span><h2>Quick-reply Chip</h2>
+    <span class="where">concierge — suggested-question pills</span>
+    <span class="fonttag">Hanken Grotesk</span>
+  </div>
+  <div class="variants">
+    <div class="variant"><div class="stage"><button class="btn f-idx chip-warm">What's the hire minimum?</button></div><div class="cap"><span class="mood">① Warm</span><span class="desc">Soft terracotta tint fill + tiny lift</span></div></div>
+    <div class="variant"><div class="stage"><button class="btn f-idx chip-crisp">What's the hire minimum?<span class="uline"></span></button></div><div class="cap"><span class="mood">② Crisp</span><span class="desc">Border tightens + underline reveal</span></div></div>
+    <div class="variant"><div class="stage"><button class="btn f-idx chip-play">What's the hire minimum?</button></div><div class="cap"><span class="mood">③ Playful</span><span class="desc">Fills terracotta, text→white, springy pop</span></div></div>
+  </div>
+</section>
+
+<!-- FAMILY 7 -->
+<section class="family">
+  <div class="family-head">
+    <span class="idx">07</span><h2>Concierge "Send"</h2>
+    <span class="where">all concierges — minimal text action</span>
+    <span class="fonttag">Inter / Hanken</span>
+  </div>
+  <div class="variants">
+    <div class="variant"><div class="stage"><button class="btn f-home send-warm">Send<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button></div><div class="cap"><span class="mood">① Warm</span><span class="desc">Arrow slides in, colour deepens</span></div></div>
+    <div class="variant"><div class="stage"><button class="btn f-home send-crisp">Send</button></div><div class="cap"><span class="mood">② Crisp</span><span class="desc">Underline reveals left-to-right</span></div></div>
+    <div class="variant"><div class="stage"><button class="btn f-home send-play">Send<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7Z"/></svg></button></div><div class="cap"><span class="mood">③ Playful</span><span class="desc">Paper-plane lifts off on hover</span></div></div>
+  </div>
+</section>
+
+<!-- FAMILY 8 -->
+<section class="family">
+  <div class="family-head">
+    <span class="idx">08</span><h2>Launcher FAB</h2>
+    <span class="where">home · index — floating concierge button</span>
+    <span class="fonttag">Playfair "S"</span>
+  </div>
+  <div class="variants">
+    <div class="variant"><div class="stage"><button class="fab fab-warm" aria-label="Open concierge"><span class="s">S</span><span class="dot"></span></button></div><div class="cap"><span class="mood">① Warm</span><span class="desc">Lifts + turns terracotta + shadow grows</span></div></div>
+    <div class="variant"><div class="stage"><button class="fab fab-crisp" aria-label="Open concierge"><span class="s">S</span><span class="dot"></span></button></div><div class="cap"><span class="mood">② Crisp</span><span class="desc">Terracotta ring expands out + slight rotate</span></div></div>
+    <div class="variant"><div class="stage"><button class="fab fab-play" aria-label="Open concierge"><span class="s">S</span><span class="dot"></span></button></div><div class="cap"><span class="mood">③ Playful</span><span class="desc">Breathing glow idle + springy pop on press</span></div></div>
+  </div>
+</section>
+
+<!-- FAMILY 8b — MORE LAUNCHER EXPLORATIONS -->
+<section class="family">
+  <div class="family-head">
+    <span class="idx">08b</span><h2>Launcher FAB — Explorations</h2>
+    <span class="where">bigger (80px) &amp; continuously active — the concierge entry point, so it should pull the eye. You liked the Crisp ring (02 ref); here are 6 more.</span>
+    <span class="fonttag">Playfair "S"</span>
+  </div>
+  <div class="variants">
+
+    <div class="variant"><div class="stage"><button class="fab fab-lg fab-crisp" aria-label="Open concierge"><span class="s">S</span><span class="dot"></span></button></div><div class="cap"><span class="mood">Ref · Crisp</span><span class="desc">Your current pick, scaled up — ring expands + slight rotate</span></div></div>
+
+    <div class="variant"><div class="stage"><button class="fab fab-lg fab-sonar" aria-label="Open concierge"><span class="ring"></span><span class="ring"></span><span class="ring"></span><span class="s">S</span><span class="dot"></span></button></div><div class="cap"><span class="mood">A · Sonar pulse</span><span class="desc">Radar rings ripple outward non-stop, speed up on hover</span></div></div>
+
+    <div class="variant"><div class="stage"><button class="fab fab-lg fab-halo" aria-label="Open concierge"><span class="s">S</span><span class="dot"></span></button></div><div class="cap"><span class="mood">B · Gradient halo</span><span class="desc">Terracotta→gold ring spins around it always, glows on hover</span></div></div>
+
+    <div class="variant"><div class="stage"><button class="fab fab-lg fab-orbit" aria-label="Open concierge"><span class="orbit"></span><span class="s">S</span></button></div><div class="cap"><span class="mood">C · Orbiting dot</span><span class="desc">A satellite dot circles the button, accelerates on hover</span></div></div>
+
+    <div class="variant"><div class="stage"><button class="fab fab-lg fab-expand" aria-label="Open concierge"><span class="ico">S</span><span class="lbl">Ask the concierge</span></button></div><div class="cap"><span class="mood">D · Expanding label</span><span class="desc">Circle stretches into a pill revealing the invitation</span></div></div>
+
+    <div class="variant"><div class="stage"><button class="fab fab-lg fab-aura" aria-label="Open concierge"><span class="s">S</span><span class="dot"></span></button></div><div class="cap"><span class="mood">E · Breathing aura</span><span class="desc">Warm glow pulses around the orb, springy press</span></div></div>
+
+    <div class="variant"><div class="stage"><button class="fab fab-lg fab-beat ripple" aria-label="Open concierge"><span class="s">S</span><span class="dot"></span></button></div><div class="cap"><span class="mood">F · Heartbeat + ripple</span><span class="desc">Gentle heartbeat draws attention, click sends a ripple</span></div></div>
+
+  </div>
+</section>
+
+<footer class="lab-foot">
+  <p><strong>Not restyled here</strong> (not CTAs): decorative spec-pills, the nav underline text-links, and bare header icon hit-areas (search / account / bag / close). Say the word if you want those treated too.</p>
+  <p><strong>Next step:</strong> tell me your pick per family — e.g. <em>"Ink → ②, Terracotta → ③, FAB → ①"</em> — and I'll wire the winners into <strong>home.html</strong>, <strong>index.html</strong>, <strong>hero.html</strong> and <strong>css/base.css</strong>, unifying the inline duplicates as I go.</p>
+</footer>
+
+<script>
+  // slow-mo toggle
+  var sw = document.getElementById('slowmoSwitch');
+  function toggleSlow(){
+    var on = document.body.classList.toggle('slowmo');
+    sw.setAttribute('aria-checked', on ? 'true' : 'false');
+  }
+  sw.addEventListener('click', toggleSlow);
+  sw.addEventListener('keydown', function(e){ if(e.key===' '||e.key==='Enter'){ e.preventDefault(); toggleSlow(); } });
+
+  // magnetic buttons — pull toward cursor
+  document.querySelectorAll('.magnetic').forEach(function(btn){
+    btn.addEventListener('mousemove', function(e){
+      var r = btn.getBoundingClientRect();
+      var x = e.clientX - r.left - r.width/2;
+      var y = e.clientY - r.top - r.height/2;
+      btn.style.transform = 'translate('+ x*0.3 +'px,'+ y*0.4 +'px)';
+    });
+    btn.addEventListener('mouseleave', function(){ btn.style.transform = ''; });
+  });
+
+  // ripple on click
+  document.querySelectorAll('.ripple').forEach(function(btn){
+    btn.addEventListener('click', function(e){
+      var r = btn.getBoundingClientRect();
+      var s = document.createElement('span');
+      s.className = 'rp';
+      var size = Math.max(r.width, r.height);
+      s.style.width = s.style.height = size + 'px';
+      s.style.left = (e.clientX - r.left) + 'px';
+      s.style.top = (e.clientY - r.top) + 'px';
+      btn.appendChild(s);
+      setTimeout(function(){ s.remove(); }, 600);
+    });
+  });
+</script>
+</body>
+</html>

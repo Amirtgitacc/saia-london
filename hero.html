@@ -9,6 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Hanken+Grotesk:wght@300;400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/buttons.css">
 <style> body { background: #16140f; } </style>
 </head>
 <body>
@@ -47,7 +48,7 @@
           <span style="font-size:13px; letter-spacing:.12em; text-transform:uppercase; color:rgba(245,241,232,.7);">per mat<br>2-day hire</span>
         </div>
         <div data-from="0.42" style="opacity:0; font-size:14px; line-height:1.7; color:rgba(245,241,232,.72); margin-top:22px; max-width:330px;">Minimum 10 mats · same-day delivery from our Central London warehouse. Over 60? We’ll quote you a reduced rate.</div>
-        <a data-from="0.54" href="#book" style="opacity:0; display:inline-flex; align-items:center; gap:10px; margin-top:30px; background:#F5F1E8; color:#2B2620; font-size:12px; letter-spacing:.2em; text-transform:uppercase; padding:16px 30px; border-radius:2px; text-decoration:none;">Start a booking</a>
+        <a data-from="0.54" href="#book" class="saia-btn saia-btn--cream" style="opacity:0; margin-top:30px; letter-spacing:.2em;">Start a booking</a>
       </div>
 
       <!-- scroll-to-unroll indicator (rolled state) -->
@@ -81,13 +82,13 @@
         </div>
         <div id="thread" class="saia-thread" style="flex:1; overflow-y:auto; padding:18px 16px; display:flex; flex-direction:column; gap:11px;"></div>
         <div style="padding:2px 13px 9px; display:flex; gap:7px; flex-wrap:wrap; flex:none;">
-          <button data-q="I'm hosting 30 people on Saturday, sort it out" class="saia-chip" style="font-family:'Hanken Grotesk',sans-serif; font-size:11.5px; color:#B8624A; border:1px solid #DDB8A9; background:none; border-radius:30px; padding:7px 12px; cursor:pointer;">Plan my event</button>
-          <button data-q="How many mats do I need for 24 guests?" class="saia-chip" style="font-family:'Hanken Grotesk',sans-serif; font-size:11.5px; color:#B8624A; border:1px solid #DDB8A9; background:none; border-radius:30px; padding:7px 12px; cursor:pointer;">How many mats?</button>
-          <button data-q="Give me a price for 20 mats" class="saia-chip" style="font-family:'Hanken Grotesk',sans-serif; font-size:11.5px; color:#B8624A; border:1px solid #DDB8A9; background:none; border-radius:30px; padding:7px 12px; cursor:pointer;">Get a quote</button>
+          <button data-q="I'm hosting 30 people on Saturday, sort it out" class="saia-chip">Plan my event</button>
+          <button data-q="How many mats do I need for 24 guests?" class="saia-chip">How many mats?</button>
+          <button data-q="Give me a price for 20 mats" class="saia-chip">Get a quote</button>
         </div>
         <div style="padding:12px 14px; border-top:1px solid #ECE7DC; display:flex; gap:10px; align-items:center; flex:none;">
           <input id="conciergeInput" type="text" placeholder="Ask the agent to do something…" style="flex:1; border:none; background:transparent; font-family:'Hanken Grotesk',sans-serif; font-size:13.5px; color:#2B2620; outline:none;">
-          <button id="conciergeSend" style="background:none; border:none; cursor:pointer; font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:#B8624A;">Send</button>
+          <button id="conciergeSend" class="saia-send">Send<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7Z"/></svg></button>
         </div>
       </div>
 
@@ -105,7 +106,7 @@
           <h2 style="font-family:'Cormorant Garamond',serif; font-weight:500; font-size:clamp(38px,5vw,62px); line-height:1.02; margin:0 0 22px;">Mats for your<br>wellness event.</h2>
           <p style="font-size:17px; line-height:1.75; color:#6B6358; margin:0 0 30px; max-width:460px;">Organising a class, retreat or brunch club? Hire our premium black mats with same-day delivery from our Central London warehouse. Set up the day before, collected once you’re done.</p>
           <div style="display:flex; gap:14px; align-items:center; flex-wrap:wrap;">
-            <a href="https://wa.me/447444611914" style="display:inline-flex; align-items:center; gap:10px; background:#2B2620; color:#F5F1E8; font-size:12px; letter-spacing:.2em; text-transform:uppercase; padding:16px 30px; border-radius:2px; text-decoration:none;">WhatsApp Cristina</a>
+            <a href="https://wa.me/447444611914" class="saia-btn saia-btn--icon"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15l-1.3 4.7 4.8-1.3A10 10 0 1 0 12 2Zm5.4 14c-.2.6-1.2 1.2-1.7 1.2-.4 0-1 .1-3.2-.8-2.7-1.1-4.4-3.9-4.5-4-.1-.2-1-1.4-1-2.6 0-1.3.6-1.9.9-2.1.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.8 2c.1.2.1.4 0 .5l-.4.6c-.2.2-.3.4-.1.7.2.3.8 1.3 1.7 2.1 1.2 1 2 1.3 2.3 1.5.2.1.4.1.5-.1l.7-.8c.2-.2.4-.2.6-.1l1.9.9c.2.1.4.2.4.3.1.1.1.6-.1 1.1Z"/></svg>WhatsApp Cristina</a>
             <span style="font-size:14px; color:#6B6358;">or 07444 611 914</span>
           </div>
         </div>
@@ -224,5 +225,19 @@
 <script src="js/planner.js"></script>
 <script src="js/concierge-ui.js"></script>
 <script src="js/hero.js"></script>
+<script>
+/* shared click ripple for playful ink + terracotta buttons */
+(function(){
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  document.querySelectorAll('.saia-btn--ink,.saia-btn--terra').forEach(function(b){
+    b.addEventListener('click', function(e){
+      var r = b.getBoundingClientRect(), s = document.createElement('span'), d = Math.max(r.width, r.height);
+      s.style.cssText = 'position:absolute;border-radius:50%;background:rgba(255,255,255,.5);transform:translate(-50%,-50%) scale(0);pointer-events:none;animation:saiaRipple .6s ease-out;width:'+d+'px;height:'+d+'px;left:'+(e.clientX-r.left)+'px;top:'+(e.clientY-r.top)+'px';
+      b.appendChild(s);
+      setTimeout(function(){ s.remove(); }, 600);
+    });
+  });
+})();
+</script>
 </body>
 </html>
