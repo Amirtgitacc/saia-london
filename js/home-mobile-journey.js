@@ -23,10 +23,10 @@ export function initMobileJourney() {
   /* chapters keyed to journey progress (0..1) */
   var CH = [
     { a: 0.00, b: 0.22, e: "A women's club in London", t: "Yoga mat hire,<br>across London.", x: "Rent our mats for £8.50 each, with same-day delivery from our Central London warehouse." },
-    { a: 0.22, b: 0.44, e: "Fitness",    t: "Move with<br>Cristina.",          x: "Founder-led Pilates for women in London — small, strong and slow, on the same mat you'll come to know by heart." },
-    { a: 0.44, b: 0.63, e: "The method", t: "Strength from<br>the inside out.", x: "Classical Pilates and Reformer, drawn from Joseph Pilates' own system, Contrology. Breath-led, for every level." },
-    { a: 0.63, b: 0.82, e: "Where",      t: "NW3 &amp;<br>Hampstead.",          x: "One-to-one in NW3, or group classes in Hampstead. Wherever you start, Cristina meets you there." },
-    { a: 0.82, b: 1.01, e: "Why",        t: "Breath-led,<br>for every body.",   x: "Train for how you feel, not just how you look. Show up, breathe, build control — session by session." }
+    { a: 0.22, b: 0.44, e: "Fitness",    t: "Pilates with<br>Cristina.",        x: "I believe that the body is the vessel that takes us through life — designed to do incredible things if you let it." },
+    { a: 0.44, b: 0.63, e: "The method", t: "Strengthen, heal,<br>realign.",  x: "My mission is to share the transformative practice of Joseph Pilates. Through his method, Contrology, Pilates empowers individuals to strengthen, heal, and realign their bodies from within." },
+    { a: 0.63, b: 0.82, e: "Where",      t: "NW3 &amp;<br>Hampstead.",          x: "I offer 1-2-1 classes for women in NW3 and group classes in Hampstead, London." },
+    { a: 0.82, b: 1.01, e: "Every body", t: "For every<br>body.",   x: "The body is the greatest investment we can make in ourselves. Pilates is a beautiful, powerful, and accessible practice for every body." }
   ];
   var N = CH.length;
   var UNROLL_END = 0.16, HANDOFF_END = 0.22;   // mat rolls open, then dissolves to the flow
