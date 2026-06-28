@@ -2,7 +2,7 @@
    SAÏA — "A Day on the Mat" journey controller
    Faithful port of the prototype's WebGL spine: real GLB mat
    unroll, continuous multi-phase camera travel, day-arc lighting,
-   scroll-band scene reveals, and the breathing Noor concierge.
+   scroll-band scene reveals, and the breathing SAÏA assistant.
    ============================================================ */
 (function () {
   const THREE = window.THREE;
@@ -175,11 +175,11 @@
     window.addEventListener('resize', onResize);
   }
 
-  /* ---------- concierge (Noor) ---------- */
+  /* ---------- SAÏA assistant ---------- */
   function wireConcierge() {
     const closed = document.getElementById('conciergeClosed');
     const panel = document.getElementById('conciergePanel');
-    const greeting = "I'm Noor, your concierge at SAÏA — your host for the club. I can plan mat hire for an event, share what's on, book you in for Pilates with Cristina, or help you decide if SAÏA is right for you. Where shall we begin?";
+    const greeting = "Hello, lovely. I'm the SAÏA assistant — your host for the club. I can plan mat hire for an event, share what's on, book you in for Pilates with Cristina, or help you decide if SAÏA is right for you. Where shall we begin?";
 
     const concierge = window.SAIA.createAgenticConcierge({
       threadEl: document.getElementById('thread'),
@@ -191,6 +191,7 @@
         mats: document.querySelector('[data-hire="mats"]'),
         date: document.querySelector('[data-hire="date"]'),
         total: document.querySelector('[data-hire="total"]'),
+        deposit: document.querySelector('[data-hire="deposit"]'),
         status: document.querySelector('[data-hire="status"]'),
       },
       greeting: greeting,

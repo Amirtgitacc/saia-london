@@ -2,7 +2,7 @@
    SAÏA — shared knowledge base (single source of truth)
    Read by BOTH brains so they can never drift:
      • Tier 1 (planner.js)   — scripted, deterministic replies
-     • Tier 2 (server.js)    — injected into the "Noor" system prompt
+     • Tier 2 (server.js)    — injected into the assistant system prompt
    Dual-mode: attaches to window.SAIA.KB in the browser and
    exports for Node (require) on the server.
    Facts sourced from the live saialondon.com (2026-06-20).
@@ -132,7 +132,7 @@
   /* A compact markdown fact-sheet for the Tier-2 system prompt.
      Built from the structured fields above so it can never disagree. */
   KB.factSheet = [
-    '## SAÏA LONDON: what you (Noor) know',
+    '## SAÏA LONDON: what you (the SAÏA assistant) know',
     '',
     'SAÏA is ' + KB.club.what + ' ' + KB.founder.meaning,
     '',

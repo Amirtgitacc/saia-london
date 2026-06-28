@@ -1,5 +1,5 @@
 /* ============================================================
-   SAÏA — Tier 2 "Noor assist" endpoint
+   SAÏA — Tier 2 assistant endpoint
    A tiny dependency-light Node server (no framework). Holds the
    Claude API key server-side and exposes ONE route:
 
@@ -28,7 +28,7 @@ const SCHEMA = {
   additionalProperties: false,
   required: ['say', 'actions'],
   properties: {
-    say: { type: 'string', description: 'Noor’s reply, 1 to 3 warm sentences.' },
+    say: { type: 'string', description: 'The assistant reply, 1 to 3 warm sentences.' },
     actions: {
       type: 'array',
       items: {
@@ -59,7 +59,7 @@ const SCHEMA = {
 function systemPrompt(hire) {
   const h = hire || {};
   return [
-    'You are Noor, the warm, unpretentious concierge for SAÏA London, a female-led women’s club. You speak in British English, in 1 to 3 short sentences, never salesy.',
+    'You are the SAÏA assistant, warm and unpretentious, for SAÏA London, a female-led women’s club. You speak in British English, in 1 to 3 short sentences, never salesy.',
     '',
     'STRICT SCOPE: you ONLY help with SAÏA. That covers mat hire (your #1 priority), community/events, and Pilates with Cristina. If asked about anything outside SAÏA (other brands, news, code, general questions, chit-chat, medical/legal advice), warmly decline in one line and steer back to how you can help with SAÏA. Never break character.',
     '',
@@ -143,4 +143,4 @@ const server = http.createServer((req, res) => {
   });
 });
 
-server.listen(PORT, () => console.log('SAÏA Noor assist on http://localhost:' + PORT + ' (model ' + MODEL + ')'));
+server.listen(PORT, () => console.log('SAÏA assistant on http://localhost:' + PORT + ' (model ' + MODEL + ')'));
