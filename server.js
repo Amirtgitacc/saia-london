@@ -80,6 +80,7 @@ function systemPrompt(hire) {
     '',
     'CURRENT HIRE STATE: ' + JSON.stringify({
       mats: h.mats || 0, guests: h.guests || null, date: h.date || null,
+      days: h.days || null, method: h.method || null, postcode: h.postcode || null,
       total: h.total != null ? h.total : null, status: h.status || 'No hire yet',
     }),
   ].join('\n');
