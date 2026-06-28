@@ -9,12 +9,16 @@
    single deterministic booking executor for BOTH tiers.
    Exposed on window.SAIA.Planner
    ============================================================ */
-(function () {
-  const NS = (window.SAIA = window.SAIA || {});
-
+(function (root, factory) {
+  var P = factory(typeof require === 'function'
+    ? require('./saia-knowledge.js')
+    : ((root.SAIA && root.SAIA.KB) || null));
+  if (typeof module !== 'undefined' && module.exports) module.exports = P;
+  if (typeof window !== 'undefined') { (window.SAIA = window.SAIA || {}).Planner = P; }
+})(typeof self !== 'undefined' ? self : this, function (KBin) {
   // Minimal fallback so scripted replies still work if the KB ever fails to load.
-  const KB = NS.KB || {
-    hire: { pricePerMat: 8.5, currency: '£', hireDays: 2, minMats: 10, extraDayPerMat: 1.5, bulkThreshold: 60,
+  const KB = KBin || {
+    hire: { pricePerMat: 8.5, currency: '£', hireDays: 2, minMats: 10, extraDayPerMat: 1.5, depositPerMat: 1.5, depositRefundable: true, bulkThreshold: 60,
       mat: { size: '68 × 185 cm, 4 mm thick', colour: 'black', material: 'natural rubber with a PU surface', features: 'non-slip and anti-odour' },
       delivery: 'Same-day courier across London from our Central London warehouse.',
       collection: 'We collect the day after. No need to clean them, we handle that.' },
@@ -28,7 +32,9 @@
   const H = KB.hire;
   const money = (v) => H.currency + Number(v).toFixed(2);
 
-  function total(h) { return h.mats ? h.mats * H.pricePerMat : null; }
+  function total(h) { return KB.priceHire ? KB.priceHire(h).total : (h.mats ? h.mats * H.pricePerMat : null); }
+  // Refundable deposit — taken upfront, returned when mats come back. Tracked apart from the hire total.
+  function deposit(h) { return h.mats ? h.mats * H.depositPerMat : null; }
 
   /* ---- booking executor — deterministic, shared by both tiers (unchanged) ---- */
   function applyActions(hireState, actions) {
@@ -39,6 +45,20 @@
         case 'add_mats':
           hire.mats = Math.max(0, parseInt(args.n, 10) || 0); hire.total = total(hire);
           acts.push('Added ' + hire.mats + ' mats to your hire'); break;
+        case 'set_days':
+          hire.days = Math.max(H.hireDays, parseInt(args.n, 10) || H.hireDays); hire.total = total(hire);
+          acts.push('Set hire length to ' + hire.days + ' days'); break;
+        case 'set_method':
+          hire.method = (args.method === 'pickup') ? 'pickup' : 'deliver';
+          if (hire.method === 'pickup') { hire.postcode = null; hire.zone = null; }
+          hire.total = total(hire);
+          acts.push(hire.method === 'pickup' ? 'Collection from NW3 selected' : 'Courier delivery selected'); break;
+        case 'set_postcode': {
+          hire.postcode = args.pc || hire.postcode; hire.method = 'deliver';
+          const z = KB.classify ? KB.classify(hire.postcode) : null;
+          hire.zone = z ? z.key : null; hire.total = total(hire);
+          acts.push('Delivery to ' + String(hire.postcode || '').toUpperCase() + (z && z.key !== 'outside' ? ' · ' + z.label : '')); break;
+        }
         case 'set_event':
           if (args.guests) hire.guests = parseInt(args.guests, 10) || hire.guests;
           if (args.date) hire.date = args.date;
@@ -50,10 +70,10 @@
           acts.push('Recommended ' + rec + ' mats for ' + (g || '—') + ' guests'); break;
         }
         case 'set_date': hire.date = args.date; acts.push('Set date to ' + args.date); break;
-        case 'quote': hire.total = total(hire); hire.status = 'Quoted'; acts.push('Prepared a quote: ' + money(H.pricePerMat) + ' / mat, ' + H.hireDays + '-day hire'); break;
+        case 'quote': hire.total = total(hire); hire.status = 'Quoted'; acts.push('Prepared your quote'); break;
         case 'book_delivery': if (args.date) hire.date = args.date; hire.status = 'Delivery scheduled'; acts.push('Scheduled delivery' + (hire.date ? ' · ' + hire.date : '')); break;
-        case 'checkout': if (!hire.total) hire.total = total(hire); hire.status = 'Checkout link ready'; acts.push('Generated a secure Shopify checkout link'); break;
-        case 'confirm': if (!hire.total) hire.total = total(hire); hire.status = 'Confirmed'; acts.push('Hire confirmed. Confirmation on its way'); break;
+        case 'checkout': if (hire.total == null) hire.total = total(hire); hire.status = 'Checkout link ready'; acts.push('Generated a secure Shopify checkout link'); break;
+        case 'confirm': if (hire.total == null) hire.total = total(hire); hire.status = 'Confirmed'; acts.push('Hire confirmed. Confirmation on its way'); break;
         case 'rsvp_event': acts.push('Reserved your place · ' + (args.event || 'SAÏA event')); break;
         case 'book_pilates': acts.push('Pilates with Cristina' + (args.date ? ' · ' + args.date : '') + ', held for you'); break;
         case 'join_newsletter': acts.push('Added you to the SAÏA guest list' + (args.email ? ' · ' + args.email : '')); break;
@@ -147,7 +167,7 @@
 
     // pricing
     if (has(/price|quote|cost|how much|rate|charge/))
-      return m(money(H.pricePerMat) + ' per mat for a ' + H.hireDays + '-day hire, minimum ' + H.minMats + '. Extra days are ' + money(H.extraDayPerMat) + ' a mat, plus courier delivery across London. Over ' + H.bulkThreshold + ' mats and I’ll arrange a reduced rate. Want me to price your numbers?',
+      return m(money(H.pricePerMat) + ' per mat for a ' + H.hireDays + '-day hire, minimum ' + H.minMats + '. Extra days are ' + money(H.extraDayPerMat) + ' a mat, plus courier delivery across London. There’s also a ' + money(H.depositPerMat) + ' refundable deposit per mat, returned once they’re back with us. Over ' + H.bulkThreshold + ' mats and I’ll arrange a reduced rate. Want me to price your numbers?',
         [{ tool: 'quote' }]);
 
     // checkout / pay
@@ -168,5 +188,5 @@
     };
   }
 
-  NS.Planner = { total, applyActions, localPlan };
-})();
+  return { total, applyActions, localPlan };
+});
