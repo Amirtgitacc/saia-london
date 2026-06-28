@@ -448,7 +448,7 @@
   .mj-matgl{ position:absolute; inset:0; z-index:1; }
   .mj-flow{ position:absolute; inset:0; z-index:2; opacity:0; }
   /* scroll beacon — mouse-wheel cue + per-chapter ladder, right side (same design as desktop #homeBeacon) */
-  .mj-beacon{ position:absolute; right:10px; top:62%; transform:translateY(-50%); z-index:6; display:flex; flex-direction:column; align-items:center; gap:11px; pointer-events:none; }
+  .mj-beacon{ position:absolute; right:10px; top:62%; transform:translateY(-50%); z-index:6; display:flex; flex-direction:column; align-items:center; gap:20px; pointer-events:none; }
   .mj-bcue{ display:flex; flex-direction:column; align-items:center; gap:8px; transition:opacity .4s ease; will-change:opacity; }
   .mj-ladder{ display:flex; flex-direction:column; align-items:center; gap:5px; }
   .mj-ladder i{ width:6px; height:15px; border-radius:99px; background:rgba(43,38,32,.2); transition:background .25s ease, height .25s ease; }
@@ -765,7 +765,7 @@
       <!-- scroll beacon — mouse-wheel cue + per-chapter segment ladder (ladder built + driven in home-journey.js) -->
       <style>
         #homeBeacon{ position:absolute; right:14px; top:31%; transform:translateY(-50%); z-index:4;
-          display:flex; flex-direction:column; align-items:center; gap:11px; pointer-events:none; }
+          display:flex; flex-direction:column; align-items:center; gap:18px; pointer-events:none; }
         #homeBeacon .hb-cue{ display:flex; flex-direction:column; align-items:center; gap:9px;
           transform:scale(1.27); transform-origin:center top; transition:opacity .4s ease; will-change:opacity; }
         #homeBeacon .hb-mouse{ width:24px; height:38px; border:2px solid #2B2620; border-radius:14px; position:relative; }
@@ -1201,6 +1201,7 @@
 <script src="js/mat-core.js"></script>
 <script src="js/saia-knowledge.js"></script>
 <script src="js/planner.js"></script>
+<script src="js/checkout-handoff.js"></script>
 <script src="js/home-concierge.js"></script>
 <script src="js/home.js"></script>
 <script src="js/home-journey.js"></script>
