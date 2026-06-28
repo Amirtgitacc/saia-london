@@ -105,6 +105,30 @@
     return { key: 'outside', label: 'outside', round: null };
   };
 
+  // full hire price — the ONE place totals are computed
+  KB.priceHire = function (hire) {
+    var H = KB.hire;
+    hire = hire || {};
+    var mats = parseInt(hire.mats, 10) || 0;
+    var days = parseInt(hire.days, 10) || H.hireDays;
+    var matCost = mats * H.pricePerMat + mats * H.extraDayPerMat * Math.max(0, days - H.hireDays);
+    var deposit = mats * H.depositPerMat;
+
+    var deliveryCost = null, deliveryLabel = null, quoteOnly = false;
+    if (hire.method === 'pickup') {
+      deliveryCost = 0; deliveryLabel = 'Pickup from NW3 · free';
+    } else if (hire.zone === 'outside') {
+      deliveryCost = null; deliveryLabel = 'Courier · by quote'; quoteOnly = true;
+    } else if (hire.zone === 'central' || hire.zone === 'greater') {
+      var z = KB.delivery.zones[hire.zone];
+      deliveryCost = z.round;
+      deliveryLabel = 'Courier · ' + (hire.zone === 'central' ? 'Central London' : 'Greater London');
+    }
+
+    var total = (deliveryCost == null) ? null : matCost + deliveryCost + deposit;
+    return { matCost: matCost, deliveryCost: deliveryCost, deliveryLabel: deliveryLabel, deposit: deposit, total: total, quoteOnly: quoteOnly };
+  };
+
   /* A compact markdown fact-sheet for the Tier-2 system prompt.
      Built from the structured fields above so it can never disagree. */
   KB.factSheet = [
