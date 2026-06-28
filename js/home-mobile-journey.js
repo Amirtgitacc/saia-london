@@ -40,11 +40,9 @@ export function initMobileJourney() {
         '<div class="mj-anim">' +
           '<canvas class="mj-matgl"></canvas>' +
           '<canvas class="mj-flow"></canvas>' +
-          '<div class="mj-rail"><span></span></div>' +
-          '<div class="mj-cue"><span class="mj-cue-lbl">Scroll</span>' +
-            '<span class="mj-mouse"></span>' +
-            '<span class="mj-chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>' +
-            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></span>' +
+          '<div class="mj-beacon">' +
+            '<div class="mj-bcue"><span class="mj-mouse"></span><span class="mj-cue-lbl">Scroll</span></div>' +
+            '<div class="mj-ladder"></div>' +
           '</div>' +
         '</div>' +
       '</div>' +
@@ -56,8 +54,10 @@ export function initMobileJourney() {
   var cv    = root.querySelector('.mj-flow');
   var ctx   = cv.getContext('2d');
   var matgl = root.querySelector('.mj-matgl');
-  var cue   = root.querySelector('.mj-cue');
-  var fill  = root.querySelector('.mj-rail span');
+  var bcue  = root.querySelector('.mj-bcue');
+  var ladEl = root.querySelector('.mj-ladder');
+  for (var _li = 0; _li < N; _li++) ladEl.appendChild(document.createElement('i'));
+  var ladder = [].slice.call(ladEl.children);
 
   /* ---- flow frames: eager entrance, then stream the rest ---- */
   for (var i = 1; i <= 14; i++) preload(i);
@@ -125,8 +125,10 @@ export function initMobileJourney() {
     var fp = clamp((p - UNROLL_END) / (1 - UNROLL_END), 0, 1);
     drawFlow(1 + fp * (FLOW_COUNT - 1));
     chaps.forEach(function (c, i) { c.classList.toggle('on', p >= CH[i].a && p < CH[i].b); });
-    cue.style.opacity = p > 0.02 ? 0 : 1;
-    fill.style.height = (p * 100) + '%';
+    var ai = 0;
+    for (var ci = 0; ci < N; ci++) { if (p >= CH[ci].a && p < CH[ci].b) { ai = ci; break; } if (p >= CH[ci].b) ai = Math.min(ci + 1, N - 1); }
+    for (var si = 0; si < ladder.length; si++) { ladder[si].classList.toggle('done', si < ai); ladder[si].classList.toggle('on', si === ai); }
+    bcue.style.opacity = (1 - Math.min(1, p / 0.05)).toFixed(3);
   }
 
   /* ---- eased loop driven by page scroll ---- */

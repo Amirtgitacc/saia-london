@@ -137,6 +137,7 @@
         mats: document.querySelector('[data-hire="mats"]'),
         date: document.querySelector('[data-hire="date"]'),
         total: document.querySelector('[data-hire="total"]'),
+        deposit: document.querySelector('[data-hire="deposit"]'),
         status: document.querySelector('[data-hire="status"]'),
       },
       greeting: 'Welcome — I am your SAÏA booking agent. Tell me your event (try “30 people on Saturday”) and I will build the hire for you here: mats, delivery and price.',

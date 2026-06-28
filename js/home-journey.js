@@ -19,8 +19,9 @@
   const wrap = document.getElementById('top');
   const canvas = document.getElementById('homeCanvas');
   const stage = document.getElementById('stage');
-  const rail = document.getElementById('homeBar');
-  const hint = document.getElementById('homeHint');
+  const beacon = document.getElementById('homeBeacon');
+  const cue    = beacon ? beacon.querySelector('.hb-cue') : null;
+  let   ladder = [];
   const sticky = document.querySelector('.home-sticky');
   const matStageEl = document.getElementById('matStage');
   const flowCanvas = document.getElementById('flowCanvas');
@@ -35,6 +36,12 @@
   if (reduce || small) { goStatic(); return; }   // keep the flat PNG, skip WebGL
 
   const bandEls = stage ? Array.prototype.slice.call(stage.querySelectorAll('[data-band]')) : [];
+  // build one ladder segment per chapter so the beacon always matches the [data-band] count
+  if (beacon) {
+    const lad = beacon.querySelector('.hb-ladder');
+    while (lad.children.length < bandEls.length) lad.appendChild(document.createElement('i'));
+    ladder = Array.prototype.slice.call(lad.children);
+  }
 
   /* Band 3 "van on a road" — scrubbed across its data-band range (0.30→0.44) */
   const hireRoad = stage ? stage.querySelector('.hire-road') : null;
@@ -367,8 +374,20 @@
     if (meshMaterial.userData.setMorph) meshMaterial.userData.setMorph(morphFor(p), bloomFor(p));
     renderer.render(scene, camera);
     canvas.style.opacity = (1 - handoffFor(p)).toFixed(3);
-    if (rail) rail.style.height = (p * 100).toFixed(1) + '%';
-    if (hint) hint.style.opacity = (1 - Math.min(1, p / 0.04)).toFixed(3);
+    if (ladder.length) {
+      // active chapter = the [data-band] whose range holds p (snap forward when between bands)
+      let ai = 0;
+      for (let i = 0; i < bandEls.length; i++) {
+        const r = (bandEls[i].getAttribute('data-band') || '0,1').split(',').map(Number);
+        if (p >= r[0] && p <= r[1]) { ai = i; break; }
+        if (p > r[1]) ai = Math.min(i + 1, bandEls.length - 1);
+      }
+      for (let i = 0; i < ladder.length; i++) {
+        ladder[i].classList.toggle('done', i < ai);
+        ladder[i].classList.toggle('on', i === ai);
+      }
+    }
+    if (cue) cue.style.opacity = (1 - Math.min(1, p / 0.05)).toFixed(3);
     bands(p);
     driveHireRoad(p);
     scrubFlow(p);
