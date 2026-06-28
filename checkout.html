@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Checkout · SAÏA (demo)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{ --cream:#F5F1E8; --ink:#2B2620; --terra:#B8624A; --line:#DAD4C8; }
+  *{ box-sizing:border-box; }
+  body{ margin:0; background:var(--cream); color:var(--ink); font-family:'Inter',sans-serif; line-height:1.5; }
+  .wrap{ max-width:640px; margin:0 auto; padding:clamp(24px,5vw,56px) 20px 80px; }
+  .demo{ font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:var(--terra); }
+  h1{ font-family:'Playfair Display',serif; font-weight:600; font-size:clamp(26px,4vw,34px); margin:6px 0 24px; }
+  .card{ background:#FBF8F1; border:1px solid var(--line); border-radius:10px; padding:20px 22px; margin-bottom:22px; }
+  .card h2{ font-size:11px; letter-spacing:.2em; text-transform:uppercase; color:#6B6358; margin:0 0 14px; font-weight:600; }
+  .row{ display:flex; justify-content:space-between; gap:16px; align-items:baseline; padding:5px 0; font-size:14px; }
+  .row .d{ color:#6B6358; font-size:12px; }
+  .row.total{ border-top:1px solid var(--line); margin-top:8px; padding-top:12px; font-family:'Playfair Display',serif; font-size:20px; color:var(--terra); }
+  label{ display:block; font-size:12px; color:#6B6358; margin:12px 0 5px; }
+  input{ width:100%; padding:11px 13px; border:1px solid var(--line); border-radius:6px; background:#fff; font:inherit; color:var(--ink); }
+  .grid{ display:grid; grid-template-columns:1fr 90px 70px; gap:10px; }
+  .pay{ width:100%; margin-top:20px; background:var(--ink); color:var(--cream); border:none; border-radius:4px; padding:15px; font-size:12px; letter-spacing:.18em; text-transform:uppercase; cursor:pointer; }
+  .pay:disabled{ opacity:.45; cursor:not-allowed; }
+  .ok{ display:none; background:#EAF2EA; border:1px solid #BcD4Bc; border-radius:10px; padding:22px; text-align:center; }
+  .ok h2{ font-family:'Playfair Display',serif; color:var(--ink); font-size:20px; margin:0 0 8px; letter-spacing:0; text-transform:none; }
+  .muted{ font-size:12px; color:#6B6358; }
+  a.back{ color:var(--terra); font-size:13px; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="demo">Checkout · demo — no real payment is taken</div>
+    <h1>Confirm your hire</h1>
+    <div id="content"></div>
+  </div>
+  <script src="js/saia-knowledge.js"></script>
+  <script src="js/checkout.js"></script>
+</body>
+</html>
