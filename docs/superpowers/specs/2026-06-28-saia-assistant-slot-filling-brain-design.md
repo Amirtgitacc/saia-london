@@ -62,8 +62,9 @@ ASSISTANT: "What's the event postcode?"
 ASSISTANT: "Here's your estimate:
             50 mats · 2 days .............. £425.00
             Courier (Central, both ways) .. from £35.00
+            Refundable deposit (£1.50/mat)  £75.00
             ──────────────────────────────────────────
-            from £460.00
+            from £535.00 to pay  ·  £75.00 back after collection
             Shall I pencil it in for Saturday and make your checkout link?"
   USER: "yes"                         → confirm → checkout link
 ```
@@ -135,13 +136,20 @@ Two shared helpers (lifted verbatim in behaviour from the current estimator):
     matCost,           // mats*8.50 + mats*1.50*max(0, days-2)
     deliveryLabel,     // "Central, both ways" | "Greater London" | "Pickup (free)" | "By quote"
     deliveryCost,      // number, 0 for pickup, or null when outside London (quote only)
-    total,             // matCost + deliveryCost, or null when quoteOnly
+    deposit,           // mats*1.50, refundable, returned after collection
+    total,             // matCost + deliveryCost + deposit (upfront to pay), or null when quoteOnly
     quoteOnly,         // true when zone is outside London
   }
   ```
 
+  The deposit is **refundable** — it is added to the upfront total but always shown as
+  its own line and described as returned after collection (`£1.50 × mats`). `KB.hire`
+  gains `depositPerMat: 1.5`. When `quoteOnly` (outside London), `total` is null but
+  `deposit` and `matCost` are still shown.
+
 `home.html`'s estimator is refactored to call `classify`/`priceHire` instead of its
-private `classify()`/inline formula. Behaviour and numbers stay identical.
+private `classify()`/inline formula. The mat/courier/zone numbers stay identical; the
+estimator **gains the refundable-deposit line** too, so it matches the assistant exactly.
 
 ## applyActions — extended executor
 
