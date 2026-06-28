@@ -75,3 +75,41 @@ test('non-hire question still answered (founder)', () => {
   assert.strictEqual(r.matched, true);
   assert.ok(/Cristina/i.test(r.say));
 });
+
+// === Finding 1: process questions must NOT enter the booking flow ===
+test('how does hire work goes to FAQ not booking flow', () => {
+  const r = Planner.localPlan('how does hire work?', { mats: 0, awaiting: null });
+  assert.strictEqual(r.matched, true);
+  assert.ok(!r.awaiting, 'awaiting should be falsy — not inside the booking flow');
+  assert.ok(!/how many mats/i.test(r.say), 'should NOT ask "How many mats"');
+  assert.ok(/day before|quote|min/i.test(r.say), 'should be the FAQ reply (mentions day before / quote / min)');
+});
+
+test('how do I rent mats goes to FAQ not booking flow', () => {
+  const r = Planner.localPlan('how do I rent mats?', { mats: 0, awaiting: null });
+  assert.strictEqual(r.matched, true);
+  assert.ok(!r.awaiting, 'awaiting should be falsy — not inside the booking flow');
+  assert.ok(!/how many mats/i.test(r.say), 'should NOT ask "How many mats"');
+  assert.ok(/day before|quote|min/i.test(r.say), 'should be the FAQ reply');
+});
+
+// === Finding 1 sanity: booking trigger still works ===
+test('I want to hire mats still enters the booking flow', () => {
+  const r = Planner.localPlan('I want to hire mats', { mats: 0, awaiting: null });
+  assert.strictEqual(r.matched, true);
+  assert.strictEqual(r.awaiting, 'mats');
+});
+
+// === Finding 2: postcode false-positives ===
+test('A1 in sentence does not trigger postcode when not awaiting', () => {
+  const r = Planner.localPlan('30 mats for an A1 launch', { mats: 0, days: null, awaiting: null });
+  assert.strictEqual(r.awaiting, 'days');
+  assert.ok(!r.actions.some(a => a.tool === 'set_postcode'), 'set_postcode should NOT fire on "A1"');
+});
+
+// === Finding 3: escape from confirm ===
+test('no cancels the confirm step instead of looping', () => {
+  const r = Planner.localPlan('no not yet', { mats: 50, days: 2, method: 'deliver', zone: 'central', date: 'Saturday', awaiting: 'confirm' });
+  assert.ok(!r.actions.some(a => a.tool === 'checkout' || a.tool === 'confirm'), 'should not fire checkout or confirm');
+  assert.ok(!r.awaiting, 'awaiting should be null — user stepped back out');
+});

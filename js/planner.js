@@ -1,7 +1,7 @@
 /* ============================================================
    SAÏA — concierge "Noor" deterministic brain (Tier 1)
    The dedicated core: knows the common situations cold —
-   instant, free, always on-brand. Returns {say, actions, matched}.
+   instant, free, always on-brand. Returns {say, actions, matched, awaiting}.
    When `matched` is false the UI escalates to the Tier-2 Claude
    assist (server.js); Claude is the safety net, this is the product.
    Facts come from window.SAIA.KB (saia-knowledge.js) so the two
@@ -99,7 +99,10 @@
     const wantsDeliver = has(/deliver|drop ?off|courier|bring them|ship/);
     const wantsPickup = has(/pick.?up|collect|warehouse|\bnw3\b/);
     const pcMatch = (text || '').match(/\b([A-Za-z]{1,2}\d[A-Za-z\d]?(?:\s*\d[A-Za-z]{2})?)\b/);
-    const looksPostcode = pcMatch && KB.classify && KB.classify(pcMatch[1]);
+    const fullPc = !!(pcMatch && /\d[A-Za-z]{2}\s*$/.test(pcMatch[1].trim()));
+    const pcZone = pcMatch && KB.classify && KB.classify(pcMatch[1]);
+    // Only treat token as a postcode when mid-flow awaiting one, OR it has an inward code (e.g. "8DS")
+    const looksPostcode = (pcZone && (hire.awaiting === 'postcode' || fullPc)) ? pcZone : null;
 
     const aw = hire.awaiting;
     const inHireFlow = !!(aw && /^(mats|days|method|postcode|date|confirm)$/.test(aw));
@@ -108,12 +111,16 @@
     const bareNum = (t.match(/^(?:just\s+)?(?:the\s+)?(\d+)\b/) || [])[1];
 
     // ===== confirm step =====
+    if (aw === 'confirm' && has(/^(no|nope|not yet|cancel|hold on|wait|stop|actually)\b/))
+      return mk("No rush — your quote's saved in the panel. Tell me what you'd like to change, or say 'checkout' when you're ready.", [], null);
     if (aw === 'confirm' && has(/^(yes|yep|yeah|sure|go ahead|do it|lock it|confirm|book it|sounds good|please|ok|okay|perfect)\b/))
       return mk("Wonderful. Your secure checkout link is in the panel — that's you booked. Delivery the day before, collection after. Welcome to SAÏA.", [{ tool: 'checkout' }], null);
 
     // ===== build / continue the hire flow =====
     // Trigger: mid-flow, or a fresh hire signal (a count, “hire”, “book”, “rent”, “event with mats”)
-    const freshHire = (matsN != null) || (guests != null) || has(/\bhire\b|\brent\b|book .*mats|mat hire|quote/);
+    // isProcessQ: “how does hire work?” etc. — these are FAQ questions, not booking signals
+    const isProcessQ = /how (do|does|to)\b|how (it|this|the hire) works?|what is (mat )?hire|what'?s (mat )?hire|the process|how .* works?/.test(t);
+    const freshHire = (matsN != null) || (guests != null) || (has(/\bhire\b|\brent\b|book .*mats|mat hire|\bquote\b/) && !isProcessQ);
     if (inHireFlow || freshHire) {
       const h = Object.assign({}, hire);
       const actions = [];
