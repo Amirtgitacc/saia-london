@@ -18,7 +18,7 @@ const KB = require('./js/saia-knowledge.js');
 
 const PORT = process.env.PORT || 8787;
 const MODEL = process.env.SAIA_MODEL || 'claude-haiku-4-5';
-const TOOLS = ['add_mats', 'set_event', 'recommend', 'set_date', 'quote',
+const TOOLS = ['add_mats', 'set_event', 'recommend', 'set_days', 'set_method', 'set_postcode', 'set_date', 'quote',
   'book_delivery', 'checkout', 'confirm', 'rsvp_event', 'book_pilates', 'join_newsletter'];
 
 /* Structured-output schema — guarantees the {say, actions} shape.
@@ -41,9 +41,11 @@ const SCHEMA = {
             type: 'object',
             additionalProperties: false,
             properties: {
-              n: { type: 'integer', description: 'number of mats (add_mats)' },
+              n: { type: 'integer', description: 'number of mats (add_mats) or days (set_days)' },
               guests: { type: 'integer', description: 'headcount (set_event/recommend)' },
               date: { type: 'string', description: 'a day, e.g. "Saturday"' },
+              method: { type: 'string', enum: ['deliver', 'pickup'], description: 'delivery method (set_method)' },
+              pc: { type: 'string', description: 'event postcode (set_postcode)' },
               event: { type: 'string', description: 'event name (rsvp_event)' },
               email: { type: 'string', description: 'email (join_newsletter)' },
             },
@@ -64,15 +66,17 @@ function systemPrompt(hire) {
     'RULES:',
     '- Mats are for HIRE ONLY. Never say they are for sale.',
     '- Never invent a price, term, date, or fact that is not in your knowledge below. If you don’t know, say so and point to WhatsApp ' + KB.contact.person + ' on ' + KB.contact.whatsapp + '.',
-    '- You do NOT calculate totals yourself. To price or recommend a count, emit an action and the app computes it deterministically.',
+    '- You do NOT calculate totals yourself. To price or recommend a count, emit an action and the app computes it deterministically (mats + extra days + courier + a refundable £' + KB.hire.depositPerMat.toFixed(2) + '/mat deposit).',
+    '- For a mat hire, COLLECT THE DETAILS ONE AT A TIME before quoting: number of mats (or guests → recommend), number of days (never assume — ask), delivery (courier + postcode, or free NW3 pickup), then the event date. Ask for the next missing detail in a single warm sentence.',
+    '- Courier is an estimate: ' + KB.hire.currency + '35 Central, ' + KB.hire.currency + '45 Greater London, outside London → WhatsApp quote. NW3 pickup is free.',
     '',
     KB.factSheet,
     '',
     'ACTIONS you may emit (only when they match the user’s intent, otherwise return an empty actions array):',
-    '- add_mats {n} · set_event {guests,date} · recommend {guests} (lets the app pick a sensible mat count) · set_date {date}',
-    '- quote {} (price the current hire) · book_delivery {date} · checkout {} (payment link) · confirm {}',
+    '- add_mats {n} · recommend {guests} (app picks a sensible count) · set_days {n} · set_method {method:"deliver"|"pickup"} · set_postcode {pc} · set_date {date} · set_event {guests,date}',
+    '- quote {} (price once mats+days+delivery are known) · book_delivery {date} · checkout {} (payment link) · confirm {}',
     '- rsvp_event {event} · book_pilates {date} · join_newsletter {email}',
-    'Prefer recommend over guessing a mat count. For a plain question, return actions: [].',
+    'Prefer recommend over guessing a mat count. Emit set_days/set_method/set_postcode as the user supplies them. For a plain question, return actions: [].',
     '',
     'CURRENT HIRE STATE: ' + JSON.stringify({
       mats: h.mats || 0, guests: h.guests || null, date: h.date || null,
