@@ -1,6 +1,6 @@
 /* ============================================================
    SAÏA — home agentic concierge (one brain, two surfaces)
-   Brings the real Tier-1/Tier-2 brain to home.html and weaves it
+   Brings the real Tier-1/Tier-2 brain to index.html and weaves it
    into the page: an inline designed-in block and the floating
    launcher share ONE conversation + ONE live hire basket.
 

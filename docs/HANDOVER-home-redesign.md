@@ -1,10 +1,10 @@
-# Handover — SAÏA `home.html` scroll-flow redesign
+# Handover — SAÏA `index.html` scroll-flow redesign
 
 Paste the prompt below into a fresh session to continue.
 
 ---
 
-You are continuing a redesign of **`home.html`** for SAÏA London (static, dependency-free
+You are continuing a redesign of **`index.html`** for SAÏA London (static, dependency-free
 site; mat hire is the priority). Read `CLAUDE.md` first — it has the brand rules, the
 concierge architecture, and a "Delivery (Addison Lee)" section. Last commit on branch
 `mat-transform-single-mat`: `f05fa7e`.
@@ -27,11 +27,11 @@ python3 -m http.server 8000    # then open http://localhost:8000/
 ```
 Labs: `http://localhost:8000/tools/lab/<name>.html`
 
-## Decisions LOCKED + APPLIED to live `home.html` ✅
-All of the below are now LIVE on `home.html` (not just in labs):
+## Decisions LOCKED + APPLIED to live `index.html` ✅
+All of the below are now LIVE on `index.html` (not just in labs):
 | Thing | Choice | Status |
 |---|---|---|
-| Font (site-wide) | **Playfair Display · Inter** | ✅ applied (home.html) |
+| Font (site-wide) | **Playfair Display · Inter** | ✅ applied (index.html) |
 | Hero | **Left · classic** | ✅ live |
 | Signature mat | **Pill chips** | ✅ live |
 | Hiring effortless (Section 3) | **Vertical list + "Van-on-a-road"** scroll animation | ✅ applied — scroll-scrubbed in `js/home-journey.js` (`driveHireRoad`); road finishes by p0.38 so the van reaches "Collect" while the copy is still sharp |
@@ -57,15 +57,17 @@ Already LIVE from earlier rounds: the 5 over-Cristina flow bands use
 
 ## DONE ✅ (this round)
 1. ~~Pick Section 4 layout~~ → **B Featured tier** chosen + applied.
-2. ~~Apply all decisions to live `home.html`~~ → Playfair/Inter, hero left-classic, pill-chips,
+2. ~~Apply all decisions to live `index.html`~~ → Playfair/Inter, hero left-classic, pill-chips,
    scroll-scrubbed van-on-a-road, Section 4 featured tier — all live.
 3. ~~Embed the delivery estimator~~ → **B Spotlight stage** embedded as `.saia-est-stage`.
 4. ~~Copy fix same-week → same-day~~ → done.
 
 ## OPEN — do next
 - Ground remaining tier copy in real facts (below); keep Brand Partnerships (it IS on the real site).
-- Fonts were scoped to `home.html` only — `index.html` / `hero.html` still on the old families if
-  site-wide consistency is wanted later.
+- Fonts were scoped to `index.html` only — the sample pages (`samples.html`, `sample-film.html`,
+  `sample-hybrid.html`) still on the old Cormorant/Hanken families if site-wide consistency is
+  wanted later. (The old `hero.html` / agentic `index.html` front end has since been removed and
+  `home.html` renamed to `index.html` as the site root.)
 - Estimator delivery numbers are still the LOW placeholder (Central £35 / Greater £45) — swap for
   **Route B** (live Addison Lee Quickbook API) when SAÏA opens a business account.
 - Wire the estimator "Book the hire" CTA (currently a prefilled WhatsApp deep-link) to real

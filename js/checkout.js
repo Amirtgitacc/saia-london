@@ -10,7 +10,7 @@
 
   if (!hire || !KB || !KB.hireComplete || !KB.hireComplete(hire)) {
     root.innerHTML = '<div class="card"><p>Let’s build your hire first. Tell the SAÏA assistant your numbers and date and it will bring you back here.</p>' +
-      '<p><a class="back" href="home.html">← Start with the assistant</a></p></div>';
+      '<p><a class="back" href="index.html">← Start with the assistant</a></p></div>';
     return;
   }
 

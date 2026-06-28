@@ -4,8 +4,9 @@ Static site for SAÏA London (a female-led women's club — **mat hire is the pr
 community, then Yoga/Pilates). Dependency-free front end; one tiny Node endpoint powers the
 Claude side of the concierge. See `README.md` for the site internals (3D pages, GLB, etc.).
 
-> **Current design state** of the `home.html` redesign (what's live, decided, and open) lives in
-> `docs/HANDOVER-home-redesign.md` — check there before touching `home.html` layout/flow.
+> **Current design state** of the `index.html` redesign (what's live, decided, and open) lives in
+> `docs/HANDOVER-home-redesign.md` — check there before touching `index.html` layout/flow.
+> (`index.html` is the page formerly known as `home.html`; it is now the site root.)
 
 ## Run / verify
 
@@ -60,12 +61,14 @@ they can never disagree. **Change a fact once, here, and both brains update.** D
   tools are: `add_mats, set_event, recommend, set_date, quote, book_delivery, checkout,
   confirm, rsvp_event, book_pilates, join_newsletter`.
 
-## Two concierge front ends
+## The concierge front end
 
-- `index.html` + `hero.html` → agentic concierge with a live hire panel
-  (`concierge-ui.js` + `planner.js`). Tier 2 escalation built in.
-- `home.html` → simpler FAQ concierge inside `home.js` (no hire panel). Also escalates to the
+- `index.html` (the site root) → FAQ concierge inside `home.js` (no hire panel). Escalates to the
   same `/api/concierge` endpoint on a miss.
+
+> The old agentic front end (`index.html` + `hero.html` with a live hire panel via `concierge-ui.js`
+> + `journey.js`) was removed. Its booking brain — `planner.js` + `applyActions()` — lives on and is
+> still shared by the concierge here.
 
 ## Brand rules (always)
 
@@ -73,8 +76,9 @@ they can never disagree. **Change a fact once, here, and both brains update.** D
 - Voice: warm, female-led, unpretentious, British English. English-only project.
 - Contact = WhatsApp Cristina (founder + Pilates instructor) on 07444 611 914; NW3 area.
 - Palette: cream `#F5F1E8`, ink `#2B2620`, terracotta accent `#B8624A`.
-- Fonts are per-page (not yet unified): `home.html` uses **Playfair Display + Inter**;
-  `index.html`/`hero.html` still on **Cormorant Garamond + Hanken Grotesk**.
+- Fonts are per-page (not yet unified): `index.html` uses **Playfair Display + Inter**;
+  the sample pages (`samples.html`, `sample-film.html`, `sample-hybrid.html`) still on
+  **Cormorant Garamond + Hanken Grotesk**.
 - Don't remove existing UI elements when making changes.
 
 ## Model
@@ -88,7 +92,7 @@ Delivery is by **Addison Lee** courier (NW3 warehouse → event; pickup from NW3
 hire facts from saialondon.com: £8.50/mat, 2-day base, **+£1.50/mat per extra day**, min 10,
 **60+ mats → reduced quote**; courier ≈ **£35–55 each way** to central London.
 
-- **NOW — Route C (placeholder, LIVE):** the estimator is live on `home.html` as the
+- **NOW — Route C (placeholder, LIVE):** the estimator is live on `index.html` as the
   `.saia-est-stage` "Spotlight" section (dark interrupt, self-drawing route, total counts up),
   ported from `tools/lab/estimator-lab.html`. A dependency-free zone estimator maps the event
   postcode to a London zone and totals it with the mat-hire math. Placeholder courier numbers are
