@@ -148,3 +148,23 @@ test('checkout intent does not emit a quote action', () => {
   const r = Planner.localPlan('checkout', { mats: 50, days: 2, method: 'deliver', zone: 'central', date: 'Saturday', awaiting: 'confirm' });
   assert.ok(!r.actions.some(a => a.tool === 'quote'), 'checkout must not loop the quote');
 });
+
+// === Fix: sub-minimum mat count re-asks instead of advancing to a dead-end quote ===
+test('below-minimum mats re-asks, does not quote', () => {
+  const r = Planner.localPlan('6 mats', { mats: 0, awaiting: 'mats' });
+  assert.strictEqual(r.awaiting, 'mats');
+  assert.ok(!r.actions.some(a => a.tool === 'quote'));
+});
+
+test('sub-minimum hire never reaches ready quote', () => {
+  const r = Planner.localPlan('saturday', { mats: 6, days: 2, method: 'pickup', date: null, awaiting: 'date' });
+  assert.strictEqual(r.awaiting, 'mats');             // re-asks for a valid count
+  assert.ok(!r.actions.some(a => a.tool === 'quote'));
+});
+
+test('valid hire still reaches ready quote', () => {
+  const r = Planner.localPlan('saturday', { mats: 15, days: 2, method: 'pickup', date: null, awaiting: 'date' });
+  assert.strictEqual(r.awaiting, null);
+  assert.ok(r.actions.some(a => a.tool === 'quote'));
+  assert.ok(/Book this hire/i.test(r.say));
+});

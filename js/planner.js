@@ -150,7 +150,7 @@
 
       // decide the next missing slot
       const need = (function (x) {
-        if (!x.mats) return 'mats';
+        if (!x.mats || x.mats < H.minMats) return 'mats';
         if (!x.days) return 'days';
         if (!x.method) return 'method';
         if (x.method === 'deliver' && !x.zone) return 'postcode';
