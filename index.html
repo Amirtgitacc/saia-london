@@ -7,7 +7,7 @@
 <meta name="description" content="Yoga mat hire across London, with same-day delivery from £8.50 a mat. A female-led club: fitness, community & mindset.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@300;400;500&family=Bricolage+Grotesque:opsz,wght@12..96,400..700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/buttons.css">
 <script type="importmap">{ "imports": { "three": "./vendor/three.module.min.js" } }</script>
@@ -299,12 +299,13 @@
 <style>
 .saia-est-stage{ --cream:#F5F1E8; --paper:#FBF8F1; --ink:#2B2620; --muted:#6B6358; --terra:#B8624A;
   --terra-dk:#A9573F; --line:#E2DBCC; --line-soft:#DAD4C8;
-  --display:'Playfair Display',serif; --body:'Inter',system-ui,sans-serif; }
+  --sage:#7C8A6B;
+  --display:'Bricolage Grotesque',sans-serif; --body:'IBM Plex Mono',monospace; }
 .saia-est-stage *{ box-sizing:border-box; }
 
 /* shared engine */
-.saia-est-stage .est{ --van:var(--terra); }
-.saia-est-stage .eyebrow{ font-family:var(--body); font-size:11px; letter-spacing:.32em; text-transform:uppercase; color:var(--terra); display:flex; align-items:center; gap:9px; margin:0; }
+.saia-est-stage .est{ --van:var(--terra); font-family:var(--display); }
+.saia-est-stage .eyebrow{ font-family:var(--body); font-size:11px; letter-spacing:.2em; text-transform:uppercase; color:var(--terra); display:flex; align-items:center; gap:9px; margin:0; }
 .saia-est-stage .eyebrow::before{ content:""; width:18px; height:1px; background:currentColor; display:inline-block; }
 .saia-est-stage .est .lead{ font-size:13px; line-height:1.55; color:var(--muted); }
 .saia-est-stage .est label{ display:block; font-family:var(--body); font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:var(--muted); margin-bottom:7px; }
@@ -321,7 +322,7 @@
   opacity:0; transition:transform .32s cubic-bezier(.4,0,.15,1),opacity .2s; }
 .saia-est-stage .est .seg[data-m="deliver"] .thumb{ opacity:1; transform:translateX(0); }
 .saia-est-stage .est .seg[data-m="pickup"] .thumb{ opacity:1; transform:translateX(100%); }
-.saia-est-stage .est .seg button{ flex:1; position:relative; z-index:1; background:none; border:none; cursor:pointer; font-family:var(--body);
+.saia-est-stage .est .seg button{ flex:1; position:relative; z-index:1; background:none; border:none; cursor:pointer; font-family:var(--display);
   font-size:12px; padding:11px 6px; color:var(--muted); transition:color .25s; }
 .saia-est-stage .est .seg button.on{ color:var(--cream); }
 .saia-est-stage .est .pcwrap{ overflow:hidden; max-height:0; opacity:0; transition:max-height .4s ease,opacity .35s,margin .4s; }
@@ -344,22 +345,22 @@
 
 /* result */
 .saia-est-stage .est .result{ position:relative; overflow:hidden; max-height:0; opacity:0; transform:translateY(8px);
-  border:1px solid var(--terra); border-radius:8px;
+  border:1px dashed var(--terra); border-radius:6px;
   transition:max-height .55s ease,opacity .5s,transform .5s; }
 .saia-est-stage .est .result.show{ overflow:visible; max-height:560px; opacity:1; transform:none; padding:30px 18px 6px; margin-top:18px; }
 .saia-est-stage .est-flag{ position:absolute; top:-11px; left:18px; background:var(--terra); color:#F5F1E8;
-  font-family:var(--body); font-size:10px; letter-spacing:.22em; text-transform:uppercase; padding:4px 12px; border-radius:2px; }
-.saia-est-stage .est .zone{ display:inline-flex; align-items:center; gap:7px; font-size:10px; letter-spacing:.1em; text-transform:uppercase;
-  color:var(--terra); background:rgba(184,98,74,.1); border-radius:30px; padding:4px 11px; margin-bottom:13px; }
+  font-family:var(--body); font-size:10px; letter-spacing:.2em; text-transform:uppercase; padding:4px 12px; border-radius:3px; }
+.saia-est-stage .est .zone{ display:inline-flex; align-items:center; gap:7px; font-family:var(--body); font-size:10px; letter-spacing:.1em; text-transform:uppercase;
+  color:var(--terra); background:rgba(184,98,74,.1); border-radius:30px; padding:4px 11px; margin-bottom:14px; }
 .saia-est-stage .est .zone .dot{ width:6px; height:6px; border-radius:50%; background:var(--terra); }
-.saia-est-stage .est .line{ display:flex; justify-content:space-between; align-items:baseline; gap:16px; margin-bottom:10px; }
-.saia-est-stage .est .line .kk{ font-size:12.5px; color:var(--muted); }
-.saia-est-stage .est .line .kk small{ display:block; font-size:10px; color:#a59c8d; margin-top:1px; }
-.saia-est-stage .est .line .vv{ font-family:var(--display); font-size:19px; color:var(--ink); white-space:nowrap; }
-.saia-est-stage .est .total{ display:flex; justify-content:space-between; align-items:center; gap:16px; border-top:1px solid var(--line); padding-top:14px; margin-top:4px; }
-.saia-est-stage .est .total .kk{ font-size:11px; letter-spacing:.06em; text-transform:uppercase; }
-.saia-est-stage .est .total .vv{ font-family:var(--display); font-weight:500; line-height:1; color:var(--terra); font-size:clamp(30px,4.6vw,40px); }
-.saia-est-stage .est .total .vv .pre{ font-size:14px; color:var(--muted); font-style:italic; margin-right:6px; }
+.saia-est-stage .est .line{ display:flex; justify-content:space-between; align-items:baseline; gap:16px; margin-bottom:9px; padding-bottom:9px; border-bottom:1px dashed var(--line); }
+.saia-est-stage .est .line .kk{ font-family:var(--display); font-size:12.5px; color:var(--muted); }
+.saia-est-stage .est .line .kk small{ display:block; font-family:var(--body); font-size:10px; color:#a59c8d; margin-top:2px; }
+.saia-est-stage .est .line .vv{ font-family:var(--body); font-size:15px; font-weight:500; color:var(--ink); font-variant-numeric:tabular-nums; white-space:nowrap; }
+.saia-est-stage .est .total{ display:flex; justify-content:space-between; align-items:center; gap:16px; padding-top:13px; margin-top:4px; }
+.saia-est-stage .est .total .kk{ font-family:var(--body); font-size:11px; letter-spacing:.06em; text-transform:uppercase; }
+.saia-est-stage .est .total .vv{ font-family:var(--body); font-weight:500; line-height:1; color:var(--terra); font-size:21px; letter-spacing:-.01em; font-variant-numeric:tabular-nums; }
+.saia-est-stage .est .total .vv .pre{ font-size:11px; color:var(--muted); margin-right:6px; }
 .saia-est-stage .est .cta{ display:flex; align-items:center; justify-content:center; gap:10px; width:100%; background:var(--terra); color:#fff;
   font-family:var(--body); font-size:11px; letter-spacing:.2em; text-transform:uppercase; padding:15px; border-radius:9px;
   text-decoration:none; border:none; cursor:pointer; margin-top:16px; transition:transform .2s,box-shadow .2s,background .2s; }
@@ -369,12 +370,15 @@
 .saia-est-stage .est .disc b{ color:var(--ink); }
 
 /* B — spotlight stage */
-.saia-est-stage .vb{ position:relative; background:linear-gradient(180deg,var(--cream) 0%,var(--paper) 100%); padding:clamp(54px,7vw,78px) 6vw; overflow:hidden; }
-.saia-est-stage .vb::before{ content:""; position:absolute; left:50%; top:-10%; width:80vw; height:70vh; transform:translateX(-50%);
-  background:radial-gradient(closest-side,rgba(184,98,74,.12),transparent 70%); pointer-events:none; }
+.saia-est-stage .vb{ position:relative; background:linear-gradient(160deg,#F3F1E6 0%,#ECEDE0 100%); padding:clamp(54px,7vw,78px) 6vw; overflow:hidden; }
+.saia-est-stage .est-blob{ position:absolute; z-index:0; border-radius:50%; filter:blur(46px); pointer-events:none; }
+.saia-est-stage .est-blob.b1{ width:46vw; height:46vw; top:-14%; right:-8%; background:rgba(184,98,74,.18); animation:saiaBlob1 18s ease-in-out infinite alternate; }
+.saia-est-stage .est-blob.b2{ width:38vw; height:38vw; bottom:-18%; left:-6%; background:rgba(124,138,107,.22); animation:saiaBlob2 22s ease-in-out infinite alternate; }
+@keyframes saiaBlob1{ 0%{transform:translate(0,0) scale(1)} 100%{transform:translate(6%,-8%) scale(1.18)} }
+@keyframes saiaBlob2{ 0%{transform:translate(6%,-8%) scale(1.18)} 100%{transform:translate(0,0) scale(1)} }
 .saia-est-stage .stagewrap{ position:relative; max-width:1080px; margin:0 auto; display:grid; grid-template-columns:1fr 1fr; gap:48px; align-items:center; }
 .saia-est-stage .pitch{ color:var(--ink); }
-.saia-est-stage .pitch h2{ font-family:var(--display); font-weight:500; font-size:clamp(40px,5.6vw,68px); line-height:.98; color:var(--ink); margin:.2em 0 .25em; }
+.saia-est-stage .pitch h2{ font-family:var(--display); font-weight:600; font-size:clamp(40px,5.4vw,62px); line-height:.96; letter-spacing:-.02em; color:var(--ink); margin:.2em 0 .25em; }
 .saia-est-stage .pitch .word{ display:inline-block; opacity:0; transform:translateY(18px); }
 .saia-est-stage .vb.play .pitch .word{ animation:saiaWordUp .6s cubic-bezier(.2,.9,.3,1) both; }
 .saia-est-stage .vb.play .pitch .word:nth-child(2){ animation-delay:.08s; }
@@ -388,8 +392,8 @@
 .saia-est-stage .pitch .bigroute .van{ --van:var(--terra); }
 .saia-est-stage .pitch .bigroute .van .win{ fill:var(--paper); }
 .saia-est-stage .pitch .bigroute .van .wheel{ fill:var(--ink); }
-.saia-est-stage .est.b{ background:#FFFFFF; border:1px solid var(--line); border-radius:16px; padding:26px;
-  box-shadow:0 30px 70px -40px rgba(43,38,32,.35); }
+.saia-est-stage .est.b{ background:#FFFFFF; border:1px solid #D9D2C0; border-radius:8px; padding:26px;
+  box-shadow:0 26px 64px -44px rgba(43,38,32,.5); }
 .saia-est-stage .est.b label{ color:var(--muted); }
 .saia-est-stage .est.b input{ background:#fff; border-color:var(--line); color:var(--ink); }
 .saia-est-stage .est.b input::placeholder{ color:#c3bba9; }
@@ -856,8 +860,7 @@
   <section id="estimate" class="saia-est-stage" aria-label="Estimate your mat hire">
     <div class="vb">
       <div class="est-deco" aria-hidden="true">
-        <span class="est-box b1"></span><span class="est-box b2"></span><span class="est-box b3"></span>
-        <span class="est-car"><svg viewBox="0 0 48 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 14h30l8 .5 4 3.5H3z"/><path d="M9 14l3-6h12l5 6"/><circle cx="14" cy="17" r="2.2"/><circle cx="34" cy="17" r="2.2"/></svg></span>
+        <span class="est-blob b1"></span><span class="est-blob b2"></span>
       </div>
       <div class="stagewrap">
         <div class="pitch">
@@ -889,8 +892,8 @@
             <div class="line"><span class="kk">Refundable deposit<small data-depsub></small></span><span class="vv" data-depcost>—</span></div>
             <div class="total"><span class="kk">Due today</span><span class="vv" data-total>—</span></div>
             <p class="disc" data-depback style="margin-top:8px;"></p>
-            <button type="button" class="cta saia-btn saia-btn--terra" data-cta data-est-book><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 5h16v11H7l-3 3z"/></svg> Book this with the assistant</button>
-            <p class="disc"><b>Estimate only.</b> Addison Lee courier guide; Cristina confirms on booking.</p>
+            <button type="button" class="cta saia-btn saia-btn--terra" data-cta data-est-book><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 5h16v11H7l-3 3z"/></svg> Book now</button>
+            <p class="disc"><b>Estimate only.</b> Your exact courier price is calculated at checkout by the Addison Lee API.</p>
           </div>
         </form>
       </div>
@@ -1096,9 +1099,11 @@
 </script>
 <!-- Estimate-your-hire spotlight stage engine -->
 <script>
-(function(){
+(function init(){
   var stage=document.querySelector('.saia-est-stage');
   if(!stage) return;
+  // KB (js/saia-knowledge.js) loads further down the page; wait for it before wiring.
+  if(!(window.SAIA&&window.SAIA.KB&&window.SAIA.KB.classify)){ document.addEventListener('DOMContentLoaded',init); return; }
   var MIN_MATS=10, BASE_DAYS=2;
   var STOPS=[{t:0,label:'NW3'},{t:0.36,label:'Details'},{t:0.68,label:'Delivery'},{t:1,label:'Your event'}];
   var VAN='<g class="van"><rect x="-12" y="-8" width="15" height="11" rx="2"></rect><path d="M3 -5 h4.5 l3.5 3.2 v4.8 h-8 z"></path><rect class="win" x="-9" y="-5.5" width="5.5" height="4" rx="1"></rect><circle class="wheel" cx="-6.5" cy="4.5" r="2.4"></circle><circle class="wheel" cx="6.5" cy="4.5" r="2.4"></circle></g>';
