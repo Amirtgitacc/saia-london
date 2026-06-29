@@ -26,6 +26,10 @@
      assigns each its opacity (it only runs after the GLB loads) or the static fallback reveals
      them, they'd all paint opaque at once. Start hidden — both reveal paths override this. */
   #stage [data-band] { opacity: 0; }
+  /* Same flash: the legacy #figureLayer (15 Cristina PNGs) is retired — the WebGL path swaps it
+     for #flowCanvas and the static path hides it, both via display:none set only after init.
+     Default it hidden so the old figure can't flash during the GLB load. */
+  #figureLayer { display: none; }
   /* Click-gating: bands are stacked position:absolute inset:0. A faded-out (inactive) band
      still carries interactive opt-ins (.s4card, the inline pointer-events:auto button rows)
      that float over and steal clicks from the live band — e.g. an inactive band's content
