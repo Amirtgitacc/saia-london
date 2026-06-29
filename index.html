@@ -81,7 +81,7 @@
   /* ===== Gallery — animated 3D photo grid (Atelier) =====
      scroll vars set by JS on #events: --gl-warm (glow) --gl-tint (theme wash 1→0)
      --gl-g (glass strength 1→0) --gl-ht (heading shrink/recolour 0→1) */
-  #events{ position:relative; --gl-warm:0; --gl-g:1; --gl-ht:0; --gl-tint:1; --gl-exit:0; height:420vh;
+  #events{ position:relative; --gl-warm:0; --gl-g:1; --gl-ht:0; --gl-tint:1; --gl-exit:0; height:760vh;
     background:linear-gradient(180deg, #F5F1E8 0%,
       color-mix(in srgb, #EBE3D5 calc(40% + var(--gl-warm)*30%), #F5F1E8) 50%,
       color-mix(in srgb, #EFE0D6 calc(var(--gl-warm)*70%), #EBE3D5) 82%,
@@ -130,13 +130,18 @@
   #events .gl-events-cta{ display:inline-flex; align-items:center; gap:9px; margin-top:24px;
     font-family:'Inter',sans-serif; font-size:12px; letter-spacing:.18em; text-transform:uppercase;
     color:#F5F1E8; background:#B8624A; padding:14px 26px; border-radius:32px; text-decoration:none;
-    pointer-events:none; opacity:0; transform:translateY(10px);
+    pointer-events:none; opacity:0; transform:translateY(18px) scale(.94);
     box-shadow:0 18px 40px -18px rgba(43,38,32,.7);
-    transition:opacity .4s ease, transform .4s cubic-bezier(.16,1,.3,1), background-color .2s; }
-  #events.gl-end .gl-events-cta{ opacity:1; transform:none; pointer-events:auto; }
+    transition:opacity .7s cubic-bezier(.16,1,.3,1), transform .7s cubic-bezier(.16,1,.3,1), background-color .2s; }
+  #events.gl-end .gl-events-cta{ opacity:1; transform:none; pointer-events:auto;
+    animation:glCtaPulse 2.8s ease-in-out .6s infinite; }
+  /* subtle terracotta breathing glow once the CTA is revealed */
+  @keyframes glCtaPulse{
+    0%,100%{ box-shadow:0 18px 40px -18px rgba(43,38,32,.7), 0 0 0 0 rgba(184,98,74,0); }
+    50%{ box-shadow:0 20px 46px -16px rgba(43,38,32,.7), 0 0 30px 3px rgba(184,98,74,.55); } }
   #events .gl-events-cta:hover{ background:#A0533D; }
   #events .gl-events-cta:focus-visible{ outline:2px solid #F5F1E8; outline-offset:3px; }
-  @media (prefers-reduced-motion: reduce){ #events .gl-events-cta{ opacity:1; pointer-events:auto; transform:none; } }
+  @media (prefers-reduced-motion: reduce){ #events .gl-events-cta{ opacity:1; pointer-events:auto; transform:none; animation:none; } }
   /* the 3D grid */
   #events .gl-stage{ display:grid; grid-template-columns:repeat(3,1fr); gap:1rem; width:min(1080px,88vw);
     transform-style:preserve-3d; transform:rotateX(62deg) scale(1.18); will-change:transform; margin:0 auto; z-index:10; }
@@ -155,8 +160,11 @@
   #events .gl-tile::after{ content:""; position:absolute; inset:0; z-index:1; pointer-events:none;
     background:linear-gradient(150deg, #C75B40 0%, #C98A77 46%, #8C6A8E 100%); mix-blend-mode:multiply;
     opacity:var(--gl-tint,0); transition:opacity .2s linear; }
-  #events .gl-tile:hover{ transform:scale(1.07) translateY(-8px); z-index:30;
-    box-shadow:0 50px 90px -34px rgba(43,38,32,.7), 0 8px 22px rgba(43,38,32,.18); }
+  #events .gl-tile:hover{ transform:scale(1.4) translateY(-10px); z-index:30;
+    box-shadow:0 60px 110px -34px rgba(43,38,32,.72), 0 10px 26px rgba(43,38,32,.2); }
+  /* during active scroll the grid pans under the cursor — ignore hover so tiles don't flicker;
+     hover re-enables ~150ms after scrolling stops (set by the gallery script) */
+  #events.gl-scrolling .gl-tile{ pointer-events:none; }
   #events .gl-tile:hover img{ transform:scale(1.07); filter:saturate(1.08) contrast(1.04) brightness(1.02); }
   .hire-chip{ font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:#6B6358; border:1px solid #C9C2B4; border-radius:30px; padding:7px 15px; }
   .input-focus:focus{ outline:2px solid #B8624A; outline-offset:1px; }
@@ -277,7 +285,9 @@
   @media (prefers-reduced-motion: reduce){ .spec-pills .spec-pill{ animation:none; } }
 
   /* ===== NW3 & Hampstead tube-map (Flow Level 3) ===== */
-  .nw3-map{ width:100%; max-width:340px; margin:30px 0 0; pointer-events:none; }
+  /* pulled left to hug the terracotta rule with a steady ~20px gap (the 7vw band padding
+     cancels out, so the gap holds across widths) — left, but never crossing the line */
+  .nw3-map{ width:100%; max-width:340px; margin:30px 0 0 -78px; pointer-events:none; }
   .nw3-map svg{ width:100%; height:auto; display:block; overflow:visible; }
   .nw3-line{ fill:none; stroke-linecap:round; stroke-linejoin:round; }
   .nw3-line.northern{ stroke:#2B2620; stroke-width:5; }
@@ -303,6 +313,37 @@
     .flow-rail.band-live .nw3-map .nw3-pop,
     .flow-rail.band-live .nw3-map .nw3-ping{ animation:none; }
     .nw3-map .nw3-pop{ opacity:1; transform:none; }
+  }
+
+  /* ===== Short-viewport fixes (13" laptops) — height-based, desktop-only so phones & tall
+     monitors are untouched. Stops big headings sliding under the fixed navbar. ===== */
+  @media (max-height:820px) and (min-width:768px){
+    #top [data-band="0,0.14"] h1{ font-size:clamp(2.9rem,6vw,4.6rem) !important; line-height:.95 !important; }
+    #top [data-band="0,0.14"] .band-inner p{ margin-top:20px !important; }
+    #top .flow-rail .band-inner h2{ font-size:clamp(30px,3.7vw,46px) !important; line-height:1.0 !important; margin-bottom:16px !important; }
+    /* tall editorial bands (mat detail + "Hiring is effortless") — shrink the heading and
+       start the block below the navbar instead of vertically centring it (centring hid the top) */
+    #top [data-band="0.14,0.30"] .band-inner h2,
+    #top [data-band="0.30,0.44"] .band-inner h2{ font-size:clamp(28px,3.4vw,42px) !important; line-height:1.06 !important; margin-bottom:12px !important; }
+    #top [data-band="0.14,0.30"],
+    #top [data-band="0.30,0.44"]{ align-items:flex-start !important; padding-top:clamp(150px,21vh,178px) !important; }
+    #top [data-band="0.30,0.44"] .band-inner p{ margin-bottom:18px !important; }
+    #top [data-band="0.30,0.44"] .band-inner > div[style*="gap:18px"]{ gap:13px !important; }
+    /* estimator spotlight — shrink to fit a ~700px-tall viewport */
+    .saia-est-stage .vb{ padding:clamp(34px,4vw,48px) 6vw; }
+    .saia-est-stage .stagewrap{ gap:34px; }
+    .saia-est-stage .pitch h2{ font-size:clamp(32px,4vw,46px); }
+    .saia-est-stage .pitch .bigroute{ height:104px; margin-top:16px; }
+    .saia-est-stage .est.b{ padding:20px; }
+    .saia-est-stage .est .field{ margin-bottom:10px; }
+    .saia-est-stage .est input{ padding:10px 12px; font-size:14px; }
+    .saia-est-stage .est .result.show{ max-height:470px; padding:24px 16px 6px; }
+  }
+  @media (max-height:680px) and (min-width:768px){
+    #top [data-band="0,0.14"] h1{ font-size:clamp(2.5rem,5vw,3.9rem) !important; }
+    #top .flow-rail .band-inner h2{ font-size:clamp(26px,3.1vw,40px) !important; }
+    .saia-est-stage .pitch h2{ font-size:clamp(28px,3.4vw,40px); }
+    .saia-est-stage .pitch .bigroute{ height:92px; }
   }
 </style>
 
@@ -1081,7 +1122,9 @@
   var stage = document.getElementById('glStage');
   if(!sec || !stage) return;
 
-  var PHOTOS = [
+  // portrait singles (full-frame) + halves split from the wide A1 diptychs/triptychs
+  // (see photos/A1/roll/). Interleaved single→half→single→half for column variety.
+  var SINGLES = [
     "SAIABRUNCHCLUB_28.png",
     "Snapinsta.app_242292911_1079452836196028_3808565095717851061_n_1080.jpg",
     "DSC04282.jpg",
@@ -1091,10 +1134,35 @@
     "picnic1.png",
     "85978036-3243-4BC3-9E98-AF5B59AEB391.jpg",
     "Snapinsta.app_274042141_476998050588663_3300805879876636614_n_1080.jpg",
-    "charlotte.png",
     "picnic3.png",
-    "Snapinsta.app_218150491_4681263711902509_5336339906255780718_n_1080.jpg"
+    "Snapinsta.app_218150491_4681263711902509_5336339906255780718_n_1080.jpg",
+    "SAIABRUNCHCLUB_38.png",
+    "42_ed67328a-6372-4de1-87ca-59cdd3d3e826.png",
+    "5_fae1344c-6ea3-4091-8923-41fb073f27a6.png",
+    "6_16fd2381-12dd-40ed-9636-b2140e96fe58.png",
+    "Snapinsta.app_317036401_665597138385313_2713674032479943115_n_1080.jpg"
   ].map(function(f){ return "photos/A1/" + f; });
+  var HALVES = [
+    "1_42bcb78a-6015-42a5-87c5-10d2fa723932__p0.jpg",
+    "2_c05a787c-d743-47cc-a033-cded5cb0db94__p1.jpg",
+    "2_c0e4c853-14f9-431c-bac5-db412e9fb59d__p0.jpg",
+    "2_c0e4c853-14f9-431c-bac5-db412e9fb59d__p1.jpg",
+    "3_30e4041d-9303-4c16-84b8-163897dc1aa1__p0.jpg",
+    "4_e8094bfb-7d00-4c0b-9e0b-07c654aa5a19__p0.jpg",
+    "5_1d261269-25f9-47e7-95a9-8f909c1c96ae__p1.jpg",
+    "5_690e4b50-df08-437a-b7ad-9d8f8370822e__p1.jpg",
+    "5_cf34c104-27ff-4a80-b7a0-86af88033c5a__p1.jpg",
+    "charlotte__p0.jpg",
+    "charlotte__p1.jpg",
+    "morena_2__p0.jpg",
+    "morena_2__p1.jpg",
+    "morena_2_d0edef3d-ef19-4c6c-a391-2084b4f7e7e9__p0.jpg"
+  ].map(function(f){ return "photos/A1/roll/" + f; });
+  var PHOTOS = [];
+  for(var pi=0; pi<Math.max(SINGLES.length,HALVES.length); pi++){
+    if(SINGLES[pi]) PHOTOS.push(SINGLES[pi]);
+    if(HALVES[pi]) PHOTOS.push(HALVES[pi]);
+  }
 
   var cols = [].slice.call(stage.querySelectorAll('.gl-col'));
   PHOTOS.forEach(function(src,i){
@@ -1113,25 +1181,40 @@
     ticking = false;
     var vh = window.innerHeight, total = sec.offsetHeight - vh;
     var p = total>0 ? clamp(-sec.getBoundingClientRect().top/total, 0, 1) : 0;
-    // stand up + scale in, then a gentle drift once flat
-    var rx = map(p,0,0.45,62,0), scl = map(p,0.35,0.85,1.18,1), gy = map(p,0.55,1,0,-2.5);
-    stage.style.transform = 'translateY('+gy+'vh) rotateX('+rx+'deg) scale('+scl+')';
-    // column parallax
+    // stand up (62→0°) + scale in (1.18→.95), with a touch-smaller settle right at the end
+    var rx = map(p,0,0.32,62,0), scl = map(p,0.22,0.42,1.18,0.95) * map(p,0.9,1,1,0.88);
+    // vertical pan: centred while the grid stands up, then travel its full height top→bottom
+    // (translateY is the outermost transform → real viewport px, unaffected by scale) so every
+    // row of the now-tall 30-photo grid scrolls into view rather than sitting off-screen below.
+    var H = stage.scrollHeight * scl;            // approx visual height of the grid
+    var A = Math.max(0, H/2 - vh*0.42);          // travel amplitude (0 if grid fits the viewport)
+    var gy = (p < 0.42) ? map(p,0,0.42,0,A) : map(p,0.42,1,A,-A);
+    stage.style.transform = 'translateY('+gy+'px) rotateX('+rx+'deg) scale('+scl+')';
+    // column parallax (subtle, keeps the grid alive while panning)
     cols.forEach(function(col){
       var yr = (col.getAttribute('data-y')||'0,0').split(',');
-      col.style.transform = 'translateY('+map(p,0.5,1,+yr[0],+yr[1])+'%)';
+      col.style.transform = 'translateY('+map(p,0.42,1,+yr[0],+yr[1])+'%)';
     });
     // warm glow, theme-colour wash (1→0), glass strength (1→0), heading shrink/recolour (0→1)
     sec.style.setProperty('--gl-warm', map(p,0.3,1,0,1).toFixed(3));
-    sec.style.setProperty('--gl-tint', (1 - map(p,0,0.5,0,1)).toFixed(3));
-    sec.style.setProperty('--gl-g',    (1 - map(p,0.55,0.9,0,1)).toFixed(3));
-    sec.style.setProperty('--gl-ht',   map(p,0.5,0.92,0,1).toFixed(3));
-    // leaving the gallery: drain colour to black-and-white and fade the tiles back
-    sec.style.setProperty('--gl-exit',  map(p,0.8,1,0,1).toFixed(3));
-    // near the bottom of the gallery scroll: reveal the "Recent events" CTA
-    sec.classList.toggle('gl-end', p > 0.9);
+    sec.style.setProperty('--gl-tint', (1 - map(p,0,0.4,0,1)).toFixed(3));
+    sec.style.setProperty('--gl-g',    (1 - map(p,0.42,0.66,0,1)).toFixed(3));
+    sec.style.setProperty('--gl-ht',   map(p,0.42,0.7,0,1).toFixed(3));
+    // leaving the gallery: drain colour to b&w + fade tiles only at the very end (keep them vivid while panning)
+    sec.style.setProperty('--gl-exit',  map(p,0.93,1,0,1).toFixed(3));
+    // reveal the "Recent events" CTA once the room has flattened, around the midpoint
+    sec.classList.toggle('gl-end', p > 0.5);
   }
-  function onScroll(){ if(!ticking){ ticking = true; requestAnimationFrame(frame); } }
+  // while actively scrolling, the grid pans under the cursor every frame — combined with the
+  // hover zoom that lifts a tile out from under the pointer, that causes rapid hover/unhover
+  // flicker. Suppress tile hover during scroll and restore it ~150ms after scrolling settles.
+  var settleT;
+  function onScroll(){
+    if(!ticking){ ticking = true; requestAnimationFrame(frame); }
+    if(!sec.classList.contains('gl-scrolling')) sec.classList.add('gl-scrolling');
+    clearTimeout(settleT);
+    settleT = setTimeout(function(){ sec.classList.remove('gl-scrolling'); }, 150);
+  }
   window.addEventListener('scroll', onScroll, {passive:true});
   window.addEventListener('resize', onScroll);
   frame();
