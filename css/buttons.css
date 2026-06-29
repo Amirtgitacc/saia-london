@@ -144,6 +144,7 @@
   transition:transform .35s cubic-bezier(.22,1,.36,1), box-shadow .35s cubic-bezier(.22,1,.36,1);
 }
 .saia-orb-s{ font-family:'Playfair Display','Cormorant Garamond',serif; font-size:30px; line-height:1; }
+.saia-orb-ico{ display:block; color:var(--saia-ink,#2B2620); }
 .saia-orb-on{
   position:absolute; right:11px; top:13px; width:10px; height:10px; border-radius:50%;
   background:var(--saia-accent,#B8624A); box-shadow:0 0 8px rgba(184,98,74,.7);

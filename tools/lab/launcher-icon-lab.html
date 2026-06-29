@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SAÏA — chat launcher icon lab (refined)</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;1,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{ --saia-cream:#F5F1E8; --saia-ink:#2B2620; --saia-accent:#B8624A; }
+  *{ box-sizing:border-box; }
+  body{ margin:0; background:var(--saia-cream); color:var(--saia-ink);
+    font-family:'Inter',system-ui,sans-serif; padding:48px 40px 80px; }
+  header{ max-width:1180px; margin:0 auto; }
+  h1{ font-family:'Playfair Display',serif; font-weight:500; font-size:30px; margin:0 0 6px; }
+  .lede{ color:#6b6258; font-size:14px; margin:0; max-width:680px; line-height:1.55; }
+  .lede b{ color:var(--saia-ink); font-weight:600; }
+
+  .row{ max-width:1180px; margin:38px auto 0; }
+  .row h2{ font-family:'Playfair Display',serif; font-weight:500; font-size:20px;
+    margin:0 0 4px; }
+  .row .desc{ color:#8a8076; font-size:13px; margin:0 0 18px; }
+  .cards{ display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr)); gap:16px; }
+  .card{ background:#FBF8F1; border:1px solid rgba(43,38,32,.10); border-radius:18px;
+    padding:32px 16px 20px; display:flex; flex-direction:column; align-items:center; gap:16px;
+    position:relative; min-height:200px; justify-content:center; }
+  .card .tag{ position:absolute; top:11px; left:14px; font-size:11px; font-weight:600;
+    letter-spacing:.04em; color:#b9b0a4; text-transform:uppercase; }
+  .card .name{ font-size:13px; font-weight:600; text-align:center; }
+  .card .sub{ font-size:12px; color:#8a8076; margin-top:2px; text-align:center; }
+
+  /* ---- live orb (verbatim from css/buttons.css §8b) ---- */
+  .saia-orb-fab{ position:relative; border:none; background:none; padding:0; margin:0;
+    cursor:pointer; display:inline-grid; place-items:center; }
+  .saia-orb{ position:relative; width:72px; height:72px; border-radius:50%; z-index:1;
+    display:grid; place-items:center; color:var(--saia-ink);
+    background:linear-gradient(145deg,#FDFAF3,#E7DDCA);
+    box-shadow:-6px -6px 14px rgba(255,255,255,.8), 8px 10px 22px rgba(43,38,32,.22);
+    transition:transform .35s cubic-bezier(.22,1,.36,1), box-shadow .35s cubic-bezier(.22,1,.36,1); }
+  .saia-orb-fab:hover .saia-orb{ transform:translateY(-3px);
+    box-shadow:-6px -6px 16px rgba(255,255,255,.85), 10px 14px 28px rgba(43,38,32,.26); }
+  .saia-orb-on{ position:absolute; right:11px; top:13px; width:10px; height:10px; border-radius:50%;
+    background:var(--saia-accent); box-shadow:0 0 8px rgba(184,98,74,.7); }
+  .saia-orb svg{ display:block; }
+  .saia-halo{ position:absolute; width:72px; height:72px; border-radius:50%; pointer-events:none;
+    box-shadow:0 0 0 1px rgba(184,98,74,.4); opacity:0; }
+  .saia-orb-fab:hover .saia-halo{ animation:saiaHalo 1.2s ease-out infinite; }
+  @keyframes saiaHalo{ 0%{ transform:scale(1); opacity:.7; } 100%{ transform:scale(1.55); opacity:0; } }
+
+  .hint{ max-width:1180px; margin:40px auto 0; font-size:13px; color:#8a8076;
+    border-top:1px solid rgba(43,38,32,.10); padding-top:18px; }
+  .hint code{ background:rgba(43,38,32,.06); padding:2px 6px; border-radius:5px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Chat launcher — refined icons</h1>
+  <p class="lede">Same orb, sharper glyphs. Three concepts you liked, each in three luxury treatments:
+    <b>Line</b> (thin precise stroke), <b>Duotone</b> (terracotta accent), and <b>Solid</b>
+    (filled ink bubble, cream knockout). <b>Hover</b> any orb for the live lift.</p>
+</header>
+
+<div id="rows"></div>
+
+<p class="hint">Pick by <b>code</b> — e.g. <code>2-Solid</code> or <code>1-Line</code> — and I'll wire it into
+  <code>index.html</code> + <code>css/buttons.css</code>.</p>
+
+<script>
+  const INK = '#2B2620', ACCENT = '#B8624A', CREAM = '#FDFAF3';
+
+  // Geometric, sharp-cornered speech bubble (tail bottom-left). r = corner radius.
+  function bubble({sw, stroke, fill}){
+    return `<path d="M5 4 H19 A2.6 2.6 0 0 1 21.6 6.6 V13.6 A2.6 2.6 0 0 1 19 16.2 H8.8 L4.4 19.8 V16.2 H5 A2.6 2.6 0 0 1 2.4 13.6 V6.6 A2.6 2.6 0 0 1 5 4 Z"
+      fill="${fill}" stroke="${stroke}" stroke-width="${sw}" stroke-linejoin="round"/>`;
+  }
+
+  // ---- Concept 1 · bubble + two lines ----
+  const lines = (c1,c2,sw) => `
+    <line x1="6.6" y1="8.6" x2="17.4" y2="8.6" stroke="${c1}" stroke-width="${sw}" stroke-linecap="round"/>
+    <line x1="6.6" y1="11.7" x2="13.2" y2="11.7" stroke="${c2}" stroke-width="${sw}" stroke-linecap="round"/>`;
+
+  const C1 = {
+    title:'1 · Bubble + lines', desc:'classic “message us”',
+    variants:[
+      { tag:'Line', name:'1-Line', sub:'thin mono',
+        svg:`<svg width="36" height="36" viewBox="0 0 24 24">${bubble({sw:1.3,stroke:INK,fill:'none'})}${lines(INK,INK,1.3)}</svg>` },
+      { tag:'Duotone', name:'1-Duo', sub:'terracotta lines',
+        svg:`<svg width="36" height="36" viewBox="0 0 24 24">${bubble({sw:1.3,stroke:INK,fill:'none'})}${lines(ACCENT,ACCENT,1.5)}</svg>` },
+      { tag:'Solid', name:'1-Solid', sub:'ink fill, cream knockout',
+        svg:`<svg width="36" height="36" viewBox="0 0 24 24">${bubble({sw:1.2,stroke:INK,fill:INK})}${lines(CREAM,CREAM,1.5)}</svg>` },
+    ]
+  };
+
+  // ---- Concept 2 · two bubbles ----
+  function twoBubbles({backStroke, backFill, frontStroke, frontFill, sw}){
+    // back bubble (upper-right), front bubble (lower-left) overlapping
+    const back = `<path d="M11.5 5.2 H19.4 A2.3 2.3 0 0 1 21.7 7.5 V12 A2.3 2.3 0 0 1 19.4 14.3 H18.6 V17.2 L15.4 14.3 H13.2"
+      fill="${backFill}" stroke="${backStroke}" stroke-width="${sw}" stroke-linejoin="round" stroke-linecap="round"/>`;
+    const front = `<path d="M4.6 4 H11.4 A2.3 2.3 0 0 1 13.7 6.3 V10.6 A2.3 2.3 0 0 1 11.4 12.9 H7.2 L4 15.8 V12.9 H4.6 A2.3 2.3 0 0 1 2.3 10.6 V6.3 A2.3 2.3 0 0 1 4.6 4 Z"
+      fill="${frontFill}" stroke="${frontStroke}" stroke-width="${sw}" stroke-linejoin="round"/>`;
+    return back + front; // front drawn last → sits on top
+  }
+  const C2 = {
+    title:'2 · Two bubbles', desc:'a conversation — closest to your reference',
+    variants:[
+      { tag:'Line', name:'2-Line', sub:'thin mono',
+        svg:`<svg width="38" height="38" viewBox="0 0 24 24">${twoBubbles({backStroke:INK,backFill:'none',frontStroke:INK,frontFill:'none',sw:1.3})}</svg>` },
+      { tag:'Duotone', name:'2-Duo', sub:'terracotta back bubble',
+        svg:`<svg width="38" height="38" viewBox="0 0 24 24">${twoBubbles({backStroke:ACCENT,backFill:'none',frontStroke:INK,frontFill:'none',sw:1.4})}</svg>` },
+      { tag:'Solid', name:'2-Solid', sub:'front filled, back outline',
+        svg:`<svg width="38" height="38" viewBox="0 0 24 24">${twoBubbles({backStroke:INK,backFill:'none',frontStroke:INK,frontFill:INK,sw:1.3})}</svg>` },
+    ]
+  };
+
+  // ---- Concept 3 · bubble + dots ----
+  const dots = (c) => `
+    <circle cx="7.6" cy="10" r="1.05" fill="${c}"/>
+    <circle cx="12" cy="10" r="1.05" fill="${c}"/>
+    <circle cx="16.4" cy="10" r="1.05" fill="${c}"/>`;
+  const C3 = {
+    title:'3 · Bubble + dots', desc:'a live “typing…” feel',
+    variants:[
+      { tag:'Line', name:'3-Line', sub:'thin mono',
+        svg:`<svg width="36" height="36" viewBox="0 0 24 24">${bubble({sw:1.3,stroke:INK,fill:'none'})}${dots(INK)}</svg>` },
+      { tag:'Duotone', name:'3-Duo', sub:'terracotta dots',
+        svg:`<svg width="36" height="36" viewBox="0 0 24 24">${bubble({sw:1.3,stroke:INK,fill:'none'})}${dots(ACCENT)}</svg>` },
+      { tag:'Solid', name:'3-Solid', sub:'ink fill, cream dots',
+        svg:`<svg width="36" height="36" viewBox="0 0 24 24">${bubble({sw:1.2,stroke:INK,fill:INK})}${dots(CREAM)}</svg>` },
+    ]
+  };
+
+  const ROWS = [C1, C2, C3];
+  const root = document.getElementById('rows');
+  ROWS.forEach(row => {
+    const sec = document.createElement('section');
+    sec.className = 'row';
+    sec.innerHTML = `<h2>${row.title}</h2><p class="desc">${row.desc}</p><div class="cards"></div>`;
+    const cards = sec.querySelector('.cards');
+    row.variants.forEach(v => {
+      const c = document.createElement('div');
+      c.className = 'card';
+      c.innerHTML = `
+        <span class="tag">${v.tag}</span>
+        <button class="saia-orb-fab" aria-label="${v.name}">
+          <span class="saia-halo"></span>
+          <span class="saia-orb">${v.svg}<span class="saia-orb-on"></span></span>
+        </button>
+        <div><div class="name">${v.name}</div><div class="sub">${v.sub}</div></div>`;
+      cards.appendChild(c);
+    });
+    root.appendChild(sec);
+  });
+</script>
+</body>
+</html>
