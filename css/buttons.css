@@ -128,6 +128,62 @@
 .saia-fab:hover .saia-fab-orbit{ animation-duration:1.2s; }
 @keyframes saiaOrbit{ to{ transform:rotate(360deg); } }
 
+/* ---- 8b · LAUNCHER — SOFT ORB + floating caption (live launcher) ---- */
+.saia-orb-fab{
+  position:relative; border:none; background:none; padding:0; margin:0; cursor:pointer;
+  display:inline-grid; place-items:center; font-family:inherit;
+  -webkit-tap-highlight-color:transparent;
+}
+.saia-orb-fab:focus-visible{ outline:3px solid var(--saia-accent,#B8624A); outline-offset:5px; border-radius:50%; }
+
+.saia-orb{
+  position:relative; width:72px; height:72px; border-radius:50%; z-index:1;
+  display:grid; place-items:center; color:var(--saia-ink,#2B2620);
+  background:linear-gradient(145deg,#FDFAF3,#E7DDCA);
+  box-shadow:-6px -6px 14px rgba(255,255,255,.8), 8px 10px 22px rgba(43,38,32,.22);
+  transition:transform .35s cubic-bezier(.22,1,.36,1), box-shadow .35s cubic-bezier(.22,1,.36,1);
+}
+.saia-orb-s{ font-family:'Playfair Display','Cormorant Garamond',serif; font-size:30px; line-height:1; }
+.saia-orb-on{
+  position:absolute; right:11px; top:13px; width:10px; height:10px; border-radius:50%;
+  background:var(--saia-accent,#B8624A); box-shadow:0 0 8px rgba(184,98,74,.7);
+}
+.saia-orb-fab:hover .saia-orb{ transform:translateY(-3px);
+  box-shadow:-6px -6px 16px rgba(255,255,255,.85), 10px 14px 28px rgba(43,38,32,.26); }
+
+/* ambient halo — 2.5× speed (3s base → 1.2s) */
+.saia-halo{
+  position:absolute; width:72px; height:72px; border-radius:50%; pointer-events:none;
+  box-shadow:0 0 0 1px rgba(184,98,74,.4); animation:saiaHalo 1.2s ease-out infinite;
+}
+@keyframes saiaHalo{ 0%{ transform:scale(1); opacity:.7; } 100%{ transform:scale(1.55); opacity:0; } }
+
+/* floating caption (from variation 03) — gentle drift, hides when chat is open */
+.saia-cap{
+  position:absolute; right:2px; bottom:82px; z-index:2; white-space:nowrap;
+  background:#FBF8F1; color:var(--saia-ink,#2B2620); border:1px solid rgba(43,38,32,.14);
+  font-family:'Inter',sans-serif; font-size:13px; font-weight:500; letter-spacing:.005em;
+  padding:9px 14px; border-radius:14px 14px 3px 14px;
+  box-shadow:0 10px 24px rgba(43,38,32,.16);
+  animation:saiaCapDrift 1.44s ease-in-out infinite;
+  transition:opacity .3s ease, transform .3s ease;
+}
+.saia-cap::after{
+  content:""; position:absolute; right:18px; bottom:-5px; width:10px; height:10px;
+  background:#FBF8F1; border-right:1px solid rgba(43,38,32,.14); border-bottom:1px solid rgba(43,38,32,.14);
+  transform:rotate(45deg);
+}
+@keyframes saiaCapDrift{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-3px); } }
+/* when the panel is open (inline display no longer "none") tuck the nudge away */
+#homeChatPanel:not([style*="none"]) ~ #homeChatLauncher .saia-cap{
+  opacity:0; transform:translateY(6px); pointer-events:none;
+}
+
+@media (prefers-reduced-motion: reduce){
+  .saia-halo, .saia-cap{ animation:none !important; }
+  .saia-orb{ transition:none !important; }
+}
+
 /* ---- shared click ripple (ink + terracotta playful) ---- */
 @keyframes saiaRipple{ to{ transform:translate(-50%,-50%) scale(4); opacity:0; } }
 

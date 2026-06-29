@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@300;400;500&family=Bricolage+Grotesque:opsz,wght@12..96,400..700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/base.css?v=2">
-<link rel="stylesheet" href="css/buttons.css">
+<link rel="stylesheet" href="css/buttons.css?v=2">
 <script type="importmap">{ "imports": { "three": "./vendor/three.module.min.js" } }</script>
 <style>
   body { background: #F5F1E8; color: #2B2620; font-family: 'Inter', system-ui, sans-serif; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
@@ -1111,7 +1111,11 @@
         <button id="homeChatSend" class="saia-send">Send<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7Z"/></svg></button>
       </div>
     </div>
-    <button id="homeChatLauncher" aria-label="Open the SAÏA assistant" class="saia-fab"><span class="saia-fab-s">S</span><span class="saia-fab-orbit"></span></button>
+    <button id="homeChatLauncher" aria-label="Open the SAÏA assistant" class="saia-orb-fab">
+      <span class="saia-cap">Questions? Chat here</span>
+      <span class="saia-halo"></span>
+      <span class="saia-orb"><span class="saia-orb-s">S</span><span class="saia-orb-on"></span></span>
+    </button>
   </div>
 
 </div>
