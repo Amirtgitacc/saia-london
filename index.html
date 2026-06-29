@@ -1095,8 +1095,10 @@
   </footer>
 
   <!-- ============ CONCIERGE CHATBOT (Option B) ============ -->
-  <div style="position:fixed; right:24px; bottom:24px; z-index:90; display:flex; flex-direction:column; align-items:flex-end; gap:14px;">
-    <div id="homeChatPanel" style="display:none; width:min(380px,calc(100vw - 32px)); height:min(560px,calc(100vh - 110px)); background:#F5F1E8; border-radius:6px; box-shadow:0 24px 60px rgba(43,38,32,.32); overflow:hidden; flex-direction:column; animation:saiaSlideIn .32s ease both;">
+  <!-- #homeChatDock is repositioned by JS (VisualViewport API) so the card rides above the
+       mobile keyboard instead of being left behind it. See js/home-concierge.js → syncViewport(). -->
+  <div id="homeChatDock" style="position:fixed; right:24px; bottom:24px; z-index:90; display:flex; flex-direction:column; align-items:flex-end; gap:14px;">
+    <div id="homeChatPanel" style="display:none; width:min(380px,calc(100vw - 32px)); height:min(560px,calc(100dvh - 110px)); background:#F5F1E8; border-radius:6px; box-shadow:0 24px 60px rgba(43,38,32,.32); overflow:hidden; flex-direction:column; animation:saiaSlideIn .32s ease both;">
       <div style="background:#2B2620; color:#F5F1E8; padding:20px 22px; display:flex; justify-content:space-between; align-items:center; flex:none;">
         <div style="display:flex; gap:12px; align-items:center;">
           <span style="width:36px; height:36px; border-radius:50%; border:1px solid rgba(245,241,232,.4); display:flex; align-items:center; justify-content:center; font-family:'Playfair Display',serif; font-size:18px;">S</span>
@@ -1403,7 +1405,7 @@
 <script src="js/saia-knowledge.js?v=20260629d"></script>
 <script src="js/planner.js?v=20260629f"></script>
 <script src="js/checkout-handoff.js?v=20260629b"></script>
-<script src="js/home-concierge.js?v=20260629d"></script>
+<script src="js/home-concierge.js?v=20260629e"></script>
 <script src="js/home.js?v=20260629b"></script>
 <script src="js/home-journey.js?v=cel1"></script>
 <!-- mobile-only scroll journey: lazy-loads the vendored three.js ES modules on small screens -->

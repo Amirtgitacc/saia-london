@@ -228,17 +228,68 @@
       : { say: "Tell me your event date and I’ll finish your quote.", actions: [], matched: false, awaiting: null });
   }
 
+  /* ---- mobile keyboard handling ----
+     The chat is a position:fixed floating card. On a phone the on-screen keyboard
+     shrinks the *visual* viewport but not the *layout* viewport, so a fixed card
+     anchored to the layout bottom is left behind the keyboard — and the browser then
+     auto-scrolls the page to chase the focused input, which makes it flicker and shift.
+     Fix: pin the dock above the keyboard using the VisualViewport API, cap the card to
+     the visible height, and lock the page behind it so it can't drift. */
+  let vpBound = false;
+  const isMobile = () => window.innerWidth <= 560;
+
+  function syncViewport() {
+    const dock = document.getElementById('homeChatDock');
+    if (!dock || !panelEl || panelEl.style.display === 'none') return;
+    const vv = window.visualViewport;
+    if (!vv) return;
+    // height of the keyboard (+ any bottom browser chrome) hidden below the visual viewport
+    const bottomGap = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+    dock.style.bottom = (bottomGap + (isMobile() ? 12 : 24)) + 'px';
+    // never let the card exceed what's actually visible above the keyboard
+    panelEl.style.maxHeight = Math.max(220, vv.height - (isMobile() ? 24 : 96)) + 'px';
+  }
+
+  function bindViewport() {
+    if (vpBound || !window.visualViewport) return;
+    vpBound = true;
+    window.visualViewport.addEventListener('resize', syncViewport);
+    window.visualViewport.addEventListener('scroll', syncViewport);
+  }
+
+  function unbindViewport() {
+    const dock = document.getElementById('homeChatDock');
+    if (window.visualViewport) {
+      window.visualViewport.removeEventListener('resize', syncViewport);
+      window.visualViewport.removeEventListener('scroll', syncViewport);
+    }
+    vpBound = false;
+    if (dock) dock.style.bottom = '';            // back to the CSS default (24px)
+    if (panelEl) panelEl.style.maxHeight = '';
+  }
+
   function open(opts) {
     opts = opts || {};
     const mode = opts.mode || 'default';
     ensureGreeted(mode);
     if (panelEl) panelEl.style.display = 'flex';
+    if (isMobile()) document.body.style.overflow = 'hidden';   // stop the page drifting behind
+    bindViewport();
+    syncViewport();
     if (opts.seed && mode === 'estimate') seedEstimate(opts.seed);
     else render();
-    if (panelInput) { try { panelInput.focus(); } catch (e) {} }
+    if (panelInput) {
+      try { panelInput.focus(); } catch (e) {}
+      // the keyboard animates in after focus — re-pin once it has settled
+      setTimeout(syncViewport, 250);
+    }
   }
 
-  function close() { if (panelEl) panelEl.style.display = 'none'; }
+  function close() {
+    if (panelEl) panelEl.style.display = 'none';
+    document.body.style.overflow = '';
+    unbindViewport();
+  }
 
   function mount(node, kind) {
     if (!node) return;
