@@ -129,7 +129,7 @@ export function initMobileJourney() {
     scene = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(32, anim.clientWidth / anim.clientHeight, 0.1, 100);
     camera.position.set(0, 3.6, 3.4); camera.lookAt(0, -0.15, -0.2);
-    scene.add(new THREE.AmbientLight(0xffffff, 0.72));
+    scene.add(new THREE.AmbientLight(0xffffff, 1.0));   // lifted so the SAÏA brand print on the mat reads clearly
     var key = new THREE.DirectionalLight(0xfff3e6, 1.45); key.position.set(2, 6, 4.5); scene.add(key);
     var rim = new THREE.DirectionalLight(0xffffff, 0.4); rim.position.set(-3, 2.5, 2); scene.add(rim);
 
