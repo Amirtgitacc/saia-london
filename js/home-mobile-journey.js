@@ -150,7 +150,7 @@ export function initMobileJourney() {
     var ho = clamp((p - HANDOFF_START) / (HANDOFF_END - HANDOFF_START), 0, 1);   // flat mat → Cristina dissolve
     matgl.style.opacity = 1 - clamp(ho / 0.55, 0, 1);   // 3D mat clears early so it doesn't cross the watercolour mat
     cv.style.opacity = ho;
-    var fp = clamp((p - HANDOFF_START) / (1 - HANDOFF_START), 0, 1);
+    var fp = clamp((p - HANDOFF_END) / (1 - HANDOFF_END), 0, 1);   // hold STAND through the fade-in, then advance — snap stops can land on settled poses
     drawFlow(1 + fp * (FLOW_COUNT - 1));
     chaps.forEach(function (c, i) { c.classList.toggle('on', p >= CH[i].a && p < CH[i].b); });
     var ai = 0;
@@ -192,7 +192,11 @@ export function initMobileJourney() {
   var prefersReduce = false;
   try { prefersReduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
   if (!prefersReduce) {
-    var STOPS = [0.06, 0.225, 0.375, 0.52, 0.655, 0.79, 0.965];   // one settled position per chapter
+    // 3 mat chapters, then Cristina's 5 SETTLED anchor poses. Anchor frame indices (0-based, emitted
+    // by tools/seam/assemble.mjs): stand0 reach69 dog156 lunge235 seated302. The mobile flow maps
+    // fp∈[0,1] over p∈[HANDOFF_END,1], so each pose sits at p = HANDOFF_END + (F/(FLOW_COUNT-1))·(1−HANDOFF_END).
+    function anchorP(F) { return HANDOFF_END + (F / (FLOW_COUNT - 1)) * (1 - HANDOFF_END); }
+    var STOPS = [0.06, 0.225, 0.375, anchorP(0), anchorP(69), anchorP(156), anchorP(235), anchorP(302)];
     var isSnapping = false, snapRaf = null, SWIPE_MIN = 22, touchStartY = 0, wheelLock = false;
     function trackTopDoc() { return track.getBoundingClientRect().top + window.scrollY; }
     function totalScroll() { return Math.max(1, track.offsetHeight - window.innerHeight); }
@@ -211,17 +215,18 @@ export function initMobileJourney() {
       (function step(ts) {
         if (t0 === null) t0 = ts;
         var k = clamp((ts - t0) / dur, 0, 1);
-        var e = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;   // easeInOutQuad — moderate, settled
+        var e = -(Math.cos(Math.PI * k) - 1) / 2;   // easeInOutSine — gentle, near-constant mid speed so the morph reads smoothly
         window.scrollTo(0, Math.round(fromY + (toY - fromY) * e));
         if (k < 1) { snapRaf = requestAnimationFrame(step); }
         else { snapRaf = null; isSnapping = false; setLock(inRange()); }   // re-evaluate lock (esp. after releasing past the end)
       })(performance.now());
     }
     function snapMove(dir) {
-      var cur = nearestStop(measure()), next = cur + dir;
-      if (next >= 0 && next < STOPS.length) tweenScrollTo(yForP(STOPS[next]), 640);
-      else if (next >= STOPS.length) tweenScrollTo(yForP(1) + 4, 460);    // release down into the editorial sections
-      else tweenScrollTo(Math.max(0, yForP(0) - 4), 460);                  // release up to the top
+      var pNow = measure(), cur = nearestStop(pNow), next = cur + dir;
+      if (next < 0) { tweenScrollTo(Math.max(0, yForP(0) - 4), 460); return; }          // release up to the top
+      if (next >= STOPS.length) { tweenScrollTo(yForP(1) + 4, 460); return; }            // release down into the editorial sections
+      var dur = clamp(Math.abs(STOPS[next] - pNow) * 8500, 800, 1500);   // distance-scaled, ~1–1.5s, so each pose-to-pose move is slow + smooth
+      tweenScrollTo(yForP(STOPS[next]), dur);
     }
     /* lock native scroll whenever we're inside the journey so iOS can't fling past chapters.
        The class flips touch-action:none on the pinned view (see index.html .mj-snaplock). */

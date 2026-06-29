@@ -546,60 +546,26 @@
 </head>
 <body>
 
-<!-- ============ INTRO / LOADING OVERLAY ============
+<!-- ============ LOADING OVERLAY ============
      Painted before anything else so it masks the brief flash of the scroll-journey
      layers (the figure PNGs + band cards sit fully visible in the HTML until
-     home-journey.js positions/hides them). Doubles as the loading screen: plays
-     intro.mp4 once per browser session, then fades once the page is ready
-     (minimum ~2s so it never just flickers). Inline styles → covers from first paint,
-     even before css/base.css arrives. -->
-<div id="introOverlay" role="status" aria-label="Loading SAÏA London" style="position:fixed; inset:0; z-index:9999; background:#F5F1E8; display:flex; align-items:center; justify-content:center; overflow:hidden; opacity:1; transition:opacity .8s ease;">
-  <video id="introVideo" muted playsinline preload="auto" aria-hidden="true" style="width:100%; height:100%; object-fit:cover; opacity:0; transition:opacity .5s ease;"></video>
-</div>
+     home-journey.js positions/hides them), then fades once the page is ready.
+     Inline styles → covers from first paint, even before css/base.css arrives. -->
+<div id="introOverlay" role="status" aria-label="Loading SAÏA London" style="position:fixed; inset:0; z-index:9999; background:#F5F1E8; display:flex; align-items:center; justify-content:center; overflow:hidden; opacity:1; transition:opacity .8s ease;"></div>
 <script>
 (function(){
   var ov = document.getElementById('introOverlay');
   if (!ov) return;
-  var vid = ov.querySelector('#introVideo');
-  var KEY = 'saiaIntroSeen';
-  var seen = false;
-  try { seen = sessionStorage.getItem(KEY) === '1'; } catch(e){}
-  var reduce = false;
-  try { reduce = matchMedia('(prefers-reduced-motion: reduce)').matches; } catch(e){}
-  // Show the video only on the first visit of the session (and not for reduced-motion);
-  // on later loads the overlay still paints to mask the flash, then dismisses on ready.
-  var playVideo = !seen && !reduce;
-  var minShow = playVideo ? 2000 : 0;
-  var start = Date.now();
   var dismissed = false;
 
   function dismiss(){
     if (dismissed) return; dismissed = true;
-    try { sessionStorage.setItem(KEY, '1'); } catch(e){}
     ov.style.opacity = '0';
     setTimeout(function(){ if (ov.parentNode) ov.parentNode.removeChild(ov); }, 850);
   }
 
-  function onReady(){
-    setTimeout(dismiss, Math.max(0, minShow - (Date.now() - start)));
-  }
-
-  if (playVideo) {
-    vid.loop = true;                 // keep covering if the page is slow to load
-    // Reveal the video only once it can actually paint frames. If it never can
-    // (a range-less dev server, an unsupported codec), it stays invisible and the
-    // visitor just sees the cream loader — never a black box. The overlay still
-    // masks the flash and dismisses on ready either way.
-    vid.addEventListener('canplay', function(){ vid.style.opacity = '1'; }, { once: true });
-    vid.src = 'intro.mp4';
-    var p = vid.play && vid.play();
-    if (p && p.catch) p.catch(function(){ /* autoplay blocked — overlay still dismisses on ready */ });
-  } else {
-    vid.style.display = 'none';
-  }
-
-  if (document.readyState === 'complete') onReady();
-  else window.addEventListener('load', onReady);
+  if (document.readyState === 'complete') dismiss();
+  else window.addEventListener('load', dismiss);
   setTimeout(dismiss, 12000);        // safety net — never trap the visitor
 })();
 </script>
@@ -1432,7 +1398,7 @@
 <!-- mobile-only scroll journey: lazy-loads the vendored three.js ES modules on small screens -->
 <script type="module">
   if (window.matchMedia('(max-width: 767px)').matches) {
-    import('./js/home-mobile-journey.js?v=20260629m21')
+    import('./js/home-mobile-journey.js?v=20260629m22')
       .then(function (m) { m.initMobileJourney(); })
       .catch(function (e) { console.warn('mobile journey init failed', e); });
   }
