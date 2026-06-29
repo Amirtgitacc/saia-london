@@ -585,12 +585,16 @@
 
 <div id="homeRoot" style="--scrim:245,241,232; background:#F5F1E8; color:#2B2620; font-family:'Inter',system-ui,sans-serif; overflow-x:clip; position:relative;">
 
+  <!-- true page-top anchor: the logo links here. #top now sits BELOW the mobile journey
+       (collapsed) so it can't be used as "home" on mobile — this span is always at scroll 0. -->
+  <span id="pagetop" aria-hidden="true" style="position:absolute; top:0; left:0;"></span>
+
   <!-- announcement -->
   <div style="background:#2B2620; color:#F5F1E8; text-align:center; font-size:11px; letter-spacing:.24em; text-transform:uppercase; padding:11px 16px;">Yoga mat hire across London. Same-day delivery from £8.50 a mat</div>
 
   <header class="snav">
     <div class="snav-desk">
-      <a class="snav-brand" href="#top" aria-label="SAÏA London — home"><img src="assets/saia-logo.avif" alt="SAÏA London"></a>
+      <a class="snav-brand" href="#pagetop" aria-label="SAÏA London — home"><img src="assets/saia-logo.avif" alt="SAÏA London"></a>
       <div class="snav-row">
         <nav class="snav-links" aria-label="Primary">
           <a href="pilates-with-cristina.html">Pilates with Cristina</a>
@@ -602,13 +606,13 @@
     </div>
     <div class="snav-mob">
       <button class="snav-burger" id="navToggle" aria-label="Open menu" aria-expanded="false"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><line x1="3" y1="7" x2="21" y2="7"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="17" x2="21" y2="17"/></svg></button>
-      <a class="snav-brand" href="#top" aria-label="SAÏA London — home"><img src="assets/saia-logo.avif" alt="SAÏA London"></a>
+      <a class="snav-brand" href="#pagetop" aria-label="SAÏA London — home"><img src="assets/saia-logo.avif" alt="SAÏA London"></a>
       <a class="snav-cta" href="#estimate">Hire</a>
     </div>
   </header>
   <div class="snav-drawer" id="mobileDrawer">
     <div class="snav-drawer-top">
-      <a class="snav-brand" href="#top" aria-label="SAÏA London — home"><img src="assets/saia-logo.avif" alt="SAÏA London"></a>
+      <a class="snav-brand" href="#pagetop" aria-label="SAÏA London — home"><img src="assets/saia-logo.avif" alt="SAÏA London"></a>
       <button class="snav-burger" id="navClose" aria-label="Close menu"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg></button>
     </div>
     <nav>
