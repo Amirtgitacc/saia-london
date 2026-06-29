@@ -137,6 +137,7 @@
   function basketEl() {
     const h = state.hire;
     if (!NS.KB || !NS.KB.hireComplete || !NS.KB.hireComplete(h)) return null;   // nothing until complete
+    if (!h.quoted) return null;   // …and not until the guest has opted in to see the quote
     const q = NS.KB.quoteLines(h);
     const wrap = el('div', BASKET);
     wrap.appendChild(el('div', BASKET_T, 'Your hire'));

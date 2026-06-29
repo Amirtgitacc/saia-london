@@ -56,6 +56,11 @@ they can never disagree. **Change a fact once, here, and both brains update.** D
 - **Add a known situation (Tier 1):** add a branch in `localPlan()` in `js/planner.js`,
   return via the `m(say, actions)` helper (sets `matched:true`). Pull facts from `KB`.
 - **Change Claude's scope/voice (Tier 2):** edit `systemPrompt()` in `server.js`.
+- **Improve Claude's answer quality (Tier 2):** add/refine gold Q→A examples in
+  `js/saia-examples.js` — these are injected as few-shot teaching of voice + the right action.
+  This is the file to *grow* over time; Claude generalises from it, so a handful of good
+  examples beats hundreds of hardcoded scripts. Keep `say` to 1–3 warm British sentences and
+  never put a computed price in it (emit an action instead).
 - **Change a fact/price/number:** edit `js/saia-knowledge.js` only.
 - **Booking math** lives in `applyActions()` in `planner.js` — shared by both tiers; the 11
   tools are: `add_mats, set_event, recommend, set_date, quote, book_delivery, checkout,

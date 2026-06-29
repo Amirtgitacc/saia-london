@@ -34,7 +34,7 @@
       depositPerMat: 1.5,                   // £ per mat, REFUNDABLE — returned after mats come back
       depositRefundable: true,
       bulkThreshold: 60,                    // 60+ → reduced quote, get in touch
-      delivery: 'Same-day courier (Addison Lee) from our Central London warehouse, roughly £35 to £55 each way across London.',
+      delivery: 'Same-day courier from our Central London warehouse, roughly £35 to £55 each way across London.',
       collection: 'We collect the day after your event, or you can drop them back at our NW3 warehouse in working hours. No need to clean them. We handle that.',
       noSale: true,                         // HIRE ONLY — never for sale
       retailReference: 79,                  // £ retail value, reference only (not for sale)

@@ -68,10 +68,10 @@
           acts.push('Recommended ' + rec + ' mats for ' + (g || '—') + ' guests'); break;
         }
         case 'set_date': hire.date = args.date; acts.push('Set date to ' + args.date); break;
-        case 'quote': hire.total = total(hire); hire.status = 'Quoted'; acts.push('Prepared your quote'); break;
+        case 'quote': hire.total = total(hire); hire.status = 'Quoted'; hire.quoted = true; acts.push('Prepared your quote'); break;
         case 'book_delivery': if (args.date) hire.date = args.date; hire.status = 'Delivery scheduled'; acts.push('Scheduled delivery' + (hire.date ? ' · ' + hire.date : '')); break;
-        case 'checkout': if (hire.total == null) hire.total = total(hire); hire.status = 'Checkout link ready'; acts.push('Generated a secure Shopify checkout link'); break;
-        case 'confirm': if (hire.total == null) hire.total = total(hire); hire.status = 'Confirmed'; acts.push('Hire confirmed. Confirmation on its way'); break;
+        case 'checkout': if (hire.total == null) hire.total = total(hire); hire.status = 'Checkout link ready'; hire.quoted = true; acts.push('Generated a secure Shopify checkout link'); break;
+        case 'confirm': if (hire.total == null) hire.total = total(hire); hire.status = 'Confirmed'; hire.quoted = true; acts.push('Hire confirmed. Confirmation on its way'); break;
         case 'rsvp_event': acts.push('Reserved your place · ' + (args.event || 'SAÏA event')); break;
         case 'book_pilates': acts.push('Pilates with Cristina' + (args.date ? ' · ' + args.date : '') + ', held for you'); break;
         case 'join_newsletter': acts.push('Added you to the SAÏA guest list' + (args.email ? ' · ' + args.email : '')); break;
@@ -95,9 +95,15 @@
     const guests = nb(/(\d+)\s*(?:people|guests|persons|pax|attendees|women|ladies|of us|girls)/);
     const matsN = nb(/(\d+)\s*mats?/);
     const daysN = nb(/(\d+)\s*(?:day|days|nights?)/);
-    const dateWord = (t.match(/\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday|tomorrow|this weekend|next weekend|next week|next month)\b/) || [])[1];
-    const wantsDeliver = has(/deliver|drop ?off|courier|bring them|ship/);
-    const wantsPickup = has(/pick.?up|collect|warehouse|\bnw3\b/);
+    // Only accept dates concrete enough to book on. Vague relatives ("next week/month",
+    // "26 next month") are handed to Tier 2, which resolves them against today's date and
+    // confirms the exact day before finalising — so the booking never carries a fuzzy date.
+    const dateWord = (t.match(/\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday|tomorrow)\b/) || [])[1];
+    // clear statements of inability — "cant collect", "won't be able to pick up" — must NOT
+    // be read as a positive choice. When present we suppress keyword matching and let Tier 2 read it.
+    const neg = has(/\b(can'?t|cannot|can ?not|won'?t|wont|unable|do ?n'?t want)\b/);
+    const wantsDeliver = !neg && has(/deliver|drop ?off|courier|bring them|ship|send (it|them|me|to|over)|post (it|them)|to my (address|place|home|venue)/);
+    const wantsPickup = !neg && has(/pick.?up|collect|warehouse|\bnw3\b/);
     const pcMatch = (text || '').match(/\b([A-Za-z]{1,2}\d[A-Za-z\d]?(?:\s*\d[A-Za-z]{2})?)\b/);
     const fullPc = !!(pcMatch && /\d[A-Za-z]{2}\s*$/.test(pcMatch[1].trim()));
     const pcZone = pcMatch && KB.classify && KB.classify(pcMatch[1]);
@@ -109,6 +115,17 @@
 
     // --- bare answers interpreted in the context of what we just asked ---
     const bareNum = (t.match(/^(?:just\s+)?(?:the\s+)?(\d+)\b/) || [])[1];
+
+    // ===== review gate: confirm they want the quote BEFORE we reveal it =====
+    if (aw === 'review' && has(/^(no|nope|not yet|hold on|wait|stop|change|actually)\b/))
+      return mk("No rush at all — tell me what you'd like to change, or say 'go ahead' whenever you'd like to see it.", [], 'review');
+    if (aw === 'review' && has(/^(yes|yep|yeah|sure|go ahead|go on|please|ok|okay|show me|sounds good|do it|let'?s|continue|book|see it)\b/)) {
+      const qq = KB.priceHire ? KB.priceHire(hire) : { total: null, matCost: 0, deposit: 0, quoteOnly: false };
+      const ready = qq.quoteOnly
+        ? "Here it is — your mats and deposit come to " + money(qq.matCost + qq.deposit) + "; as you're outside London, Cristina will confirm the courier. Press Book this hire and I'll pass your details to her. Anything else I can help with?"
+        : "Here it is — " + money(qq.total) + " all in, including a " + money(qq.deposit) + " refundable deposit returned after collection. Press Book this hire when you're ready — and anything else I can help with in the meantime?";
+      return mk(ready, [{ tool: 'quote' }], null);
+    }
 
     // ===== confirm step =====
     if (aw === 'confirm' && has(/^(no|nope|not yet|cancel|hold on|wait|stop|actually)\b/))
@@ -148,6 +165,13 @@
       // date
       if (dateWord) { h.date = dateWord; actions.push({ tool: 'set_date', args: { date: dateWord } }); }
 
+      // HANDOFF: mid-flow, but this message gave us nothing to act on (an unrecognised phrasing
+      // like "send to my address", "cant collect", "5 july", or an off-topic question). Rather than
+      // re-ask the same slot and loop, escalate to Tier-2 Claude — it reads the intent in context,
+      // emits the right action, and applyActions still does the math. This is the safety net firing.
+      if (inHireFlow && actions.length === 0)
+        return { say: '', actions: [], matched: false, awaiting: aw };
+
       // decide the next missing slot
       const need = (function (x) {
         if (!x.mats || x.mats < H.minMats) return 'mats';
@@ -166,13 +190,9 @@
       // need the date before we quote anything
       if (need === 'date') return mk('And what date is your event? We deliver the day before and collect the day after.', actions, 'date');
 
-      // everything gathered → compute the quote (for the card) and reveal it with the Book button
-      actions.push({ tool: 'quote' });
-      const q = KB.priceHire ? KB.priceHire(h) : { total: null, matCost: 0, deposit: 0, quoteOnly: false };
-      const ready = q.quoteOnly
-        ? "That's everything I need. Your mats and deposit come to " + money(q.matCost + q.deposit) + "; as you're outside London, Cristina will confirm the courier. Press Book this hire and I'll pass your details to her."
-        : "That's everything — your full quote is below: " + money(q.total) + " all in, including a " + money(q.deposit) + " refundable deposit returned after collection. Press Book this hire when you're ready.";
-      return mk(ready, actions, null);
+      // everything gathered → DON'T reveal the quote yet. Ask first, so the guest opts in to
+      // booking before any price or basket appears; the quote shows only on their 'yes' (above).
+      return mk("That's everything I need — shall I put your quote together?", actions, 'review');
     }
 
     // ===== everything below: the existing scripted FAQ intents (unchanged behaviour) =====
@@ -213,19 +233,21 @@
     if (has(/how (does|do|to)\s?(it|this|the hire|i|we)?\s?(work|hire|rent)|how does (it|hire) work|process/))
       return m('Simple: tell me your numbers and date, we deliver the day before (min ' + H.minMats + ' mats, from ' + money(H.pricePerMat) + ' each for a ' + H.hireDays + '-day hire) and collect after. Shall I start a quote?');
 
-    // delivery / collection facts
+    // delivery / collection facts — answer both halves; they're usually asked together
     if (has(/deliver|courier|ship|drop ?off|bring them/))
-      return m(H.delivery + " Tell me your numbers and postcode and I'll price it.");
+      return m(H.delivery + ' We collect the day after — no cleaning needed, we handle that — or you can drop them at our NW3 warehouse for free. Tell me your numbers and postcode and I\'ll price it.');
     if (has(/collect|return|pick.?up|pick them|after the event|clean|wash/))
-      return m(H.collection);
+      return m(H.collection + ' Prefer it brought to you? We courier across London too — just share your postcode.');
 
     // location / contact
     if (has(/where|location|nw3|warehouse|address|whats ?app|phone|number|contact|call|reach|email/))
       return m("We're " + (KB.contact.pickup || 'in London') + '. For the quickest service, WhatsApp ' + KB.contact.person + ' on ' + KB.contact.whatsapp + '. Or tell me your numbers and I\'ll start your hire right here.');
 
-    // pricing FAQ (no count yet)
-    if (has(/price|quote|cost|how much|rate|charge/))
-      return mk(money(H.pricePerMat) + ' per mat for a ' + H.hireDays + '-day hire, minimum ' + H.minMats + ', plus a refundable ' + money(H.depositPerMat) + '/mat deposit and courier across London. How many mats do you need?', [], 'mats');
+    // pricing FAQ — answer the question; only start collecting mats if we're not already mid-hire
+    if (has(/price|quote|cost|how much|rate|charge/)) {
+      const tail = aw ? " Shall I show you the full quote?" : ' How many mats do you need?';
+      return mk(money(H.pricePerMat) + ' per mat for a ' + H.hireDays + '-day hire, then ' + money(H.extraDayPerMat) + '/mat for each extra day; minimum ' + H.minMats + ', plus a refundable ' + money(H.depositPerMat) + '/mat deposit and courier across London.' + tail, [], aw || 'mats');
+    }
 
     // not recognised → Tier 2
     return {

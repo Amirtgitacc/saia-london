@@ -59,15 +59,35 @@ test('pickup but no date → asks date, no quote yet', () => {
   assert.ok(!r.actions.some(a => a.tool === 'quote'));
 });
 
-test('all slots in (date answers the last question) → ready: quote + Book prompt', () => {
+test('all slots in (date answers the last question) → asks before quoting, no quote yet', () => {
   const r = Planner.localPlan('saturday', { mats: 15, days: 2, method: 'deliver', zone: 'central', date: null, awaiting: 'date' });
-  assert.strictEqual(r.awaiting, null);
+  assert.strictEqual(r.awaiting, 'review');                 // gate: confirm before revealing
   assert.ok(r.actions.some(a => a.tool === 'set_date'));
+  assert.ok(!r.actions.some(a => a.tool === 'quote'), 'must NOT quote until the guest opts in');
+  assert.ok(/quote together|put your quote/i.test(r.say));
+});
+
+test('review gate: "yes" reveals the quote + Book prompt + closing', () => {
+  const r = Planner.localPlan('yes please', { mats: 15, days: 2, method: 'deliver', zone: 'central', date: 'Saturday', awaiting: 'review' });
+  assert.strictEqual(r.awaiting, null);
   assert.ok(r.actions.some(a => a.tool === 'quote'));
   assert.ok(/Book this hire/i.test(r.say));
+  assert.ok(/anything else/i.test(r.say), 'should close warmly');
 });
-test('ready state outside London points to Cristina', () => {
-  const r = Planner.localPlan('saturday', { mats: 15, days: 2, method: 'deliver', zone: 'outside', date: null, awaiting: 'date' });
+
+test('review gate: "not yet" holds without quoting', () => {
+  const r = Planner.localPlan('not yet', { mats: 15, days: 2, method: 'deliver', zone: 'central', date: 'Saturday', awaiting: 'review' });
+  assert.strictEqual(r.awaiting, 'review');
+  assert.ok(!r.actions.some(a => a.tool === 'quote'));
+});
+
+test('quote action sets the reveal flag so the basket can show', () => {
+  const h = Planner.applyActions({ mats: 15, days: 2, method: 'pickup', date: 'Saturday' }, [{ tool: 'quote' }]).hire;
+  assert.strictEqual(h.quoted, true);
+});
+
+test('ready state outside London points to Cristina (after opting in)', () => {
+  const r = Planner.localPlan('go ahead', { mats: 15, days: 2, method: 'deliver', zone: 'outside', date: 'Saturday', awaiting: 'review' });
   assert.strictEqual(r.awaiting, null);
   assert.ok(r.actions.some(a => a.tool === 'quote'));
   assert.ok(/Cristina/.test(r.say) && /Book this hire/i.test(r.say));
@@ -162,9 +182,40 @@ test('sub-minimum hire never reaches ready quote', () => {
   assert.ok(!r.actions.some(a => a.tool === 'quote'));
 });
 
-test('valid hire still reaches ready quote', () => {
+test('valid hire reaches the review gate (then quote on yes)', () => {
   const r = Planner.localPlan('saturday', { mats: 15, days: 2, method: 'pickup', date: null, awaiting: 'date' });
-  assert.strictEqual(r.awaiting, null);
-  assert.ok(r.actions.some(a => a.tool === 'quote'));
-  assert.ok(/Book this hire/i.test(r.say));
+  assert.strictEqual(r.awaiting, 'review');
+  assert.ok(!r.actions.some(a => a.tool === 'quote'));
+  const r2 = Planner.localPlan('yes', { mats: 15, days: 2, method: 'pickup', date: 'Saturday', awaiting: 'review' });
+  assert.ok(r2.actions.some(a => a.tool === 'quote'));
+  assert.ok(/Book this hire/i.test(r2.say));
+});
+
+// === Loop fix: negation must not be read as a positive method choice ===
+test('"cant collect" does NOT select pickup', () => {
+  const r = Planner.localPlan('cant collect', { mats: 28, days: 3, method: null, awaiting: 'method' });
+  assert.ok(!r.actions.some(a => a.tool === 'set_method'), 'negation must not set a method');
+  assert.strictEqual(r.matched, false, 'unparsed mid-flow message escalates to Tier 2');
+});
+
+// === Loop fix: natural delivery phrasing parses without Claude ===
+test('"send to my address" selects deliver', () => {
+  const r = Planner.localPlan('send to my address', { mats: 28, days: 3, method: null, awaiting: 'method' });
+  assert.ok(r.actions.some(a => a.tool === 'set_method' && a.args.method === 'deliver'));
+  assert.strictEqual(r.awaiting, 'postcode');
+});
+
+// === Loop fix: an unrecognised mid-flow message escalates instead of re-asking ===
+test('unparsed answer mid-flow escalates to Tier 2 (no loop)', () => {
+  const r = Planner.localPlan('I need it sent over somehow tomorrow-ish', { mats: 28, days: 3, method: null, awaiting: 'method' });
+  // "sent over" matches deliver synonyms → handled; but a truly opaque message must escalate:
+  const r2 = Planner.localPlan('whatever works best for you really', { mats: 28, days: 3, method: null, awaiting: 'method' });
+  assert.strictEqual(r2.matched, false, 'opaque message must hand off to Claude, not loop');
+  assert.strictEqual(r2.actions.length, 0);
+});
+
+// === Loop fix: a bare date the keyword parser misses ("5 july") escalates, not loops ===
+test('"5 july" while awaiting date escalates to Tier 2', () => {
+  const r = Planner.localPlan('5 july', { mats: 28, days: 3, method: 'pickup', date: null, awaiting: 'date' });
+  assert.strictEqual(r.matched, false, 'numeric date the regex misses hands off to Claude');
 });
