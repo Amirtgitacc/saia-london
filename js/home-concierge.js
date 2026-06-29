@@ -107,7 +107,7 @@
     let done = false;
     const finish = (say, actions) => { if (done) return; done = true; applyAndShow({ say: say || GENERIC, actions: actions || [] }); };
     const guard = setTimeout(() => finish(GENERIC), 12000);
-    fetch((window.SAIA_CONFIG && window.SAIA_CONFIG.conciergeEndpoint) || 'http://localhost:8787/api/concierge', {
+    fetch((window.SAIA_CONFIG && window.SAIA_CONFIG.conciergeEndpoint) || '/api/concierge', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ messages: history, hire: state.hire }),
     })

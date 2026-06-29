@@ -1,0 +1,20 @@
+# Keep the deploy lean — only ship the live site + the api/ functions.
+# Vercel installs deps from package.json itself, so local node_modules is skipped.
+node_modules/
+
+# dev tooling, scratch and docs — never served by the site
+tools/
+tests/
+docs/
+tmp/
+output/
+.superpowers/
+.claude/
+
+# unreferenced / dead assets
+intro-original.mp4
+
+# editor / OS cruft
+.DS_Store
+**/.DS_Store
+*.md

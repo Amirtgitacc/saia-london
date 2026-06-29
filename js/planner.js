@@ -32,6 +32,29 @@
   const H = KB.hire;
   const money = (v) => H.currency + Number(v).toFixed(2);
 
+  // ---- date helpers ----
+  // Tier 1 captures EXPLICIT day+month dates ("16 July", "5th of Aug", "July 16")
+  // and normalises weekday words. Vague/relative dates ("next month", "the 16th")
+  // still fall through to Tier 2, which resolves + confirms them.
+  const MONTHS = { jan: 'January', feb: 'February', mar: 'March', apr: 'April', may: 'May', jun: 'June', jul: 'July', aug: 'August', sep: 'September', oct: 'October', nov: 'November', dec: 'December' };
+  const MONTH_KEYS = Object.keys(MONTHS);
+  const WD = { mon: 'Monday', tue: 'Tuesday', tues: 'Tuesday', wed: 'Wednesday', thu: 'Thursday', thur: 'Thursday', thurs: 'Thursday', fri: 'Friday', sat: 'Saturday', sun: 'Sunday', tomorrow: 'Tomorrow' };
+  function normWeekday(w) { return w ? (WD[w] || (w.charAt(0).toUpperCase() + w.slice(1))) : null; }
+  function parseDate(text) {
+    const s = (text || '').toLowerCase();
+    const M = '(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*';
+    let day = null, mon = null, mm;
+    if ((mm = s.match(new RegExp('\\b(\\d{1,2})(?:st|nd|rd|th)?\\s*(?:of\\s+)?' + M)))) { day = parseInt(mm[1], 10); mon = mm[2]; }
+    else if ((mm = s.match(new RegExp('\\b' + M + '\\s+(\\d{1,2})(?:st|nd|rd|th)?')))) { mon = mm[1]; day = parseInt(mm[2], 10); }
+    if (!day || !mon || day < 1 || day > 31) return null;
+    const key = mon.slice(0, 3); const name = MONTHS[key]; if (!name) return null;
+    const now = new Date();
+    const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    let year = now.getFullYear();
+    if (new Date(year, MONTH_KEYS.indexOf(key), day) < todayMidnight) year++;   // already passed → next year
+    return day + ' ' + name + ' ' + year;
+  }
+
   function total(h) { return KB.priceHire ? KB.priceHire(h).total : (h.mats ? h.mats * H.pricePerMat : null); }
 
   /* ---- booking executor — deterministic, shared by both tiers (unchanged) ---- */
@@ -93,13 +116,16 @@
     const mk = (say, actions, awaiting) => ({ say, actions: actions || [], matched: true, awaiting: awaiting || null });
 
     // --- parse signals from this message ---
-    const guests = nb(/(\d+)\s*(?:people|guests|persons|pax|attendees|women|ladies|of us|girls)/);
+    const guests = nb(/(\d+)\s*(?:people|guests?|persons?|pax|attendees?|participants?|women|ladies|of us|girls|staff|team|employees?|colleagues?|delegates?|heads?|guests of mine|members of staff)/);
     const matsN = nb(/(\d+)\s*mats?/);
     const daysN = nb(/(\d+)\s*(?:day|days|nights?)/);
     // Only accept dates concrete enough to book on. Vague relatives ("next week/month",
     // "26 next month") are handed to Tier 2, which resolves them against today's date and
     // confirms the exact day before finalising — so the booking never carries a fuzzy date.
-    const dateWord = (t.match(/\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday|tomorrow)\b/) || [])[1];
+    const rawWeekday = (t.match(/\b(monday|mon|tuesday|tues|tue|wednesday|wed|thursday|thurs|thur|thu|friday|fri|saturday|sat|sunday|sun|tomorrow)\b/) || [])[1];
+    const dateWord = normWeekday(rawWeekday);          // "Saturday" / "Sat"→"Saturday" / null
+    const explicitDate = parseDate(text);              // "16 July 2026" / null
+    const dateVal = explicitDate || dateWord;          // what we actually store
     // clear statements of inability — "cant collect", "won't be able to pick up" — must NOT
     // be read as a positive choice. When present we suppress keyword matching and let Tier 2 read it.
     const neg = has(/\b(can'?t|cannot|can ?not|won'?t|wont|unable|do ?n'?t want)\b/);
@@ -111,6 +137,9 @@
     // Only treat token as a postcode when mid-flow awaiting one, OR it has an inward code (e.g. "8DS")
     const looksPostcode = (pcZone && (hire.awaiting === 'postcode' || fullPc)) ? pcZone : null;
 
+    // does THIS message carry an actionable hire slot? (used to apply changes at the review step)
+    const hasSlotSignal = (matsN != null) || (guests != null) || (daysN != null) || !!dateVal || wantsPickup || !!looksPostcode || wantsDeliver;
+
     const aw = hire.awaiting;
     const inHireFlow = !!(aw && /^(mats|days|method|postcode|date|confirm)$/.test(aw));
 
@@ -118,7 +147,9 @@
     const bareNum = (t.match(/^(?:just\s+)?(?:the\s+)?(\d+)\b/) || [])[1];
 
     // ===== review gate: confirm they want the quote BEFORE we reveal it =====
-    if (aw === 'review' && has(/^(no|nope|not yet|hold on|wait|stop|change|actually)\b/))
+    // A bare "no/not yet/actually" with NO new detail → deflect. But "actually make it Sunday"
+    // carries a real change, so let it fall through to the hire flow (below) to be applied.
+    if (aw === 'review' && !hasSlotSignal && has(/^(no|nope|not yet|hold on|wait|stop|change|actually)\b/))
       return mk("No rush at all — tell me what you'd like to change, or say 'go ahead' whenever you'd like to see it.", [], 'review');
     if (aw === 'review' && has(/^(yes|yep|yeah|sure|go ahead|go on|please|ok|okay|show me|sounds good|do it|let'?s|continue|book|see it)\b/)) {
       const qq = KB.priceHire ? KB.priceHire(hire) : { total: null, matCost: 0, deposit: 0, quoteOnly: false };
@@ -144,15 +175,24 @@
     // Trigger: mid-flow, or a fresh hire signal (a count, “hire”, “book”, “rent”, “event with mats”)
     // isProcessQ: “how does hire work?” etc. — these are FAQ questions, not booking signals
     const isProcessQ = /how (do|does|to)\b|how (it|this|the hire) works?|what is (mat )?hire|what'?s (mat )?hire|the process|how .* works?/.test(t);
-    const freshHire = (matsN != null) || (guests != null) || (has(/\bhire\b|\brent\b|book .*mats|mat hire|\bquote\b/) && !isProcessQ);
-    if (inHireFlow || freshHire) {
+    // FAQ markers — a question that merely mentions "hire/book" shouldn't start a booking
+    // (e.g. "are mats cleaned between each hire?", "how far in advance should I book?").
+    const isFaqQ = /\b(clean|cleaned|cleaning|hygien|wash|sanit|vat|tax|invoice|receipt|pay|payment|card|cash|cancel|refund|policy|insur|damage|broken|lost|strap|bag|advance|notice|how far|opening|open|hours)\b/.test(t);
+    const freshHire = (matsN != null) || (guests != null) || (has(/\bhire\b|\brent\b|book .*mats|mat hire|\bquote\b/) && !isProcessQ && !isFaqQ);
+
+    // HIRE-ONLY guard: mats are never sold. Intercept buy/purchase intent BEFORE the hire
+    // flow turns "buy 30 mats to keep" into a booking. Warmly reframe to hire.
+    if (has(/\b(buy|buying|purchase|purchasing|sell|selling|for sale|to keep|keep them|own them|owning|permanently|outright|forever)\b/) && (has(/mat/) || inHireFlow || freshHire))
+      return m("We don't sell the mats, lovely — they're hire-only, so you get our studio-quality mats for your event and we handle everything after. Happy to set up a hire whenever you like; how many are you after?");
+
+    if (inHireFlow || freshHire || (aw === 'review' && hasSlotSignal)) {
       const h = Object.assign({}, hire);
       const actions = [];
 
       // mats / guests
       if (matsN != null) { h.mats = matsN; actions.push({ tool: 'add_mats', args: { n: matsN } }); }
       else if (guests != null && !h.mats) { h.guests = guests; h.mats = rec(guests); actions.push({ tool: 'recommend', args: { guests } }); }
-      else if (aw === 'mats' && bareNum) { h.mats = parseInt(bareNum, 10); actions.push({ tool: 'add_mats', args: { n: h.mats } }); }
+      else if (aw === 'mats' && bareNum && daysN == null) { h.mats = parseInt(bareNum, 10); actions.push({ tool: 'add_mats', args: { n: h.mats } }); }
 
       // days
       if (daysN != null) { h.days = Math.max(H.hireDays, daysN); actions.push({ tool: 'set_days', args: { n: h.days } }); }
@@ -163,8 +203,8 @@
       else if (looksPostcode) { h.method = 'deliver'; h.postcode = pcMatch[1]; h.zone = looksPostcode.key; actions.push({ tool: 'set_postcode', args: { pc: pcMatch[1] } }); }
       else if (wantsDeliver) { h.method = 'deliver'; actions.push({ tool: 'set_method', args: { method: 'deliver' } }); }
 
-      // date
-      if (dateWord) { h.date = dateWord; actions.push({ tool: 'set_date', args: { date: dateWord } }); }
+      // date — explicit day+month or a weekday; vague dates fall to the handoff below
+      if (dateVal) { h.date = dateVal; actions.push({ tool: 'set_date', args: { date: dateVal } }); }
 
       // HANDOFF: mid-flow, but this message gave us nothing to act on (an unrecognised phrasing
       // like "send to my address", "cant collect", "5 july", or an off-topic question). Rather than
@@ -183,7 +223,11 @@
         return 'confirm';
       })(h);
 
-      if (need === 'mats') return mk("Lovely — let's plan your hire. How many mats do you need? (Minimum " + H.minMats + '.)', actions, 'mats');
+      if (need === 'mats') return mk(
+        (h.mats && h.mats < H.minMats)
+          ? 'We hire from a minimum of ' + H.minMats + " mats — shall I set you up with " + H.minMats + ', or did you have a higher number in mind?'
+          : "Lovely — let's plan your hire. How many mats do you need? (Minimum " + H.minMats + '.)',
+        actions, 'mats');
       if (need === 'days') return mk((h.mats ? h.mats + ' mats — perfect. ' : '') + 'How many days do you need them? Our standard hire is ' + H.hireDays + ' days.', actions, 'days');
       if (need === 'method') return mk('Shall we deliver by courier, or will you collect from our NW3 warehouse?', actions, 'method');
       if (need === 'postcode') return mk("What's the event postcode? I'll work out the courier from there.", actions, 'postcode');
@@ -205,37 +249,61 @@
       return m('Any time. Anything else I can sort for your day?');
 
     // who we are / founder / the name
-    if (has(/who (runs|started|made|owns|is behind|founded)|founder|sa[ïi]a mean|meaning of|story behind|who.{0,4}cristina|about cristina/))
+    if (has(/who (runs|started|made|owns|is behind|founded)|founder|sa[ïi]a mean|meaning of|story behind|who.{0,4}cristina|about cristina|who is cristina|where.{0,14}cristina|cristina.{0,14}from/))
       return m(KB.founder.bio + ' ' + KB.founder.meaning);
     if (has(/what is sa[ïi]a|what'?s sa[ïi]a|about sa[ïi]a|tell me about (you|saia|saïa)|what do you (do|offer)/))
       return m((KB.club.what || 'SAÏA is a female-led club for women in London.') + ' Mostly I help with mat hire for events, plus community gatherings and Pilates with Cristina. Where shall we start?');
 
-    // Pilates / classes — two paths: 1-2-1 request, or group-event waitlist
+    // women-only space — men / husband / partner asking to attend
+    if (has(/\b(men|man|male|males|husband|boyfriend|partner|son|guys|blokes|gentlemen)\b/) && has(/come|attend|join|allow|welcome|can (he|they|men|i)|bring|class|event|member|session/))
+      return m("SAÏA is a women's space, lovely — our classes and gatherings are for women, so everyone can move and gather freely. Our mats, though, are for hire by anyone for any event. Anything I can help you plan?");
+
+    // privacy — never share another member's details
+    if ((has(/\bmembers?\b/) || has(/someone else|another (woman|member|guest)|other (people|women|members|guests)/)) && has(/\b(number|phone|email|contact|details?|reach)\b/) && has(/\b(give|share|get|have|provide|can you|could you|pass)\b/))
+      return m("I can't share other members' details, I'm afraid — privacy matters here. But I'm happy to help you join the guest list, plan a hire, or book Pilates. What would you like?");
+
+    // yoga (the teaching is Pilates; mats are for hire) — answer honestly, don't claim yoga classes
+    if (has(/\byoga\b/) && !has(/mat/) && has(/\b(run|teach|offer|do you|have|class|classes|only|instead|vs|versus|difference|or pilates)\b/))
+      return m("Our classes are Pilates with Cristina — small, breath-led sessions for women. We don't run yoga classes ourselves, but our mats are lovely for a yoga event and I can hire you a set whenever you like. Shall I help with mats, or tell you more about Pilates?");
+
+    // Pilates / classes — answer questions, only place a request/waitlist on a clear intent
     if (has(/pilates|reformer|class(es)?|yoga session|work ?out|sessions?\b|\b1.?(2|to|on).?1\b|one.?to.?one/) && !has(/mat/)) {
       const email = (text || '').match(/[\w.+-]+@[\w-]+\.[\w.-]+/);
-      // explicit private 1-2-1 → place a request with Cristina
-      if (has(/1.?(2|to|on).?1|one.?to.?one|private|personal|just me/))
-        return m('Lovely — a private 1-2-1 with Cristina in NW3. Tell me a day or two that suit' + (dateWord ? ' (' + dateWord + ' works?)' : '') + ' and I’ll put your request to her; she confirms directly.',
-          [{ tool: 'request_pilates', args: { type: '1-2-1', date: dateWord || null } }]);
-      // explicit group / waitlist intent (or they handed over an email)
-      if (email || has(/group|wait ?list|notify|updates?|let me know|sign ?up|join the list/))
-        return m(email
-          ? 'Perfect — you’re on the Pilates waitlist. You’ll be first to hear the moment a group session opens.'
-          : 'Group Pilates runs as occasional events in Hampstead. Pop your email in and I’ll add you to the waitlist — you’ll hear the moment a session opens.',
-          [{ tool: 'join_pilates_list', args: { email: email ? email[0] : null } }]);
-      // generic — explain both, let them choose
+      // pricing question → don't auto-request; pricing comes from Cristina
+      if (has(/price|cost|how much|rate|fee|charge|expensive|per session|per class/))
+        return m("Pilates with Cristina is tailored to you, so she shares rates directly — drop her a line at " + KB.contact.email + " or WhatsApp " + KB.contact.whatsapp + ". Shall I put a 1-2-1 request to her so she can come back with details?");
+      // private 1-2-1 — request only when they want to book / give a day
+      if (has(/1.?(2|to|on).?1|one.?to.?one|private|personal|just me/)) {
+        const wantsBook = has(/book|request|arrange|set ?up|sign me|put me|sort|want|like to|let'?s|^yes\b/) || !!dateWord;
+        return wantsBook
+          ? m('Lovely — a private 1-2-1 with Cristina in NW3. Tell me a day or two that suit' + (dateWord ? ' (' + dateWord + ' works?)' : '') + ' and I’ll put your request to her; she confirms directly.',
+            [{ tool: 'request_pilates', args: { type: '1-2-1', date: dateWord || null } }])
+          : m('A private 1-2-1 with Cristina in NW3 — small, slow and breath-led. Want me to put a request to her? Tell me a day or two that suit and she confirms directly.');
+      }
+      // group / waitlist — join only with an email or a clear "add me" intent
+      if (email)
+        return m('Perfect — you’re on the Pilates waitlist. You’ll be first to hear the moment a group session opens.',
+          [{ tool: 'join_pilates_list', args: { email: email[0] } }]);
+      if (has(/group|wait ?list|notify|updates?|let me know|sign ?up|join the list|add me/))
+        return m('Group Pilates runs as occasional events in Hampstead. Pop your email in and I’ll add you to the waitlist — you’ll hear the moment a session opens.');
+      // generic — explain both, let them choose (no action)
       return m('Pilates with Cristina is ' + KB.pilates.method + ' ' + KB.pilates.format + ' For a 1-2-1 I can put a request to Cristina; group classes run as occasional events, so I can add you to the waitlist for updates. Which would you like?');
     }
 
-    // events / community
-    if (has(/what'?s on|whats on|upcoming|any events?|events\b|this month|brunch|book club|watercolou?r|gathering|community/))
-      return m('This season: ' + KB.events.slice(0, 3).join(', ') + '. Want me to reserve you a place?',
-        [{ tool: 'rsvp_event', args: { event: KB.events[0] } }]);
+    // events — list what's on; only RSVP on a clear "reserve me / I'll come" intent
+    if (has(/what'?s on|whats on|upcoming|any events?|events\b|this month|brunch|book club|watercolou?r|gathering/) && !has(/\bmat|chair|table|equipment|furniture/)) {
+      const wantsRsvp = has(/reserve|rsvp|book.*place|come to|coming to|attend|sign me|put me down|get me in|count me in|i'?d like to (come|go|attend)|can i come/);
+      return m('This season: ' + KB.events.slice(0, 3).join(', ') + (wantsRsvp ? ". Consider it reserved — I'll pass your name on." : '. Want me to reserve you a place?'),
+        wantsRsvp ? [{ tool: 'rsvp_event', args: { event: KB.events[0] } }] : []);
+    }
 
-    // membership / join
-    if (has(/right for me|is (it|this) for me|join\b|member|belong|guest list|newsletter|sign ?up/))
-      return m("If you want to move, gather and breathe with women who lift each other up, yes — it's for you. No pressure, no performing. " + KB.club.join + " and I'll send the next gathering.",
-        [{ tool: 'join_newsletter', args: {} }]);
+    // membership / join — never auto-sign-up; only join with an email in hand
+    if (has(/right for me|is (it|this) for me|join\b|member|belong|guest list|newsletter|sign ?up|community/)) {
+      const email = (text || '').match(/[\w.+-]+@[\w-]+\.[\w.-]+/);
+      return email
+        ? m("You're on the guest list — welcome. You'll be first to hear about the next gathering.", [{ tool: 'join_newsletter', args: { email: email[0] } }])
+        : m("If you want to move, gather and breathe with women who lift each other up, this is your place — no pressure, no performing. " + KB.club.join + " Pop yours in and I'll add you.");
+    }
 
     // mat spec
     if (has(/what (are|kind|type)|material|rubber|thick|how big|dimension|size|spec|pvc|slip|odou?r|smell|made of/) && (has(/mat/) || has(/rubber|thick|pvc|slip|odou?r/)))
@@ -251,9 +319,17 @@
     if (has(/collect|return|pick.?up|pick them|after the event|clean|wash/))
       return m(H.collection + ' Prefer it brought to you? We courier across London too — just share your postcode.');
 
+    // minimum order — MUST precede the location branch, which greedily matches "number"
+    if (has(/\b(minimum|min|fewest|least|smallest|how few|at least)\b/) && has(/mat|order|hire|book|rent|need/))
+      return m('Our minimum hire is ' + H.minMats + ' mats, from ' + money(H.pricePerMat) + ' a mat for a ' + H.hireDays + '-day hire. How many are you after?');
+
     // location / contact
     if (has(/where|location|nw3|warehouse|address|whats ?app|phone|number|contact|call|reach|email/))
       return m("We're " + (KB.contact.pickup || 'in London') + '. For the quickest service, email ' + KB.contact.person + ' at ' + KB.contact.email + '. Or tell me your numbers and I\'ll start your hire right here.');
+
+    // VAT / invoices / receipts — Cristina handles the paperwork; never invent a tax answer
+    if (has(/\bvat\b|invoice|receipt|\btax\b/))
+      return m('For VAT, invoices or receipts, Cristina sorts those directly — drop her a line at ' + KB.contact.email + " and she'll handle the paperwork. Want me to put your hire numbers together in the meantime?");
 
     // pricing FAQ — answer the question; only start collecting mats if we're not already mid-hire
     if (has(/price|quote|cost|how much|rate|charge/)) {
