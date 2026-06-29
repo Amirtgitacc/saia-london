@@ -54,10 +54,14 @@ export function initMobileJourney() {
           '</div>' +
             '<div class="mj-ladder"></div>' +
           '</div>' +
-          '<a class="mj-endcta" href="guest-list.html">' +
+          '<form class="mj-endcta" data-guest-form novalidate>' +
             '<span class="mj-endcta-eb">Train with Cristina</span>' +
-            '<span class="mj-endcta-btn">Work out together <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></span>' +
-          '</a>' +
+            '<div class="mj-endcta-row">' +
+              '<input class="mj-endcta-email" type="email" name="email" required placeholder="Your email" aria-label="Email address">' +
+              '<button type="submit" class="mj-endcta-btn" aria-label="Join the list">Join <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></button>' +
+            '</div>' +
+            '<span class="mj-endcta-msg" data-guest-msg aria-live="polite"></span>' +
+          '</form>' +
         '</div>' +
       '</div>' +
     '</div>';
@@ -71,6 +75,18 @@ export function initMobileJourney() {
   var bcue  = root.querySelector('.mj-bcue');
   var ladEl = root.querySelector('.mj-ladder');
   var endcta = root.querySelector('.mj-endcta');
+  endcta.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var field = endcta.querySelector('input[type=email]');
+    var msg = endcta.querySelector('[data-guest-msg]');
+    var email = (field && field.value || '').trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      if (msg) { msg.textContent = 'Please enter a valid email address.'; msg.style.color = '#B8624A'; }
+      if (field) field.focus();
+      return;
+    }
+    window.location.href = 'guest-list.html';
+  });
   for (var _li = 0; _li < N; _li++) ladEl.appendChild(document.createElement('i'));
   var ladder = [].slice.call(ladEl.children);
 
