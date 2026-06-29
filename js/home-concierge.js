@@ -53,7 +53,6 @@
     hire: { mats: 0, guests: null, date: null, days: null, total: null, status: null },
   };
   const mounts = [];        // { node, kind:'panel'|'inline' }
-  let replyTimer = null;
   let panelEl = null, panelInput = null;
 
   const GENERIC = 'Happy to help. Is it mat hire for an event, an upcoming SAÏA experience, or Pilates with Cristina?';
@@ -101,36 +100,38 @@
     render();
   }
 
-  function askAssist() {
+  function askAssist(text) {
     const history = state.msgs.filter((m) => m.from === 'user' || m.from === 'bot')
       .map((m) => ({ role: m.from === 'user' ? 'user' : 'bot', text: m.text }));
     let done = false;
     const finish = (say, actions) => { if (done) return; done = true; applyAndShow({ say: say || GENERIC, actions: actions || [] }); };
-    const guard = setTimeout(() => finish(GENERIC), 12000);
+    // Offline safety net: Claude unreachable → re-plan the raw message through the Tier-1
+    // regex planner; if even that is missing, a single graceful generic line.
+    const fallback = () => {
+      if (done) return;
+      done = true;
+      const plan = (NS.Planner && NS.Planner.localPlan) ? NS.Planner.localPlan(text, state.hire) : { say: '', actions: [] };
+      if (!plan.say || !plan.say.trim()) plan.say = GENERIC;   // localPlan emits '' to hand off — never render a blank bubble
+      applyAndShow(plan);
+    };
+    const guard = setTimeout(fallback, 12000);
     fetch((window.SAIA_CONFIG && window.SAIA_CONFIG.conciergeEndpoint) || '/api/concierge', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ messages: history, hire: state.hire }),
     })
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error('http ' + r.status))))
       .then((d) => { clearTimeout(guard); finish((d && d.say) || GENERIC, (d && d.actions) || []); })
-      .catch(() => { clearTimeout(guard); finish(GENERIC); });
+      .catch(() => { clearTimeout(guard); fallback(); });
   }
 
   function send(text) {
     if (!text || !text.trim()) return;
-    state.msgs.push({ from: 'user', text: text.trim() });
+    const clean = text.trim();
+    state.msgs.push({ from: 'user', text: clean });
     state.turns++;
     state.typing = true;
     render();
-    const plan = (NS.Planner && NS.Planner.localPlan)
-      ? NS.Planner.localPlan(text, state.hire)
-      : { say: GENERIC, actions: [], matched: false, awaiting: null };
-    if (plan.matched) {
-      clearTimeout(replyTimer);
-      replyTimer = setTimeout(() => applyAndShow(plan), 650);
-      return;
-    }
-    askAssist();   // long tail → Claude (Tier 2)
+    askAssist(clean);   // Claude reads EVERY message; localPlan is the offline fallback
   }
 
   /* ---- live hire basket ---- */

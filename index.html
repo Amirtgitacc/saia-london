@@ -603,7 +603,13 @@
     flowFrameDir: 'assets/flow-frames/',
     flowFrameCount: 303
   };
-  window.SAIA_CONFIG = { conciergeEndpoint: '/api/concierge' };
+  window.SAIA_CONFIG = {
+    // Prod (Vercel) serves the function at /api/concierge. On localhost the static site is
+    // on :8000 with no such route, so point at the local Claude server (npm start) on :8787.
+    conciergeEndpoint: (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
+      ? 'http://localhost:8787/api/concierge'
+      : '/api/concierge'
+  };
 </script>
 
 <div id="homeRoot" style="--scrim:245,241,232; background:#F5F1E8; color:#2B2620; font-family:'Inter',system-ui,sans-serif; overflow-x:clip; position:relative;">
@@ -1428,7 +1434,7 @@
 <script src="js/saia-knowledge.js?v=20260629d"></script>
 <script src="js/planner.js?v=20260629f"></script>
 <script src="js/checkout-handoff.js?v=20260629b"></script>
-<script src="js/home-concierge.js?v=20260629e"></script>
+<script src="js/home-concierge.js?v=20260629h"></script>
 <script src="js/home.js?v=20260629b"></script>
 <script src="js/home-journey.js?v=cel1"></script>
 <!-- mobile-only scroll journey: lazy-loads the vendored three.js ES modules on small screens -->
