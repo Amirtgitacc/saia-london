@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SAÏA — Navbar Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Cormorant+Garamond:wght@400;500;600&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Marcellus&family=Inter:wght@300;400;500;600&family=Hanken+Grotesk:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* live design tokens — driven by the control panel */
+    --bar-bg: #F5F1E8;
+    --txt: #2B2620;
+    --accent: #B8624A;
+    --line: #DAD4C8;
+
+    --font-wordmark: 'Playfair Display', serif;
+    --font-nav: 'Inter', sans-serif;
+
+    --wordmark-size: 22px;
+    --wordmark-track: 0.18em;
+    --nav-size: 12px;
+    --nav-track: 0.18em;
+    --bar-pad: 10px;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    font-family: 'Inter', sans-serif;
+    background: #EDE7DA;
+    color: #2B2620;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ----------------------------------------------------------------- LAYOUT */
+  .lab {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    min-height: 100vh;
+  }
+  @media (max-width: 880px) { .lab { grid-template-columns: 1fr; } }
+
+  /* ------------------------------------------------------------- CONTROLS */
+  .panel {
+    position: sticky;
+    top: 0;
+    align-self: start;
+    height: 100vh;
+    overflow-y: auto;
+    background: #FBF9F4;
+    border-right: 1px solid #D8D1C2;
+    padding: 24px 22px 60px;
+  }
+  @media (max-width: 880px) { .panel { position: static; height: auto; } }
+
+  .panel h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 19px; font-weight: 600; margin: 0 0 2px;
+    letter-spacing: .02em;
+  }
+  .panel .sub { font-size: 12px; color: #7A7363; margin: 0 0 22px; line-height: 1.5; }
+
+  .group { margin-bottom: 22px; padding-bottom: 20px; border-bottom: 1px solid #E6E0D2; }
+  .group:last-child { border-bottom: 0; }
+  .group > .glabel {
+    font-size: 10.5px; text-transform: uppercase; letter-spacing: .18em;
+    color: #9A917D; margin: 0 0 12px; font-weight: 600;
+  }
+
+  .field { margin-bottom: 13px; }
+  .field label {
+    display: flex; justify-content: space-between; align-items: baseline;
+    font-size: 12px; color: #4A4439; margin-bottom: 5px;
+  }
+  .field label .val { font-size: 11px; color: #9A917D; font-variant-numeric: tabular-nums; }
+
+  select, input[type="range"] { width: 100%; }
+  select {
+    font-family: inherit; font-size: 12.5px; color: #2B2620;
+    padding: 7px 9px; border: 1px solid #CFC8B8; border-radius: 7px;
+    background: #fff; cursor: pointer;
+  }
+  input[type="range"] {
+    -webkit-appearance: none; appearance: none; height: 3px; border-radius: 3px;
+    background: #D8D1C2; outline: none; margin: 9px 0 2px;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none; width: 15px; height: 15px;
+    border-radius: 50%; background: #B8624A; cursor: pointer; border: 2px solid #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,.2);
+  }
+
+  /* colour rows */
+  .color-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .color-row label { flex: 1; font-size: 12px; color: #4A4439; }
+  .color-row input[type="color"] {
+    width: 34px; height: 26px; padding: 0; border: 1px solid #CFC8B8;
+    border-radius: 6px; background: none; cursor: pointer;
+  }
+  .swatches { display: flex; gap: 7px; flex-wrap: wrap; margin-top: 10px; }
+  .swatch {
+    border: 1px solid #D8D1C2; border-radius: 6px; cursor: pointer;
+    font-size: 11px; padding: 6px 9px; background: #fff; color: #4A4439;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .swatch .dot { width: 11px; height: 11px; border-radius: 50%; display: inline-block; border: 1px solid rgba(0,0,0,.12); }
+
+  .reset {
+    width: 100%; margin-top: 6px; padding: 9px; border: 1px solid #CFC8B8;
+    border-radius: 7px; background: #fff; cursor: pointer; font-family: inherit;
+    font-size: 12px; color: #4A4439; letter-spacing: .04em;
+  }
+  .reset:hover { background: #F2EEE4; }
+
+  /* -------------------------------------------------------------- STAGE */
+  .stage { padding: 30px 32px 80px; }
+  @media (max-width: 880px) { .stage { padding: 22px 16px 60px; } }
+
+  .stage-head { margin: 0 0 24px; }
+  .stage-head h2 {
+    font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 500; margin: 0;
+  }
+  .stage-head p { font-size: 13px; color: #7A7363; margin: 4px 0 0; }
+
+  .variant { margin-bottom: 30px; }
+  .variant > .tag {
+    display: flex; align-items: baseline; gap: 10px; margin: 0 0 9px;
+  }
+  .variant > .tag .name {
+    font-size: 12px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase;
+    color: #2B2620;
+  }
+  .variant > .tag .desc { font-size: 12px; color: #8A8270; }
+  .frame {
+    border: 1px solid #D8D1C2; border-radius: 12px; overflow: hidden;
+    box-shadow: 0 6px 24px rgba(43,38,32,.06);
+  }
+
+  /* a little body sliver under each bar so it reads as a real page top */
+  .pagebody { height: 70px; background: linear-gradient(#fff, #FBF9F4); }
+  .pagebody.dark { background: linear-gradient(#23201B, #2B2620); }
+
+  /* =================================================== SHARED NAV PRIMITIVES */
+  .nav { background: var(--bar-bg); color: var(--txt); }
+  .nav a { color: var(--txt); text-decoration: none; }
+  .wordmark {
+    font-family: var(--font-wordmark); font-weight: 600;
+    font-size: var(--wordmark-size); letter-spacing: var(--wordmark-track);
+    color: var(--txt); white-space: nowrap; display: inline-flex; align-items: center;
+  }
+  .wordmark img { height: var(--wordmark-size); width: auto; display: block; }
+  .links { display: flex; gap: 30px; align-items: center; }
+  .links a {
+    font-family: var(--font-nav); font-size: var(--nav-size);
+    letter-spacing: var(--nav-track); text-transform: uppercase; white-space: nowrap;
+    position: relative; padding-bottom: 2px;
+  }
+  .links a::after {
+    content: ''; position: absolute; left: 0; bottom: 0; height: 1px; width: 0;
+    background: currentColor; transition: width .28s ease;
+  }
+  .links a:hover::after { width: 100%; }
+
+  .cta {
+    font-family: var(--font-nav); font-size: var(--nav-size); letter-spacing: var(--nav-track);
+    text-transform: uppercase; white-space: nowrap; cursor: pointer;
+    padding: 10px 18px; border-radius: 999px;
+    background: var(--accent); color: #fff !important; border: 1px solid var(--accent);
+    transition: opacity .2s ease;
+  }
+  .cta:hover { opacity: .88; }
+  .cta.ghost { background: transparent; color: var(--accent) !important; }
+
+  .inner { max-width: 1180px; margin: 0 auto; padding: 0 28px; }
+
+  /* ---- V1 Refined classic: logo left, links + CTA right -------------- */
+  .v1 .inner {
+    display: flex; align-items: center; justify-content: space-between;
+    padding-top: var(--bar-pad); padding-bottom: var(--bar-pad);
+    border-bottom: 1px solid var(--line);
+  }
+  .v1 .right { display: flex; align-items: center; gap: 30px; }
+
+  /* ---- V2 Centred wordmark: links left, wordmark centre, CTA right ---- */
+  .v2 .inner {
+    display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
+    padding-top: var(--bar-pad); padding-bottom: var(--bar-pad);
+    border-bottom: 1px solid var(--line);
+  }
+  .v2 .links { justify-self: start; }
+  .v2 .wordmark { justify-self: center; }
+  .v2 .end { justify-self: end; }
+
+  /* ---- V3 Big serif wordmark, tiny tracked links underneath ---------- */
+  .v3 .inner {
+    display: flex; flex-direction: column; align-items: center; gap: 14px;
+    padding-top: calc(var(--bar-pad) + 6px); padding-bottom: var(--bar-pad);
+    border-bottom: 1px solid var(--line);
+  }
+  .v3 .wordmark { font-size: calc(var(--wordmark-size) * 1.7); }
+  .v3 .wordmark img { height: calc(var(--wordmark-size) * 1.7); }
+  .v3 .row { display: flex; align-items: center; gap: 28px; }
+
+  /* ---- V4 Floating pill -------------------------------------------- */
+  .v4 { background: transparent; padding: 18px 0; }
+  .v4 .inner {
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--bar-bg); border: 1px solid var(--line); border-radius: 999px;
+    padding: calc(var(--bar-pad) * .55) 26px; max-width: 1040px;
+    box-shadow: 0 8px 28px rgba(43,38,32,.08);
+  }
+  .v4 .right { display: flex; align-items: center; gap: 26px; }
+  .v4-wrap { background: linear-gradient(#fff, #F5F1E8); }
+
+  /* ---- V5 Minimal: no fill, hairline baseline, ghost CTA ------------ */
+  .v5 { background: transparent; }
+  .v5 .inner {
+    display: flex; align-items: center; justify-content: space-between;
+    padding-top: var(--bar-pad); padding-bottom: var(--bar-pad);
+    border-bottom: 1px solid var(--txt);
+  }
+  .v5 .right { display: flex; align-items: center; gap: 30px; }
+  .v5-wrap { background: var(--bar-bg); }
+
+  /* ---- V6 Stacked editorial: rules + centred two-row ---------------- */
+  .v6 .inner { padding: 0 28px; }
+  .v6 .topline {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: calc(var(--bar-pad) * .7) 0;
+  }
+  .v6 .topline .meta {
+    font-family: var(--font-nav); font-size: calc(var(--nav-size) * .92);
+    letter-spacing: var(--nav-track); text-transform: uppercase; color: var(--txt); opacity: .6;
+  }
+  .v6 .wordmark { font-size: calc(var(--wordmark-size) * 1.25); }
+  .v6 .wordmark img { height: calc(var(--wordmark-size) * 1.25); }
+  .v6 .navrow {
+    display: flex; justify-content: center; gap: 34px;
+    border-top: 1px solid var(--line); padding: 12px 0;
+  }
+  .v6 .navrow .cta { padding: 6px 16px; }
+</style>
+</head>
+<body>
+<div class="lab">
+
+  <!-- ======================================================= CONTROL PANEL -->
+  <aside class="panel">
+    <h1>Navbar Lab</h1>
+    <p class="sub">Six directions, one set of controls. Tweak font, colour and size — every bar updates live so you can compare like-for-like. Nothing here is wired into the site yet.</p>
+
+    <div class="group">
+      <p class="glabel">Typeface</p>
+      <div class="field">
+        <label for="fWord">Wordmark font</label>
+        <select id="fWord">
+          <option value="'Playfair Display', serif">Playfair Display</option>
+          <option value="'Cormorant Garamond', serif">Cormorant Garamond</option>
+          <option value="'Fraunces', serif">Fraunces</option>
+          <option value="'Marcellus', serif">Marcellus</option>
+          <option value="'Inter', sans-serif">Inter</option>
+          <option value="'Hanken Grotesk', sans-serif">Hanken Grotesk</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="fNav">Nav / links font</label>
+        <select id="fNav">
+          <option value="'Inter', sans-serif">Inter</option>
+          <option value="'Hanken Grotesk', sans-serif">Hanken Grotesk</option>
+          <option value="'Marcellus', serif">Marcellus</option>
+          <option value="'Cormorant Garamond', serif">Cormorant Garamond</option>
+          <option value="'Playfair Display', serif">Playfair Display</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="group">
+      <p class="glabel">Colour</p>
+      <div class="color-row">
+        <label>Bar background</label>
+        <input type="color" id="cBar" value="#F5F1E8">
+      </div>
+      <div class="color-row">
+        <label>Text</label>
+        <input type="color" id="cTxt" value="#2B2620">
+      </div>
+      <div class="color-row">
+        <label>Accent / CTA</label>
+        <input type="color" id="cAcc" value="#B8624A">
+      </div>
+      <div class="swatches" id="swatches"></div>
+    </div>
+
+    <div class="group">
+      <p class="glabel">Size &amp; spacing</p>
+      <div class="field">
+        <label for="sWord">Wordmark size <span class="val" id="sWordV">22px</span></label>
+        <input type="range" id="sWord" min="14" max="40" value="22">
+      </div>
+      <div class="field">
+        <label for="sNav">Link size <span class="val" id="sNavV">12px</span></label>
+        <input type="range" id="sNav" min="9" max="18" value="12">
+      </div>
+      <div class="field">
+        <label for="sTrack">Link tracking <span class="val" id="sTrackV">0.18em</span></label>
+        <input type="range" id="sTrack" min="0" max="40" value="18">
+      </div>
+      <div class="field">
+        <label for="sPad">Bar height <span class="val" id="sPadV">10px</span></label>
+        <input type="range" id="sPad" min="4" max="36" value="10">
+      </div>
+      <button class="reset" id="reset">Reset to brand defaults</button>
+    </div>
+  </aside>
+
+  <!-- ============================================================== STAGE -->
+  <main class="stage">
+    <div class="stage-head">
+      <h2>Pick a direction</h2>
+      <p>Links: Pilates with Cristina · Events · Our Story, plus a Hire&nbsp;mats CTA. Mat&nbsp;Hire and Gallery removed.</p>
+    </div>
+
+    <!-- V1 -->
+    <section class="variant">
+      <div class="tag"><span class="name">01 · Refined classic</span><span class="desc">Closest to what you have — logo left, links and CTA right.</span></div>
+      <div class="frame">
+        <header class="nav v1">
+          <div class="inner">
+            <a href="#" class="wordmark"><img src="/assets/saia-logo.avif" alt="SAÏA London"></a>
+            <div class="right">
+              <nav class="links">
+                <a href="#">Pilates with Cristina</a>
+                <a href="#">Events</a>
+                <a href="#">Our Story</a>
+              </nav>
+              <a href="#" class="cta">Hire mats</a>
+            </div>
+          </div>
+        </header>
+        <div class="pagebody"></div>
+      </div>
+    </section>
+
+    <!-- V2 -->
+    <section class="variant">
+      <div class="tag"><span class="name">02 · Centred wordmark</span><span class="desc">Editorial symmetry — links left, name centred, CTA right.</span></div>
+      <div class="frame">
+        <header class="nav v2">
+          <div class="inner">
+            <nav class="links">
+              <a href="#">Pilates with Cristina</a>
+              <a href="#">Events</a>
+              <a href="#">Our Story</a>
+            </nav>
+            <a href="#" class="wordmark"><img src="/assets/saia-logo.avif" alt="SAÏA London"></a>
+            <div class="end"><a href="#" class="cta">Hire mats</a></div>
+          </div>
+        </header>
+        <div class="pagebody"></div>
+      </div>
+    </section>
+
+    <!-- V3 -->
+    <section class="variant">
+      <div class="tag"><span class="name">03 · Stacked serif</span><span class="desc">Large serif wordmark over tiny tracked links — boutique feel.</span></div>
+      <div class="frame">
+        <header class="nav v3">
+          <div class="inner">
+            <a href="#" class="wordmark"><img src="/assets/saia-logo.avif" alt="SAÏA London"></a>
+            <div class="row">
+              <nav class="links">
+                <a href="#">Pilates with Cristina</a>
+                <a href="#">Events</a>
+                <a href="#">Our Story</a>
+              </nav>
+              <a href="#" class="cta ghost">Hire mats</a>
+            </div>
+          </div>
+        </header>
+        <div class="pagebody"></div>
+      </div>
+    </section>
+
+    <!-- V4 -->
+    <section class="variant">
+      <div class="tag"><span class="name">04 · Floating pill</span><span class="desc">Detached rounded bar over the hero — modern, soft.</span></div>
+      <div class="frame v4-wrap">
+        <header class="nav v4">
+          <div class="inner">
+            <a href="#" class="wordmark"><img src="/assets/saia-logo.avif" alt="SAÏA London"></a>
+            <div class="right">
+              <nav class="links">
+                <a href="#">Pilates with Cristina</a>
+                <a href="#">Events</a>
+                <a href="#">Our Story</a>
+              </nav>
+              <a href="#" class="cta">Hire mats</a>
+            </div>
+          </div>
+        </header>
+      </div>
+    </section>
+
+    <!-- V5 -->
+    <section class="variant">
+      <div class="tag"><span class="name">05 · Minimal hairline</span><span class="desc">No fill, single baseline rule, ghost CTA — barely there.</span></div>
+      <div class="frame v5-wrap">
+        <header class="nav v5">
+          <div class="inner">
+            <a href="#" class="wordmark"><img src="/assets/saia-logo.avif" alt="SAÏA London"></a>
+            <div class="right">
+              <nav class="links">
+                <a href="#">Pilates with Cristina</a>
+                <a href="#">Events</a>
+                <a href="#">Our Story</a>
+              </nav>
+              <a href="#" class="cta ghost">Hire mats</a>
+            </div>
+          </div>
+        </header>
+        <div class="pagebody"></div>
+      </div>
+    </section>
+
+    <!-- V6 -->
+    <section class="variant">
+      <div class="tag"><span class="name">06 · Two-row editorial</span><span class="desc">Wordmark + contact row up top, centred nav row beneath a rule.</span></div>
+      <div class="frame">
+        <header class="nav v6">
+          <div class="inner">
+            <div class="topline">
+              <span class="meta">NW3 · London</span>
+              <a href="#" class="wordmark"><img src="/assets/saia-logo.avif" alt="SAÏA London"></a>
+              <span class="meta">07444 611 914</span>
+            </div>
+            <nav class="navrow links">
+              <a href="#">Pilates with Cristina</a>
+              <a href="#">Events</a>
+              <a href="#">Our Story</a>
+              <a href="#" class="cta">Hire mats</a>
+            </nav>
+          </div>
+        </header>
+        <div class="pagebody"></div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+  var root = document.documentElement.style;
+  var $ = function (id) { return document.getElementById(id); };
+
+  function setVar(name, value) { root.setProperty(name, value); }
+
+  // ---- fonts
+  $('fWord').addEventListener('change', function () { setVar('--font-wordmark', this.value); });
+  $('fNav').addEventListener('change', function () { setVar('--font-nav', this.value); });
+
+  // ---- colours
+  $('cBar').addEventListener('input', function () { setVar('--bar-bg', this.value); });
+  $('cTxt').addEventListener('input', function () { setVar('--txt', this.value); });
+  $('cAcc').addEventListener('input', function () { setVar('--accent', this.value); });
+
+  // ---- sizes
+  function bindRange(id, vId, cssVar, unit, fmt) {
+    var el = $(id), out = $(vId);
+    el.addEventListener('input', function () {
+      var v = fmt ? fmt(this.value) : this.value;
+      setVar(cssVar, v + unit);
+      out.textContent = v + unit;
+    });
+  }
+  bindRange('sWord', 'sWordV', '--wordmark-size', 'px');
+  bindRange('sNav', 'sNavV', '--nav-size', 'px');
+  bindRange('sTrack', 'sTrackV', '--nav-track', 'em', function (v) { return (v / 100).toFixed(2); });
+  bindRange('sPad', 'sPadV', '--bar-pad', 'px');
+
+  // ---- colour presets
+  var presets = [
+    { name: 'Cream', bar: '#F5F1E8', txt: '#2B2620', acc: '#B8624A' },
+    { name: 'Ink', bar: '#2B2620', txt: '#F5F1E8', acc: '#C8795F' },
+    { name: 'Sand', bar: '#EBE3D3', txt: '#3A332A', acc: '#A6543C' },
+    { name: 'Olive', bar: '#3F3F30', txt: '#EFE9DA', acc: '#C9A24B' },
+    { name: 'White', bar: '#FFFFFF', txt: '#2B2620', acc: '#B8624A' },
+    { name: 'Terracotta', bar: '#B8624A', txt: '#FBF4EC', acc: '#2B2620' }
+  ];
+  var sw = $('swatches');
+  presets.forEach(function (p) {
+    var b = document.createElement('button');
+    b.className = 'swatch';
+    b.innerHTML = '<span class="dot" style="background:' + p.bar + '"></span>' + p.name;
+    b.addEventListener('click', function () {
+      setVar('--bar-bg', p.bar); setVar('--txt', p.txt); setVar('--accent', p.acc);
+      $('cBar').value = p.bar; $('cTxt').value = p.txt; $('cAcc').value = p.acc;
+    });
+    sw.appendChild(b);
+  });
+
+  // ---- reset
+  $('reset').addEventListener('click', function () {
+    var d = {
+      '--bar-bg': '#F5F1E8', '--txt': '#2B2620', '--accent': '#B8624A',
+      '--font-wordmark': "'Playfair Display', serif", '--font-nav': "'Inter', sans-serif",
+      '--wordmark-size': '22px', '--nav-size': '12px', '--nav-track': '0.18em', '--bar-pad': '10px'
+    };
+    for (var k in d) setVar(k, d[k]);
+    $('fWord').value = "'Playfair Display', serif"; $('fNav').value = "'Inter', sans-serif";
+    $('cBar').value = '#F5F1E8'; $('cTxt').value = '#2B2620'; $('cAcc').value = '#B8624A';
+    $('sWord').value = 22; $('sWordV').textContent = '22px';
+    $('sNav').value = 12; $('sNavV').textContent = '12px';
+    $('sTrack').value = 18; $('sTrackV').textContent = '0.18em';
+    $('sPad').value = 10; $('sPadV').textContent = '10px';
+  });
+</script>
+</body>
+</html>

@@ -75,4 +75,36 @@ html, body { margin: 0; padding: 0; }
 }
 .saia-slot svg { opacity: .4; }
 .saia-slot.filled { border: none; padding: 0; }
+
+/* ============================================================
+   Stacked header — logo wordmark over links + Hire CTA
+   Shared across every page. Markup uses .snav* classes.
+   Drawer id differs per page (mobileDrawer on index, drawer
+   elsewhere) but styling is shared.
+   ============================================================ */
+.snav { position: sticky; top: 0; z-index: 50; background: rgba(245,241,232,.94); backdrop-filter: blur(10px); border-bottom: 1px solid var(--saia-line); }
+.snav-desk { display: flex; flex-direction: column; align-items: center; gap: 13px; padding: 14px 48px; max-width: 1480px; margin: 0 auto; }
+.snav-brand { display: inline-flex; align-items: center; text-decoration: none; }
+.snav-brand img { height: 48px; width: auto; display: block; }
+.snav-row { display: flex; align-items: center; gap: 30px; }
+.snav-links { display: flex; align-items: center; gap: 30px; font-size: 12px; letter-spacing: .18em; text-transform: uppercase; white-space: nowrap; }
+.snav-links a { color: var(--saia-ink); text-decoration: none; position: relative; padding-bottom: 3px; }
+.snav-links a::after { content: ""; position: absolute; left: 0; bottom: 0; height: 1px; width: 0; background: currentColor; transition: width .28s ease; }
+.snav-links a:hover::after { width: 100%; }
+.snav-links a[aria-current] { color: var(--saia-accent); }
+.snav-cta { font-size: 12px; letter-spacing: .18em; text-transform: uppercase; white-space: nowrap; padding: 8px 18px; border-radius: 999px; border: 1px solid var(--saia-accent); color: var(--saia-accent); text-decoration: none; transition: background .2s ease, color .2s ease; }
+.snav-cta:hover { background: var(--saia-accent); color: #fff; }
+.snav-mob { display: none; }
+.snav-burger { background: none; border: none; padding: 6px; cursor: pointer; display: flex; color: var(--saia-ink); }
+.snav-drawer { display: none; position: fixed; inset: 0; z-index: 60; background: var(--saia-cream); padding: 24px 28px; }
+.snav-drawer-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 48px; }
+.snav-drawer-top img { height: 34px; width: auto; display: block; }
+.snav-drawer nav { display: flex; flex-direction: column; gap: 6px; }
+.snav-drawer nav a { font-family: 'Playfair Display', serif; font-size: 32px; color: var(--saia-ink); text-decoration: none; padding: 12px 0; border-bottom: 1px solid var(--saia-line); }
+.snav-drawer nav a[aria-current] { color: var(--saia-accent); }
+@media (max-width: 760px) {
+  .snav-desk { display: none; }
+  .snav-mob { display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; }
+  .snav-mob .snav-brand img { height: 30px; }
+}
 .saia-slot img { width: 100%; height: 100%; object-fit: cover; display: block; }
