@@ -22,7 +22,7 @@
       mat: { size: '68 × 185 cm, 4 mm thick', colour: 'black', material: 'natural rubber with a PU surface', features: 'non-slip and anti-odour' },
       delivery: 'Same-day courier across London from our Central London warehouse.',
       collection: 'We collect the day after. No need to clean them, we handle that.' },
-    contact: { whatsapp: '07444 611 914', person: 'Cristina', pickup: 'NW3 warehouse' },
+    contact: { email: 'support@saialondon.com', whatsapp: '07444 611 914', person: 'Cristina', pickup: 'NW3 warehouse' },
     club: { ethos: 'women who lift each other up', join: 'pop your email in to hear about gatherings' },
     pilates: { method: 'small, slow and breath-led', format: '1-2-1 in NW3, group in Hampstead' },
     founder: { name: 'Cristina', bio: 'Cristina founded SAÏA in 2020.', meaning: 'SAÏA means “A Woman Who Wins”.' },
@@ -253,7 +253,7 @@
 
     // location / contact
     if (has(/where|location|nw3|warehouse|address|whats ?app|phone|number|contact|call|reach|email/))
-      return m("We're " + (KB.contact.pickup || 'in London') + '. For the quickest service, WhatsApp ' + KB.contact.person + ' on ' + KB.contact.whatsapp + '. Or tell me your numbers and I\'ll start your hire right here.');
+      return m("We're " + (KB.contact.pickup || 'in London') + '. For the quickest service, email ' + KB.contact.person + ' at ' + KB.contact.email + '. Or tell me your numbers and I\'ll start your hire right here.');
 
     // pricing FAQ — answer the question; only start collecting mats if we're not already mid-hire
     if (has(/price|quote|cost|how much|rate|charge/)) {

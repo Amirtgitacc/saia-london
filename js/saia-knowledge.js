@@ -16,7 +16,8 @@
   var KB = {
     /* ---- contact (one channel, one person) ---- */
     contact: {
-      whatsapp: '07444 611 914',           // Cristina — quickest for urgent hires
+      email: 'support@saialondon.com',      // primary contact for hires + bookings
+      whatsapp: '07444 611 914',           // Cristina — kept for booking handoffs only
       person: 'Cristina',
       area: 'London',
       pickup: 'NW3 (North London) warehouse, working hours only',
@@ -193,7 +194,7 @@
     '- Delivery: ' + KB.hire.delivery,
     '- Collection: ' + KB.hire.collection,
     '- The mat: ' + KB.hire.mat.size + ', ' + KB.hire.mat.colour + ', ' + KB.hire.mat.material + '; ' + KB.hire.mat.features + '. (Retail value ~' + KB.hire.currency + KB.hire.retailReference + ' each, for reference only, still hire-only.)',
-    '- Booking/urgent: WhatsApp ' + KB.contact.person + ' on ' + KB.contact.whatsapp + '. Pickup at ' + KB.contact.pickup + '.',
+    '- Booking/urgent: email ' + KB.contact.person + ' at ' + KB.contact.email + '. Pickup at ' + KB.contact.pickup + '.',
     '',
     '### Community / the club (#2)',
     '- ' + KB.club.ethos,
@@ -208,7 +209,7 @@
     '- ' + KB.founder.bio,
     '',
     '### Contact',
-    '- WhatsApp ' + KB.contact.person + ': ' + KB.contact.whatsapp + ' · Instagram ' + KB.contact.social.instagram + ' · ' + KB.contact.area + ' (' + KB.contact.pickup + ').',
+    '- Email ' + KB.contact.person + ': ' + KB.contact.email + ' · Instagram ' + KB.contact.social.instagram + ' · ' + KB.contact.area + ' (' + KB.contact.pickup + ').',
   ].join('\n');
 
   return KB;

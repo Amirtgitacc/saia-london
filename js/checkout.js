@@ -44,7 +44,7 @@
     '<label>Address *</label><input id="f-addr" autocomplete="street-address">' +
     '<label>Email</label><input id="f-email" type="email" autocomplete="email">' +
     '<label>Phone</label><input id="f-phone" type="tel" autocomplete="tel">' +
-    '<div class="muted">* required · add an email or phone so Cristina can confirm.</div>' +
+    '<div class="muted">* required · add an email or phone so we can confirm your booking.</div>' +
     '<h2 style="margin-top:18px">Payment · demo, no real charge</h2>' +
     '<div class="grid"><input placeholder="Card number" inputmode="numeric"><input placeholder="MM/YY"><input placeholder="CVC"></div>';
   var pay = el('button', 'pay', 'Pay ' + money(q.total) + ' →');
@@ -54,7 +54,7 @@
 
   // success panel
   var ok = el('div', 'ok');
-  ok.innerHTML = '<h2>Booking received</h2><p class="muted">Thank you. Cristina will confirm your courier and be in touch shortly. (This is a demo — no payment was taken.)</p>';
+  ok.innerHTML = '<h2>Booking received</h2><p class="muted">Thank you. We\'ll confirm your courier and be in touch shortly. (This is a demo — no payment was taken.)</p>';
   root.appendChild(ok);
 
   var name = document.getElementById('f-name');
