@@ -8,7 +8,20 @@
   var hire = null;
   try { hire = JSON.parse(sessionStorage.getItem('saia_hire') || 'null'); } catch (e) { hire = null; }
 
-  if (!hire || !KB || !KB.hireComplete || !KB.hireComplete(hire)) {
+  // Bookable = the hire has its numbers + a delivery method (and a zone if delivering).
+  // The event date is optional here — the estimator doesn't ask for it, so we collect
+  // it on this page below. (The assistant flow still gathers it up front.)
+  function bookable(h) {
+    if (!h || !KB || !KB.hire) return false;
+    var mats = parseInt(h.mats, 10) || 0;
+    var days = parseInt(h.days, 10) || 0;
+    if (mats < KB.hire.minMats || days < KB.hire.hireDays) return false;
+    if (h.method === 'pickup') return true;
+    if (h.method === 'deliver') return !!h.zone;
+    return false;
+  }
+
+  if (!bookable(hire)) {
     root.innerHTML = '<div class="card"><p>Let’s build your hire first. Tell the SAÏA assistant your numbers and date and it will bring you back here.</p>' +
       '<p><a class="back" href="index.html">← Start with the assistant</a></p></div>';
     return;
@@ -40,7 +53,9 @@
   // details + payment form
   var form = el('div', 'card');
   form.appendChild(el('h2', null, 'Your details'));
+  var needDate = !hire.date;   // estimator handoff has no date — collect it here
   form.innerHTML += '<label>Name *</label><input id="f-name" autocomplete="name">' +
+    (needDate ? '<label>Event date *</label><input id="f-date" type="date">' : '') +
     '<label>Address *</label><input id="f-addr" autocomplete="street-address">' +
     '<label>Email</label><input id="f-email" type="email" autocomplete="email">' +
     '<label>Phone</label><input id="f-phone" type="tel" autocomplete="tel">' +
@@ -59,9 +74,11 @@
 
   var name = document.getElementById('f-name');
   var addr = document.getElementById('f-addr');
-  function check() { pay.disabled = !(name.value.trim() && addr.value.trim()); }
+  var date = document.getElementById('f-date');   // null unless needDate
+  function check() { pay.disabled = !(name.value.trim() && addr.value.trim() && (!date || date.value)); }
   name.addEventListener('input', check);
   addr.addEventListener('input', check);
+  if (date) { date.addEventListener('input', check); date.addEventListener('change', check); }
 
   pay.addEventListener('click', function () {
     form.style.display = 'none';
