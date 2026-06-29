@@ -265,7 +265,7 @@
       window.visualViewport.removeEventListener('scroll', syncViewport);
     }
     vpBound = false;
-    if (dock) dock.style.bottom = '';            // back to the CSS default (24px)
+    if (dock) dock.style.bottom = '24px';        // restore the rest anchor (it lives inline, not in CSS — clearing it drops the fixed dock to page bottom)
     if (panelEl) panelEl.style.maxHeight = '';
   }
 
