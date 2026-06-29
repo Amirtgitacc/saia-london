@@ -495,12 +495,15 @@
     #top [data-band="0,0.14"],
     #top [data-band="0.14,0.30"],
     #top [data-band="0.30,0.44"],
-    #top .flow-rail:not([data-band="0.972,1"]){ display:none !important; }
+    #top [data-band="0.44,0.556"],   /* "For every gathering" range grid — desktop only */
+    #top .flow-rail{ display:none !important; }   /* Pilates flow + Train-with-Cristina form: the journey + its end-CTA replace these on mobile */
   }
   .mj-track{ position:relative; height:780vh; }
-  .mj-pin{ position:sticky; top:0; height:100vh; display:flex; flex-direction:column; overflow:hidden; }
+  /* clear the sticky nav (≈59px): pad the pinned area down so chapter text never tucks under it */
+  .mj-pin{ position:sticky; top:0; height:100vh; padding-top:60px; box-sizing:border-box; display:flex; flex-direction:column; overflow:hidden; }
   .mj-txt{ position:relative; flex:0 0 33%; padding:0 24px; }
-  .mj-chap{ position:absolute; left:24px; right:24px; bottom:10px; opacity:0; transition:opacity .45s ease; pointer-events:none; }
+  /* top-anchored so tall 2-line titles grow downward into the empty stage, never upward under the nav */
+  .mj-chap{ position:absolute; left:24px; right:24px; top:6px; opacity:0; transition:opacity .45s ease; pointer-events:none; }
   .mj-chap.on{ opacity:1; }
   .mj-eb{ font-size:11px; letter-spacing:.28em; text-transform:uppercase; color:#B8624A; margin:0 0 12px; }
   .mj-h{ font-family:'Playfair Display',serif; font-weight:500; font-size:clamp(32px,9vw,40px); line-height:1.0; margin:0 0 12px; color:#2B2620; padding-left:14px; border-left:2px solid #B8624A; }
@@ -508,18 +511,32 @@
   .mj-anim{ position:relative; flex:1 1 auto; background:radial-gradient(120% 90% at 50% 14%, #F5F1E8 38%, #EFEADF 100%); }
   .mj-matgl{ position:absolute; inset:0; width:100%; height:100%; z-index:1; }
   .mj-flow{ position:absolute; inset:0; width:100%; height:100%; z-index:2; opacity:0; }
-  /* swipe cue — hand-on-phone gesture (tap + swipe up) + per-chapter ladder, lower-centre (clear of the concierge S) */
-  .mj-beacon{ position:absolute; left:50%; top:63%; transform:translate(-50%,-50%); z-index:6; display:flex; flex-direction:column; align-items:center; gap:12px; pointer-events:none; }
+  /* swipe cue + per-chapter ladder — pinned to the LEFT edge, clear of the centred mat/Cristina
+     and the concierge "S" (bottom-right). The ladder is a thin vertical rail; JS fades it out
+     toward the end so the closing CTA under Cristina sits clean. */
+  .mj-beacon{ position:absolute; left:16px; top:50%; transform:translateY(-50%); z-index:6; display:flex; flex-direction:column; align-items:center; gap:16px; pointer-events:none; }
   .mj-bcue{ display:flex; flex-direction:column; align-items:center; gap:9px; transition:opacity .4s ease; will-change:opacity; }
-  .mj-swipe{ width:50px; height:59px; display:flex; align-items:center; justify-content:center; }
+  .mj-swipe{ width:46px; height:54px; display:flex; align-items:center; justify-content:center; }
   .mj-hand-img{ width:100%; height:auto; display:block; animation:mjFlick 1.7s ease-in-out infinite; will-change:transform; }
-  .mj-cue-lbl{ font-size:10px; letter-spacing:.28em; text-transform:uppercase; color:#2B2620; font-weight:600; }
-  .mj-ladder{ display:flex; flex-direction:row; align-items:center; gap:5px; }
-  .mj-ladder i{ width:15px; height:6px; border-radius:99px; background:rgba(43,38,32,.2); transition:background .25s ease, width .25s ease; }
+  .mj-cue-lbl{ font-size:9px; letter-spacing:.24em; text-transform:uppercase; color:#2B2620; font-weight:600; }
+  .mj-ladder{ display:flex; flex-direction:column; align-items:center; gap:6px; transition:opacity .4s ease; will-change:opacity; }
+  .mj-ladder i{ width:6px; height:15px; border-radius:99px; background:rgba(43,38,32,.2); transition:background .25s ease, height .25s ease; }
   .mj-ladder i.done{ background:#C98A2E; }
-  .mj-ladder i.on{ background:#C98A2E; width:24px; }
+  .mj-ladder i.on{ background:#C98A2E; height:26px; }
   @keyframes mjFlick{ 0%,100%{ transform:translateY(5px) } 48%,64%{ transform:translateY(-4px) } }
   @media (prefers-reduced-motion: reduce){ .mj-hand-img{ animation:none } }
+  /* closing CTA — fades in beneath Cristina on the last chapter, where the rail used to be.
+     Anchored bottom-LEFT so it never collides with the persistent concierge orb + "Chat here"
+     caption (bottom-right). */
+  .mj-endcta{ position:absolute; left:24px; right:24px; bottom:4%; z-index:7;
+    display:flex; flex-direction:column; align-items:flex-start; gap:8px; text-decoration:none; text-align:left;
+    transform:translateY(10px); opacity:0; pointer-events:none; transition:opacity .5s ease, transform .5s ease; }
+  .mj-endcta.show{ opacity:1; transform:translateY(0); pointer-events:auto; }
+  .mj-endcta .mj-endcta-eb{ font-size:10px; letter-spacing:.28em; text-transform:uppercase; color:#B8624A; font-weight:600; }
+  .mj-endcta .mj-endcta-btn{ display:inline-flex; align-items:center; gap:10px; background:#2B2620; color:#F5F1E8;
+    font-family:'Inter',sans-serif; font-size:14px; letter-spacing:.04em; padding:13px 22px; border-radius:99px;
+    box-shadow:0 14px 30px rgba(43,38,32,.22); max-width:64vw; }
+  .mj-endcta .mj-endcta-btn svg{ width:15px; height:15px; flex:0 0 auto; }
 </style>
 </head>
 <body>
@@ -1410,7 +1427,7 @@
 <!-- mobile-only scroll journey: lazy-loads the vendored three.js ES modules on small screens -->
 <script type="module">
   if (window.matchMedia('(max-width: 767px)').matches) {
-    import('./js/home-mobile-journey.js?v=20260629m19')
+    import('./js/home-mobile-journey.js?v=20260629m20')
       .then(function (m) { m.initMobileJourney(); })
       .catch(function (e) { console.warn('mobile journey init failed', e); });
   }

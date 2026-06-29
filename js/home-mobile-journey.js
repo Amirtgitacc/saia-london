@@ -54,6 +54,10 @@ export function initMobileJourney() {
           '</div>' +
             '<div class="mj-ladder"></div>' +
           '</div>' +
+          '<a class="mj-endcta" href="guest-list.html">' +
+            '<span class="mj-endcta-eb">Train with Cristina</span>' +
+            '<span class="mj-endcta-btn">Work out together <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></span>' +
+          '</a>' +
         '</div>' +
       '</div>' +
     '</div>';
@@ -66,6 +70,7 @@ export function initMobileJourney() {
   var matgl = root.querySelector('.mj-matgl');
   var bcue  = root.querySelector('.mj-bcue');
   var ladEl = root.querySelector('.mj-ladder');
+  var endcta = root.querySelector('.mj-endcta');
   for (var _li = 0; _li < N; _li++) ladEl.appendChild(document.createElement('i'));
   var ladder = [].slice.call(ladEl.children);
 
@@ -151,6 +156,8 @@ export function initMobileJourney() {
     var ai = 0;
     for (var ci = 0; ci < N; ci++) { if (p >= CH[ci].a && p < CH[ci].b) { ai = ci; break; } if (p >= CH[ci].b) ai = Math.min(ci + 1, N - 1); }
     for (var si = 0; si < ladder.length; si++) { ladder[si].classList.toggle('done', si < ai); ladder[si].classList.toggle('on', si === ai); }
+    ladEl.style.opacity = clamp(1 - (p - 0.9) / 0.06, 0, 1).toFixed(3);   // fade the rail out before the close
+    endcta.classList.toggle('show', p >= 0.93);                          // closing CTA takes the rail's place under Cristina
     bcue.style.opacity = (1 - Math.min(1, p / 0.05)).toFixed(3);
   }
 
@@ -177,6 +184,63 @@ export function initMobileJourney() {
     camera.aspect = anim.clientWidth / anim.clientHeight; camera.updateProjectionMatrix();
     sizeFlow(); targetP = measure(); draw(curP);
   });
+
+  /* ---- section-by-section snap (touch + wheel) ----
+     Within the pinned journey each swipe eases to the next chapter at a moderate, fixed speed so
+     the animation can't be flicked past — you see every step. Free native scrolling resumes above
+     the hero and below the final chapter. Disabled under prefers-reduced-motion. */
+  var prefersReduce = false;
+  try { prefersReduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
+  if (!prefersReduce) {
+    var STOPS = [0.06, 0.225, 0.375, 0.52, 0.655, 0.79, 0.965];   // one settled position per chapter
+    var isSnapping = false, snapRaf = null, SWIPE_MIN = 22, touchStartY = 0, wheelLock = false;
+    function trackTopDoc() { return track.getBoundingClientRect().top + window.scrollY; }
+    function totalScroll() { return Math.max(1, track.offsetHeight - window.innerHeight); }
+    function yForP(p) { return Math.round(trackTopDoc() + clamp(p, 0, 1) * totalScroll()); }
+    function nearestStop(p) { var bi = 0, bd = Infinity; for (var i = 0; i < STOPS.length; i++) { var d = Math.abs(STOPS[i] - p); if (d < bd) { bd = d; bi = i; } } return bi; }
+    function engaged() {
+      if (isSnapping) return true;
+      if (track.offsetHeight - window.innerHeight <= 0) return false;
+      var y = window.scrollY;
+      return y >= yForP(0) - 1 && y <= yForP(1) + 1;
+    }
+    function tweenScrollTo(toY, dur) {
+      if (snapRaf) cancelAnimationFrame(snapRaf);
+      var fromY = window.scrollY, t0 = null;
+      isSnapping = true;
+      (function step(ts) {
+        if (t0 === null) t0 = ts;
+        var k = clamp((ts - t0) / dur, 0, 1);
+        var e = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;   // easeInOutQuad — moderate, settled
+        window.scrollTo(0, Math.round(fromY + (toY - fromY) * e));
+        if (k < 1) { snapRaf = requestAnimationFrame(step); }
+        else { snapRaf = null; isSnapping = false; }
+      })(performance.now());
+    }
+    function snapMove(dir) {
+      var cur = nearestStop(measure()), next = cur + dir;
+      if (next >= 0 && next < STOPS.length) tweenScrollTo(yForP(STOPS[next]), 640);
+      else if (next >= STOPS.length) tweenScrollTo(yForP(1) + 4, 460);    // release down into the editorial sections
+      else tweenScrollTo(Math.max(0, yForP(0) - 4), 460);                  // release up to the top
+    }
+    function overConcierge(t) { return !!(t && t.closest && t.closest('#homeChatPanel, #homeChatLauncher')); }
+    window.addEventListener('touchstart', function (e) { touchStartY = e.touches[0].clientY; }, { passive: true });
+    window.addEventListener('touchmove', function (e) { if (engaged() && !overConcierge(e.target) && e.cancelable) e.preventDefault(); }, { passive: false });
+    window.addEventListener('touchend', function (e) {
+      if (isSnapping || !engaged() || overConcierge(e.target)) return;
+      var dy = touchStartY - e.changedTouches[0].clientY;
+      if (Math.abs(dy) < SWIPE_MIN) return;   // a tap — let the closing CTA / concierge through
+      snapMove(dy > 0 ? 1 : -1);
+    }, { passive: true });
+    window.addEventListener('wheel', function (e) {
+      if (!engaged() || overConcierge(e.target)) return;
+      if (e.cancelable) e.preventDefault();
+      if (isSnapping || wheelLock) return;
+      snapMove(e.deltaY > 0 ? 1 : -1);
+      wheelLock = true; setTimeout(function () { wheelLock = false; }, 700);
+    }, { passive: false });
+  }
+
   targetP = curP = measure();
   setTimeout(function () { draw(curP); }, 120);
   draw(curP);
