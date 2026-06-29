@@ -27,10 +27,22 @@
   .ok h2{ font-family:'Playfair Display',serif; color:var(--ink); font-size:20px; margin:0 0 8px; letter-spacing:0; text-transform:none; }
   .muted{ font-size:12px; color:#6B6358; }
   a.back{ color:var(--terra); font-size:13px; }
+  /* top-left back control — works on the summary, payment & empty views */
+  .saia-back{ display:inline-flex; align-items:center; gap:8px; min-height:44px; padding:8px 16px 8px 12px; margin-bottom:14px; border:1px solid var(--line); border-radius:999px; background:#FBF8F1; color:var(--ink); font-size:13px; letter-spacing:.02em; text-decoration:none; -webkit-tap-highlight-color:transparent; transition:background .18s ease, border-color .18s ease, color .18s ease, transform .18s ease; }
+  .saia-back svg{ width:16px; height:16px; flex:0 0 auto; }
+  .saia-back:hover{ background:#fff; border-color:var(--terra); color:var(--terra); }
+  .saia-back:focus-visible{ outline:2px solid var(--terra); outline-offset:2px; }
+  .saia-back:active{ transform:translateX(-2px); }
+  @media (prefers-reduced-motion:reduce){ .saia-back{ transition:none; } .saia-back:active{ transform:none; } }
 </style>
 </head>
 <body>
   <div class="wrap">
+    <a class="saia-back" href="index.html#estimate" aria-label="Go back to your hire"
+       onclick="if(document.referrer&&history.length>1){history.back();return false;}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+      <span>Back</span>
+    </a>
     <div class="demo">Checkout · demo — no real payment is taken</div>
     <h1>Confirm your hire</h1>
     <div id="content"></div>
