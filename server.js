@@ -20,7 +20,7 @@ const EX = require('./js/saia-examples.js');
 const PORT = process.env.PORT || 8787;
 const MODEL = process.env.SAIA_MODEL || 'claude-haiku-4-5';
 const TOOLS = ['add_mats', 'set_event', 'recommend', 'set_days', 'set_method', 'set_postcode', 'set_date', 'quote',
-  'book_delivery', 'checkout', 'confirm', 'rsvp_event', 'book_pilates', 'join_newsletter'];
+  'book_delivery', 'checkout', 'confirm', 'rsvp_event', 'request_pilates', 'join_pilates_list', 'join_newsletter'];
 
 /* Structured-output schema — guarantees the {say, actions} shape.
    args keys are optional (additionalProperties:false as required by the API). */
@@ -89,7 +89,7 @@ function systemPrompt(hire) {
     'ACTIONS you may emit (only when they match the user’s intent, otherwise return an empty actions array):',
     '- add_mats {n} · recommend {guests} (app picks a sensible count) · set_days {n} · set_method {method:"deliver"|"pickup"} · set_postcode {pc} · set_date {date} · set_event {guests,date}',
     '- quote {} (price once mats+days+delivery are known) · book_delivery {date} · checkout {} (payment link) · confirm {}',
-    '- rsvp_event {event} · book_pilates {date} · join_newsletter {email}',
+    '- rsvp_event {event} · request_pilates {type:"1-2-1"|"group", date} (1-2-1 request to Cristina) · join_pilates_list {email} (group-class waitlist) · join_newsletter {email}',
     'Prefer recommend over guessing a mat count. Emit set_days/set_method/set_postcode as the user supplies them. For a plain question, return actions: [].',
     '',
     'CURRENT HIRE STATE: ' + JSON.stringify({

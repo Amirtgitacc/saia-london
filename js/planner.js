@@ -73,7 +73,8 @@
         case 'checkout': if (hire.total == null) hire.total = total(hire); hire.status = 'Checkout link ready'; hire.quoted = true; acts.push('Generated a secure Shopify checkout link'); break;
         case 'confirm': if (hire.total == null) hire.total = total(hire); hire.status = 'Confirmed'; hire.quoted = true; acts.push('Hire confirmed. Confirmation on its way'); break;
         case 'rsvp_event': acts.push('Reserved your place · ' + (args.event || 'SAÏA event')); break;
-        case 'book_pilates': acts.push('Pilates with Cristina' + (args.date ? ' · ' + args.date : '') + ', held for you'); break;
+        case 'request_pilates': acts.push('Pilates request sent to Cristina' + (args.type ? ' · ' + args.type : '') + (args.date ? ' · ' + args.date : '') + ' — she\'ll confirm'); break;
+        case 'join_pilates_list': acts.push('Added you to the Pilates waitlist' + (args.email ? ' · ' + args.email : '') + ' — updates when a session opens'); break;
         case 'join_newsletter': acts.push('Added you to the SAÏA guest list' + (args.email ? ' · ' + args.email : '')); break;
         default: break;
       }
@@ -199,7 +200,7 @@
 
     // greeting / thanks
     if (has(/^(hi|hey|hello|good (morning|afternoon|evening)|yo|hiya)\b/))
-      return m("Hello, lovely. I can plan mat hire for an event, share what's on, or book you in for Pilates with Cristina. What brings you in?");
+      return m("Hello, lovely. I can plan mat hire for an event, share what's on, or get you on the list for Pilates with Cristina. What brings you in?");
     if (has(/\b(thanks|thank you|cheers|ta)\b/))
       return m('Any time. Anything else I can sort for your day?');
 
@@ -209,10 +210,21 @@
     if (has(/what is sa[ïi]a|what'?s sa[ïi]a|about sa[ïi]a|tell me about (you|saia|saïa)|what do you (do|offer)/))
       return m((KB.club.what || 'SAÏA is a female-led club for women in London.') + ' Mostly I help with mat hire for events, plus community gatherings and Pilates with Cristina. Where shall we start?');
 
-    // Pilates / classes
-    if (has(/pilates|reformer|class(es)?|yoga session|work ?out|sessions?\b/) && !has(/mat/)) {
-      return m('Pilates with Cristina is ' + KB.pilates.method + '. ' + KB.pilates.format + '. Shall I hold you a place' + (dateWord ? ' for ' + dateWord : '') + '?',
-        [{ tool: 'book_pilates', args: { date: dateWord || null } }]);
+    // Pilates / classes — two paths: 1-2-1 request, or group-event waitlist
+    if (has(/pilates|reformer|class(es)?|yoga session|work ?out|sessions?\b|\b1.?(2|to|on).?1\b|one.?to.?one/) && !has(/mat/)) {
+      const email = (text || '').match(/[\w.+-]+@[\w-]+\.[\w.-]+/);
+      // explicit private 1-2-1 → place a request with Cristina
+      if (has(/1.?(2|to|on).?1|one.?to.?one|private|personal|just me/))
+        return m('Lovely — a private 1-2-1 with Cristina in NW3. Tell me a day or two that suit' + (dateWord ? ' (' + dateWord + ' works?)' : '') + ' and I’ll put your request to her; she confirms directly.',
+          [{ tool: 'request_pilates', args: { type: '1-2-1', date: dateWord || null } }]);
+      // explicit group / waitlist intent (or they handed over an email)
+      if (email || has(/group|wait ?list|notify|updates?|let me know|sign ?up|join the list/))
+        return m(email
+          ? 'Perfect — you’re on the Pilates waitlist. You’ll be first to hear the moment a group session opens.'
+          : 'Group Pilates runs as occasional events in Hampstead. Pop your email in and I’ll add you to the waitlist — you’ll hear the moment a session opens.',
+          [{ tool: 'join_pilates_list', args: { email: email ? email[0] : null } }]);
+      // generic — explain both, let them choose
+      return m('Pilates with Cristina is ' + KB.pilates.method + ' ' + KB.pilates.format + ' For a 1-2-1 I can put a request to Cristina; group classes run as occasional events, so I can add you to the waitlist for updates. Which would you like?');
     }
 
     // events / community
@@ -251,7 +263,7 @@
 
     // not recognised → Tier 2
     return {
-      say: "I can plan your mat hire and make a checkout link, share what's on, book Pilates with Cristina, or help you decide if SAÏA is for you. Where shall we start?",
+      say: "I can plan your mat hire and make a checkout link, share what's on, get you on the list for Pilates with Cristina, or help you decide if SAÏA is for you. Where shall we start?",
       actions: [],
       matched: false,
       awaiting: null,

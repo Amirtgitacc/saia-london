@@ -10,7 +10,7 @@
      - NEVER put a computed price in `say` — emit an action; the app prices it.
      - Use only these tools: add_mats, recommend, set_days, set_method,
        set_postcode, set_date, set_event, quote, book_delivery, checkout,
-       confirm, rsvp_event, book_pilates, join_newsletter.
+       confirm, rsvp_event, request_pilates, join_pilates_list, join_newsletter.
    Dual-mode: window.SAIA.Examples in the browser, require() in Node.
    ============================================================ */
 (function (root, factory) {
@@ -82,10 +82,16 @@
       say: "Recent SAÏA experiences include our Brunch Club at Mortimer House, watercolour mornings in Regent's Park and Book Club with afternoon tea. Shall I pop you on the guest list for the next one?",
       actions: [{ tool: 'join_newsletter', args: {} }] },
     { u: 'do you do pilates classes?',
-      say: "We do — Classical Pilates and Reformer with Cristina, small, slow and breath-led, every level welcome. 1-2-1 in NW3 or group in Hampstead; tell me a day that suits and I'll hold you a place.",
+      say: "We do — Classical Pilates and Reformer with Cristina, small, slow and breath-led, every level welcome. For a 1-2-1 in NW3 I'll put a request to Cristina; group classes run as occasional events, so I can pop you on the waitlist for updates. Which would you like?",
       actions: [] },
+    { u: "I'd like a private 1-2-1 with Cristina",
+      say: "Lovely — a private 1-2-1 in NW3. Tell me a day or two that suit and I'll put your request to Cristina; she confirms directly.",
+      actions: [{ tool: 'request_pilates', args: { type: '1-2-1' } }] },
+    { u: 'add me to the list for group pilates, my email is jo@example.com',
+      say: "Perfect — you're on the Pilates waitlist. You'll be first to hear the moment a group session opens.",
+      actions: [{ tool: 'join_pilates_list', args: { email: 'jo@example.com' } }] },
     { u: "I've never done reformer, is it suitable?",
-      say: 'Absolutely — Cristina meets you exactly where you are, every level welcome. Want me to hold you a 1-2-1 in NW3 to start?',
+      say: 'Absolutely — Cristina meets you exactly where you are, every level welcome. Shall I put a 1-2-1 request to her in NW3, or pop you on the waitlist for a group class?',
       actions: [] },
 
     // ── Specific event types ──────────────────────────────────────

@@ -62,9 +62,11 @@ they can never disagree. **Change a fact once, here, and both brains update.** D
   examples beats hundreds of hardcoded scripts. Keep `say` to 1–3 warm British sentences and
   never put a computed price in it (emit an action instead).
 - **Change a fact/price/number:** edit `js/saia-knowledge.js` only.
-- **Booking math** lives in `applyActions()` in `planner.js` — shared by both tiers; the 11
+- **Booking math** lives in `applyActions()` in `planner.js` — shared by both tiers; the 12
   tools are: `add_mats, set_event, recommend, set_date, quote, book_delivery, checkout,
-  confirm, rsvp_event, book_pilates, join_newsletter`.
+  confirm, rsvp_event, request_pilates, join_pilates_list, join_newsletter`. Pilates is **not**
+  instant-booked: 1-2-1 → `request_pilates` (request to Cristina); group classes are occasional
+  events → `join_pilates_list` (email waitlist, updates when a session opens).
 
 ## The concierge front end
 
