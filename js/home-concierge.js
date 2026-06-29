@@ -262,6 +262,21 @@
     if (thread) mount(thread, 'panel');
     if (inlineThread) mount(inlineThread, 'inline');
 
+    // Don't let the inline chat log hijack page scroll. The thread is overflow:auto,
+    // so the wheel normally scrolls it instead of the page once the cursor is over it.
+    // Forward the wheel to the page UNLESS the user has actually clicked into the card.
+    if (inlineThread) {
+      let chatActive = false;
+      const card = inlineThread.closest('.ca-card') || inlineThread;
+      card.addEventListener('pointerdown', () => { chatActive = true; });
+      document.addEventListener('pointerdown', (e) => { if (!card.contains(e.target)) chatActive = false; });
+      inlineThread.addEventListener('wheel', (e) => {
+        if (chatActive) return;          // clicked in → let the log scroll
+        e.preventDefault();              // otherwise keep the page scrolling
+        window.scrollBy(0, e.deltaY);
+      }, { passive: false });
+    }
+
     if (launcher) launcher.addEventListener('click', () => open({}));
     if (closeBtn) closeBtn.addEventListener('click', close);
     if (panelSend && panelInput) panelSend.addEventListener('click', () => { send(panelInput.value); panelInput.value = ''; });
