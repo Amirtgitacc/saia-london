@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Terms &amp; Conditions · SAÏA London</title>
+  <meta name="description" content="The terms and conditions for using the SAÏA London website. Your use of this website confirms your unconditional acceptance of these terms.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/buttons.css">
+  <style>
+    body{ font-family:'Inter',system-ui,sans-serif; background:var(--saia-cream); color:var(--saia-ink); -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility; }
+    a{ color:inherit; }
+    img{ display:block; max-width:100%; }
+
+    /* ---------- nav (matches index.html) ---------- */
+    .nav{ position:sticky; top:0; z-index:50; background:rgba(245,241,232,.92); backdrop-filter:blur(10px); border-bottom:1px solid var(--saia-line); }
+    .nav-desk{ display:grid; grid-template-columns:1fr auto 1fr; align-items:center; padding:22px 48px; max-width:1480px; margin:0 auto; }
+    .nav-desk nav{ display:flex; gap:32px; font-size:12px; letter-spacing:.18em; text-transform:uppercase; white-space:nowrap; }
+    .nav-desk nav a{ color:var(--saia-ink); text-decoration:none; }
+    .nav-desk nav a[aria-current]{ color:var(--saia-accent); }
+    .brand{ text-align:center; text-decoration:none; color:var(--saia-ink); }
+    .brand .mark{ font-family:'Playfair Display',serif; font-size:30px; letter-spacing:.2em; line-height:1; }
+    .brand .sub{ font-size:9px; letter-spacing:.52em; text-transform:uppercase; color:var(--saia-ink-soft); margin-top:3px; }
+    .nav-spacer{ }
+    .nav-mob{ display:none; }
+    .nav-mob-in{ display:flex; align-items:center; justify-content:space-between; padding:16px 20px; }
+    .drawer{ display:none; position:fixed; inset:0; z-index:60; background:var(--saia-cream); padding:24px 28px; }
+    .drawer-top{ display:flex; justify-content:space-between; align-items:center; margin-bottom:48px; }
+    .drawer nav{ display:flex; flex-direction:column; gap:6px; }
+    .drawer nav a{ font-family:'Playfair Display',serif; font-size:38px; color:var(--saia-ink); text-decoration:none; padding:10px 0; border-bottom:1px solid var(--saia-line); }
+    .iconbtn{ background:none; border:none; padding:6px; cursor:pointer; display:flex; }
+
+    /* ---------- page head ---------- */
+    .pagehead{ max-width:760px; margin:0 auto; padding:clamp(56px,8vw,104px) 6vw clamp(20px,3vw,32px); text-align:center; }
+    .eyebrow{ font-size:12px; letter-spacing:.34em; text-transform:uppercase; color:var(--saia-accent); margin-bottom:22px; }
+    .pagehead h1{ font-family:'Playfair Display',serif; font-weight:500; font-size:clamp(40px,6.4vw,76px); line-height:1.02; letter-spacing:-.01em; margin:0 0 24px; }
+    .pagehead .lede{ font-family:'Playfair Display',serif; font-style:italic; font-weight:400; font-size:clamp(18px,2.1vw,24px); line-height:1.5; color:#43403A; max-width:40ch; margin:0 auto; }
+
+    /* ---------- legal reading column ---------- */
+    .legal{ max-width:740px; margin:0 auto; padding:clamp(20px,3vw,32px) 6vw clamp(56px,8vw,96px); }
+    .legal .intro{ background:#FCFAF4; border:1px solid var(--saia-line); border-radius:6px; padding:clamp(22px,3vw,30px); margin-bottom:clamp(36px,5vw,56px); }
+    .legal .intro p{ font-size:14px; line-height:1.8; color:#43403A; margin:0 0 14px; }
+    .legal .intro p:last-child{ margin-bottom:0; }
+    .legal .caps{ font-size:12.5px; letter-spacing:.04em; line-height:1.8; color:var(--saia-ink-soft); text-transform:uppercase; }
+
+    .clause{ margin:0 0 clamp(30px,4vw,42px); }
+    .clause h2{ display:flex; align-items:baseline; gap:14px; font-family:'Playfair Display',serif; font-weight:500; font-size:clamp(19px,2.1vw,24px); line-height:1.25; margin:0 0 14px; color:var(--saia-ink); }
+    .clause h2 .num{ font-style:italic; font-size:.78em; color:var(--saia-accent); flex:0 0 auto; }
+    .clause p{ font-size:15px; line-height:1.85; color:#43403A; margin:0; }
+    .clause + .clause{ border-top:1px solid var(--saia-line); padding-top:clamp(30px,4vw,42px); }
+
+    /* ---------- footer (matches index.html) ---------- */
+    footer{ background:var(--saia-ink); color:#F5F1E8; padding:clamp(64px,8vw,100px) 6vw 40px; }
+    .foot-in{ max-width:1320px; margin:0 auto; }
+    .foot-top{ display:flex; flex-wrap:wrap; gap:48px; justify-content:space-between; }
+    .foot-brand{ flex:1 1 280px; max-width:360px; }
+    .foot-brand .mark{ font-family:'Playfair Display',serif; font-size:34px; letter-spacing:.2em; line-height:1; }
+    .foot-brand .sub{ font-size:10px; letter-spacing:.5em; text-transform:uppercase; color:rgba(245,241,232,.55); margin:6px 0 22px; }
+    .foot-brand p{ font-size:14px; line-height:1.75; color:rgba(245,241,232,.65); margin:0 0 24px; max-width:300px; }
+    .foot-social{ display:flex; gap:18px; margin-top:24px; }
+    .foot-social a{ color:rgba(245,241,232,.7); text-decoration:none; }
+    .foot-cols{ flex:0 1 auto; display:flex; flex-wrap:wrap; gap:48px; }
+    .foot-col h4{ font-size:11px; letter-spacing:.22em; text-transform:uppercase; color:rgba(245,241,232,.5); margin:0 0 18px; font-weight:500; }
+    .foot-col .links{ display:flex; flex-direction:column; gap:12px; font-size:14px; }
+    .foot-col .links a{ color:rgba(245,241,232,.78); text-decoration:none; }
+    .foot-col .links a:hover{ color:#F5F1E8; }
+    .foot-bottom{ display:flex; flex-wrap:wrap; gap:14px; justify-content:space-between; align-items:center; margin-top:56px; padding-top:26px; border-top:1px solid rgba(245,241,232,.16); font-size:12px; color:rgba(245,241,232,.5); }
+
+    /* ---------- responsive ---------- */
+    @media (max-width:760px){
+      .nav-desk{ display:none; }
+      .nav-mob{ display:block; position:sticky; top:0; z-index:50; background:rgba(245,241,232,.94); backdrop-filter:blur(10px); border-bottom:1px solid var(--saia-line); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ============ HEADER (desktop) ============ -->
+  <header class="nav">
+    <div class="nav-desk">
+      <nav>
+        <a href="index.html#estimate" class="saia-link">Mat Hire</a>
+        <a href="index.html#pilates" class="saia-link">Pilates</a>
+        <a href="events.html" class="saia-link">Events</a>
+        <a href="index.html#events" class="saia-link">Gallery</a>
+        <a href="story.html" class="saia-link">Our Story</a>
+      </nav>
+      <a class="brand" href="index.html#top">
+        <div class="mark">SAÏA</div>
+        <div class="sub">London</div>
+      </a>
+      <div class="nav-spacer"></div>
+    </div>
+  </header>
+
+  <!-- ============ HEADER (mobile) ============ -->
+  <header class="nav-mob">
+    <div class="nav-mob-in">
+      <button class="iconbtn" id="navToggle" aria-label="Open menu"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2B2620" stroke-width="1.3"><line x1="3" y1="7" x2="21" y2="7"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="17" x2="21" y2="17"/></svg></button>
+      <a class="brand" href="index.html#top"><div class="mark" style="font-size:25px;">SAÏA</div></a>
+      <span style="width:22px;"></span>
+    </div>
+  </header>
+  <div class="drawer" id="drawer">
+    <div class="drawer-top">
+      <div style="font-family:'Playfair Display',serif; font-size:26px; letter-spacing:.2em;">SAÏA</div>
+      <button class="iconbtn" id="navClose" aria-label="Close menu"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2B2620" stroke-width="1.3"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg></button>
+    </div>
+    <nav>
+      <a href="index.html#estimate">Mat Hire</a>
+      <a href="index.html#pilates">Pilates</a>
+      <a href="events.html">Events</a>
+      <a href="index.html#events">Gallery</a>
+      <a href="story.html">Our Story</a>
+    </nav>
+  </div>
+
+  <main>
+    <!-- ============ PAGE HEAD ============ -->
+    <section class="pagehead">
+      <div class="eyebrow">The fine print</div>
+      <h1>Terms &amp; Conditions</h1>
+      <p class="lede">Your use of this website confirms your unconditional acceptance of our terms &amp; conditions. Please take the time to read them before ordering.</p>
+    </section>
+
+    <!-- ============ LEGAL ============ -->
+    <section class="legal">
+      <div class="intro">
+        <p>SAÏA London Limited is a company registered in Northern Ireland under company number NI651967, with our registered office at 3 Pine Crest, Holywood, Co. Down, Northern Ireland, BT18 9ED. SAÏA London Limited operate this website (www.saialondon.com) and are hereinafter referred to as "we" or "us".</p>
+        <p class="caps">Please read these terms and conditions carefully before using this website. Your use of this website confirms your unconditional acceptance of the following terms and conditions. If you do not accept these terms and conditions, do not use this website.</p>
+      </div>
+
+      <div class="clause">
+        <h2><span class="num">01</span>Products, content and specifications</h2>
+        <p>All features, content, specifications, products and prices of products and services described or depicted on this website are subject to change at any time without notice. Certain weights, measures and similar descriptions are approximate and are provided for convenience purposes only. All products have SAÏA London branding. We make all reasonable efforts to accurately display the attributes of our products, including the applicable colours; however, the actual colour you see will depend on your computer system and we cannot guarantee that your computer will accurately display such colours. Unless otherwise stated, all product images are for illustration purposes only and therefore, may not include items such as yoga mats, activewear, mobile phones, and other items not specified in the product description. The inclusion of any products or services in this website at a particular time does not imply or warrant that these products or services will be available at any time. It is your responsibility to ascertain and obey all applicable local and international laws. By placing an order, you represent that the products ordered will be used only in a lawful manner.</p>
+      </div>
+
+      <div class="clause">
+        <h2><span class="num">02</span>Shipping limitations</h2>
+        <p>When an order is placed, it will be shipped to an address designated by the purchaser as long as that shipping address is compliant with the shipping restrictions contained on this website. Risk of loss for items purchased from this website pass to you upon delivery of the items by the carrier. You are responsible for filing any claims with carriers for damaged and/or lost shipments.</p>
+      </div>
+
+      <div class="clause">
+        <h2><span class="num">03</span>Accuracy of information</h2>
+        <p>We attempt to ensure that information on this website is complete, accurate and current. Despite our efforts, the information on this website may occasionally be inaccurate, incomplete or out of date. We make no representation as to the completeness, accuracy or validity of any information on this website. For example, products included on the website may be unavailable, may have different attributes than those listed, or may actually carry a different price than that stated on the website. In addition, we may make changes in information about price and availability without notice. While it is our practice to confirm orders by email, the receipt of an email order confirmation does not constitute our acceptance of an order or our confirmation of an offer to sell a product or service. We reserve the right, without prior notice, to limit the order quantity on any product or service and/or to refuse service to any customer. We also may require verification of information prior to the acceptance and/or shipment of any order. Note: the prices online may vary to the prices in our retail outlets.</p>
+      </div>
+
+      <div class="clause">
+        <h2><span class="num">04</span>Use of this website</h2>
+        <p>The website design and all text, graphics, information, content, and other material displayed on or that can be downloaded from this website are either the property of, or used with permission by, SAÏA London and are protected by copyright, trademark, patent and other laws and may not be used except as permitted in these Terms and Conditions or with the prior written permission of the owner of such material. You may not modify the information or materials located on this website in any way or reproduce or publicly display, perform, or distribute or otherwise use any such materials for any public or commercial purpose. Any unauthorised use of any such information or materials may violate copyright laws, trademark laws, patent laws, laws of privacy and publicity, and other laws and regulations. You are responsible for maintaining the confidentiality of your account information and password and for restricting access to such information and to your computer. You agree to accept responsibility for all activities that occur under your account or password.</p>
+      </div>
+
+      <div class="clause">
+        <h2><span class="num">05</span>Third party links</h2>
+        <p>From time to time, this website may contain links to websites that are not owned, operated or controlled by us or our affiliates. All such links are provided solely as a convenience to you. If you use these links, you will leave this website. Neither we nor any of our affiliates are responsible for any content, materials or other information located on or accessible from any other website. Neither we nor any of our affiliates endorse, guarantee, or make any representations or warranties regarding any other website, or any content, materials or other information located or accessible from such websites, or the results that you may obtain from using such websites. If you decide to access any other website linked to or from this website, you do so entirely at your own risk.</p>
+      </div>
+
+      <div class="clause">
+        <h2><span class="num">06</span>Inappropriate material</h2>
+        <p>You are prohibited from posting or transmitting any unlawful, threatening, defamatory, libellous, obscene, pornographic or profane material or any material that could constitute or encourage conduct that would be considered a criminal offence or give rise to civil liability, or otherwise violate any law. In addition to any remedies that we may have at law or in equity, if we reasonably determine that you have violated or are likely to violate the foregoing prohibitions, we may take any action we reasonably deem necessary to cure or prevent the violation, including without limitation, the immediate removal from this website of the related materials.</p>
+      </div>
+
+      <div class="clause">
+        <h2><span class="num">07</span>User information</h2>
+        <p>Other than personally identifiable information, which is subject to this website's Privacy Policy, any material, information, suggestions, ideas, concepts, know-how, techniques, questions, comments or other communication you transmit or post to this website in any manner is and will be considered non-confidential and non-proprietary. We shall have no obligation to use, return, review, or respond to any customer communication. We will have no liability related to the content of any such customer communication, whether or not arising under the laws of copyright, libel, privacy, obscenity, or otherwise. We retain the right to remove any or all user communications that include any material we deem inappropriate or unacceptable.</p>
+      </div>
+
+      <div class="clause">
+        <h2><span class="num">08</span>Disclaimers</h2>
+        <p>Your use of this website is at your risk. The materials and services provided in connection with this website are provided "as is" without any warranties of any kind including warranties of merchantability, fitness for a particular purpose, or non-infringement of intellectual property. Neither we nor any of our affiliates warrant the accuracy or completeness of the materials or services on or through this website. The materials and services on or through this website may be out of date, and neither we nor any of their affiliates make any commitment or assumes any duty to update such materials or services. The foregoing exclusions of implied warranties do not apply to the extent prohibited by law. Please refer to your local laws for any such prohibitions.</p>
+      </div>
+
+      <div class="clause">
+        <h2><span class="num">09</span>Limitations of liability</h2>
+        <p>We assume no responsibility, and shall not be liable for, any damages to, or viruses that may infect, your computer, telecommunication equipment, or other property caused by or arising from your access to, use of, or browsing this website or your downloading of any materials from this website. In no event will we, our respective officers, directors, employees, shareholders, affiliates, parent corporations, agents, successors, assigns, retail partners nor any party involved in the creation, production or transmission of this website be liable to any party for any indirect, special, punitive, incidental or consequential damages (including, without limitation, those resulting from lost profits, lost data or business interruption) arising out of the use, inability to use, or the results of use of this website, any websites linked to this website, or the materials, information or services contained at any or all such websites, whether based on warranty, contract, tort or any other legal theory and whether or not advised of the possibility of such damages. The foregoing limitations of liability do not apply to the extent prohibited by law. Please refer to your local laws for any such prohibitions.</p>
+      </div>
+
+      <div class="clause">
+        <h2><span class="num">10</span>Revisions to these terms and conditions</h2>
+        <p>We may revise these Terms and Conditions at any time and from time to time by updating this posting. You should visit this page from time to time to review the then current Terms and Conditions because they are binding on you. Certain provisions of these Terms and Conditions may be superseded by expressly designated legal notices or terms located on particular pages at this website.</p>
+      </div>
+
+      <div class="clause">
+        <h2><span class="num">11</span>Choice of law; jurisdiction</h2>
+        <p>These Terms and Conditions supersede any other agreement between you and us to the extent necessary to resolve any inconsistency or ambiguity between them. These Terms and Conditions will be governed by and construed in accordance with the laws of England, without giving effect to any principles of conflicts of laws. A printed version of these Terms and Conditions shall be admissible in judicial and administrative proceedings based upon or relating to these Terms and Conditions to the same extent and subject to the same conditions as other business documents and records originally generated and maintained in printed form.</p>
+      </div>
+
+      <div class="clause">
+        <h2><span class="num">12</span>Termination</h2>
+        <p>You or we may suspend or terminate your account or your use of this website at any time, for any reason or for no reason. You are personally liable for any orders that you place or charges that you incur prior to termination. We reserve the right to change, suspend, or discontinue all or any aspect of this website at any time without notice.</p>
+      </div>
+
+      <div class="clause">
+        <h2><span class="num">13</span>Promotional codes</h2>
+        <p>Only one promotional code can be used per transaction and cannot be used in conjunction with another promotional code. All sale products are excluded from qualifying for any online promotional codes and their associated discounts. All offer codes apply to full price products only.</p>
+      </div>
+    </section>
+  </main>
+
+  <!-- ============ FOOTER (matches index.html) ============ -->
+  <footer>
+    <div class="foot-in">
+      <div class="foot-top">
+        <div class="foot-brand">
+          <div class="mark">SAÏA</div>
+          <div class="sub">London</div>
+          <p>A female-led club empowering women through fitness, community &amp; mindset. Premium yoga-mat hire across London.</p>
+          <a href="index.html#estimate" class="saia-btn saia-btn--terra" style="text-decoration:none;">Hire mats for your event</a>
+          <div class="foot-social">
+            <a href="https://www.instagram.com/saialondon" aria-label="SAÏA on Instagram"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg></a>
+            <a href="https://www.facebook.com/saialondon" aria-label="SAÏA on Facebook"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M15 8h-2a2 2 0 0 0-2 2v11"/><path d="M8 13h6"/><path d="M11 21V10a3 3 0 0 1 3-3h1"/></svg></a>
+            <a href="https://www.pinterest.com/saialondon" aria-label="SAÏA on Pinterest"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M9 19c-.5-2 .5-5 1-7"/><circle cx="12" cy="10" r="7"/><path d="M9.5 13c.5 1 3 1.5 4.5-.5S15 8 13 8s-3 1.5-2.5 3"/></svg></a>
+          </div>
+        </div>
+        <div class="foot-cols">
+          <div class="foot-col">
+            <h4>Customer care</h4>
+            <div class="links">
+              <a href="contact-us.html">Contact us</a>
+              <a href="terms-and-conditions.html">Terms &amp; conditions</a>
+            </div>
+          </div>
+          <div class="foot-col">
+            <h4>About us</h4>
+            <div class="links">
+              <a href="story.html">Our story</a>
+              <a href="events.html">Events</a>
+              <a href="index.html#estimate">Yoga mat hire</a>
+              <a href="index.html#events">Gallery</a>
+            </div>
+          </div>
+          <div class="foot-col" style="max-width:240px;">
+            <h4>Subscribe</h4>
+            <p style="font-size:13px; line-height:1.6; color:rgba(245,241,232,.6); margin:0 0 14px;">Get on the guest list of our upcoming events.</p>
+            <div style="display:flex; border-bottom:1px solid rgba(245,241,232,.35);"><input type="email" placeholder="Email" aria-label="Email address" style="flex:1; background:none; border:none; color:#F5F1E8; font-family:'Inter',sans-serif; font-size:14px; padding:8px 0; outline:none;"><span style="font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:#B8624A; padding:8px 0; cursor:pointer;">Join</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="foot-bottom">
+        <span>© 2026 SAÏA London</span>
+        <span style="letter-spacing:.16em; text-transform:uppercase;">A Woman Who Wins.</span>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      var d = document.getElementById('drawer');
+      var open = document.getElementById('navToggle');
+      var close = document.getElementById('navClose');
+      if (open) open.addEventListener('click', function () { d.style.display = 'block'; });
+      if (close) close.addEventListener('click', function () { d.style.display = 'none'; });
+      Array.prototype.slice.call(d.querySelectorAll('a')).forEach(function (a) {
+        a.addEventListener('click', function () { d.style.display = 'none'; });
+      });
+    })();
+  </script>
+</body>
+</html>
