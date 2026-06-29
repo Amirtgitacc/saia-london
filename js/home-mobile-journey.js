@@ -225,7 +225,9 @@ export function initMobileJourney() {
       var pNow = measure(), cur = nearestStop(pNow), next = cur + dir;
       if (next < 0) { tweenScrollTo(Math.max(0, yForP(0) - 4), 460); return; }          // release up to the top
       if (next >= STOPS.length) { tweenScrollTo(yForP(1) + 4, 460); return; }            // release down into the editorial sections
-      var dur = clamp(Math.abs(STOPS[next] - pNow) * 8500, 800, 1500);   // distance-scaled, ~1–1.5s, so each pose-to-pose move is slow + smooth
+      // distance-scaled glide; Cristina's pose-to-pose morphs (stops 4–7) play at 60% speed (≈1.67× longer) so the watercolour reads smoothly
+      var cristina = next >= 4;
+      var dur = clamp(Math.abs(STOPS[next] - pNow) * (cristina ? 8500 / 0.6 : 8500), 800, cristina ? 2500 : 1500);
       tweenScrollTo(yForP(STOPS[next]), dur);
     }
     /* lock native scroll whenever we're inside the journey so iOS can't fling past chapters.
