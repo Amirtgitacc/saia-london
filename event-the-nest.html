@@ -111,9 +111,10 @@
       .nav-desk{ display:none; }
       .nav-mob{ display:block; position:sticky; top:0; z-index:50; background:rgba(245,241,232,.94); backdrop-filter:blur(10px); border-bottom:1px solid var(--saia-line); }
       .feat-in{ grid-template-columns:1fr; }
-      .feat img{ aspect-ratio:3/2; max-width:420px; }
       .band.duo figure{ grid-template-columns:1fr; }
-      .band.duo img{ aspect-ratio:3/2; }
+      /* small screens: render photos at natural ratio so nothing is cropped */
+      .cover img, .band img, .band.duo img, .feat img{ aspect-ratio:auto; height:auto; }
+      .feat img{ max-width:420px; justify-self:center; }
     }
     @media (prefers-reduced-motion:reduce){
       .js .reveal{ opacity:1; transform:none; transition:none; }

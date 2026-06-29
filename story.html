@@ -101,13 +101,14 @@
     @media (max-width:860px){
       .hero{ grid-template-columns:1fr; gap:36px; padding-top:40px; }
       .hero-fig{ order:-1; }
-      .hero-fig img{ aspect-ratio:3/2; object-position:60% center; }
+      .hero-fig img{ aspect-ratio:auto; height:auto; }
       .meaning-grid{ grid-template-columns:1fr; }
     }
     @media (max-width:760px){
       .nav-desk{ display:none; }
       .nav-mob{ display:block; position:sticky; top:0; z-index:50; background:rgba(245,241,232,.94); backdrop-filter:blur(10px); border-bottom:1px solid var(--saia-line); }
-      .band img, .meaning-grid img{ aspect-ratio:3/2; }
+      /* small screens: render photos at natural ratio so nothing is cropped */
+      .band img, .meaning-grid img{ aspect-ratio:auto; height:auto; }
     }
     @media (prefers-reduced-motion:reduce){
       .reveal{ opacity:1; transform:none; transition:none; }

@@ -123,6 +123,8 @@
     @media (max-width:760px){
       .nav-desk{ display:none; }
       .nav-mob{ display:block; position:sticky; top:0; z-index:50; background:rgba(245,241,232,.94); backdrop-filter:blur(10px); border-bottom:1px solid var(--saia-line); }
+      /* small screens: show the full portrait, uncropped (arch shape kept via border-radius) */
+      .arch img{ aspect-ratio:auto; height:auto; }
     }
     @media (max-width:560px){
       .cform .row{ grid-template-columns:1fr; }
