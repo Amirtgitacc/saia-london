@@ -214,7 +214,7 @@ export function initMobileJourney() {
         var e = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;   // easeInOutQuad — moderate, settled
         window.scrollTo(0, Math.round(fromY + (toY - fromY) * e));
         if (k < 1) { snapRaf = requestAnimationFrame(step); }
-        else { snapRaf = null; isSnapping = false; }
+        else { snapRaf = null; isSnapping = false; setLock(inRange()); }   // re-evaluate lock (esp. after releasing past the end)
       })(performance.now());
     }
     function snapMove(dir) {
@@ -223,6 +223,25 @@ export function initMobileJourney() {
       else if (next >= STOPS.length) tweenScrollTo(yForP(1) + 4, 460);    // release down into the editorial sections
       else tweenScrollTo(Math.max(0, yForP(0) - 4), 460);                  // release up to the top
     }
+    /* lock native scroll whenever we're inside the journey so iOS can't fling past chapters.
+       The class flips touch-action:none on the pinned view (see index.html .mj-snaplock). */
+    var locked = false;
+    function inRange() {
+      if (track.offsetHeight - window.innerHeight <= 0) return false;
+      var y = window.scrollY;
+      return y >= yForP(0) - 1 && y <= yForP(1) + 1;
+    }
+    function setLock(on) {
+      if (on === locked) return;
+      locked = on;
+      document.documentElement.classList.toggle('mj-snaplock', on);
+    }
+    window.addEventListener('scroll', function () {
+      if (isSnapping) return;                 // don't fight our own tween
+      if (inRange()) { if (!locked) { setLock(true); snapMove(0); } }   // entering: lock + settle onto the nearest chapter (arrests any entry momentum)
+      else setLock(false);
+    }, { passive: true });
+
     function overConcierge(t) { return !!(t && t.closest && t.closest('#homeChatPanel, #homeChatLauncher')); }
     window.addEventListener('touchstart', function (e) { touchStartY = e.touches[0].clientY; }, { passive: true });
     window.addEventListener('touchmove', function (e) { if (engaged() && !overConcierge(e.target) && e.cancelable) e.preventDefault(); }, { passive: false });

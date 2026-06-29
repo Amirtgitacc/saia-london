@@ -501,6 +501,11 @@
   .mj-track{ position:relative; height:780vh; }
   /* clear the sticky nav (≈59px): pad the pinned area down so chapter text never tucks under it */
   .mj-pin{ position:sticky; top:0; height:100vh; padding-top:60px; box-sizing:border-box; display:flex; flex-direction:column; overflow:hidden; }
+  /* section-snap lock — while the journey owns the gesture, kill native scroll + momentum on the
+     pinned view so each swipe advances exactly ONE chapter (iOS ignores touchmove preventDefault
+     once it commits to scrolling; touch-action:none stops it starting). Toggled in home-mobile-journey.js. */
+  html.mj-snaplock .mj-pin{ touch-action:none; }
+  html.mj-snaplock, html.mj-snaplock body{ overscroll-behavior-y:none; }
   .mj-txt{ position:relative; flex:0 0 33%; padding:0 24px; }
   /* top-anchored so tall 2-line titles grow downward into the empty stage, never upward under the nav */
   .mj-chap{ position:absolute; left:24px; right:24px; top:6px; opacity:0; transition:opacity .45s ease; pointer-events:none; }
@@ -1427,7 +1432,7 @@
 <!-- mobile-only scroll journey: lazy-loads the vendored three.js ES modules on small screens -->
 <script type="module">
   if (window.matchMedia('(max-width: 767px)').matches) {
-    import('./js/home-mobile-journey.js?v=20260629m20')
+    import('./js/home-mobile-journey.js?v=20260629m21')
       .then(function (m) { m.initMobileJourney(); })
       .catch(function (e) { console.warn('mobile journey init failed', e); });
   }
