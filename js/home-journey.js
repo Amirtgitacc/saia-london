@@ -154,7 +154,7 @@
     if (!flowFrames || i < 0 || i >= FLOW_COUNT || flowFrames[i]) return;
     const img = new Image();
     img.decoding = 'async';
-    img.src = FLOW_DIR + 'f' + padFrame(i + 1) + '.webp';   // transparent cutout (figure+mat, no bg)
+    img.src = FLOW_DIR + 'f' + padFrame(i + 1) + '.webp?v=cel1';   // transparent cutout (figure+mat, no bg) — ?v bumped on frame regen
     flowFrames[i] = img;
   }
   function initFlowFrames() {
