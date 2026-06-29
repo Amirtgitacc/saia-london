@@ -20,16 +20,23 @@ export function initMobileJourney() {
   function frameURL(i) { return 'assets/flow-frames/f' + String(i).padStart(3, '0') + '.webp'; }
   function preload(i) { if (loaded[i]) return; var im = new Image(); im.onload = function () { if (rafId === null) draw(curP); }; im.src = frameURL(i); loaded[i] = im; }
 
-  /* chapters keyed to journey progress (0..1) */
+  /* chapters keyed to journey progress (0..1)
+     0.00–0.41 = mat phase (rolls open, then holds flat): hero → signature mat → hiring effortless
+     0.41–1.00 = Cristina watercolour flow: Pilates → method → where → every body
+     (mirrors the desktop flow — the mat-hire story is told over the opening mat, not in separate sections) */
   var CH = [
-    { a: 0.00, b: 0.22, e: "A women's club in London", t: "Yoga mat hire,<br>across London.", x: "Rent our mats for £8.50 each, with same-day delivery from our Central London warehouse." },
-    { a: 0.22, b: 0.44, e: "Fitness",    t: "Pilates with<br>Cristina.",        x: "I believe that the body is the vessel that takes us through life — designed to do incredible things if you let it." },
-    { a: 0.44, b: 0.63, e: "The method", t: "Strengthen, heal,<br>realign.",  x: "My mission is to share the transformative practice of Joseph Pilates. Through his method, Contrology, Pilates empowers individuals to strengthen, heal, and realign their bodies from within." },
-    { a: 0.63, b: 0.82, e: "Where",      t: "NW3 &amp;<br>Hampstead.",          x: "I offer 1-2-1 classes for women in NW3 and group classes in Hampstead, London." },
-    { a: 0.82, b: 1.01, e: "Every body", t: "For every<br>body.",   x: "The body is the greatest investment we can make in ourselves. Pilates is a beautiful, powerful, and accessible practice for every body." }
+    { a: 0.00, b: 0.15, e: "A women's club in London", t: "Yoga mat hire,<br>across London.", x: "Rent our mats for £8.50 each, with same-day delivery from our Central London warehouse." },
+    { a: 0.15, b: 0.30, e: "The signature mat", t: "Made for grip,<br>made to last.", x: "One mat, exceptionally made: an ethically sourced natural-rubber base with a non-slip, anti-odour PU surface. Weighted to fall open and lie flat the moment you unroll it." },
+    { a: 0.30, b: 0.45, e: "Mat hire",   t: "Hiring is<br>effortless.", x: "From a 10-mat morning class to a 50-person retreat, we handle delivery, set-up and collection. £8.50 a mat, 2-day hire, minimum of ten." },
+    { a: 0.45, b: 0.59, e: "Fitness",    t: "Pilates with<br>Cristina.",        x: "I believe that the body is the vessel that takes us through life — designed to do incredible things if you let it." },
+    { a: 0.59, b: 0.72, e: "The method", t: "Strengthen, heal,<br>realign.",  x: "My mission is to share the transformative practice of Joseph Pilates. Through his method, Contrology, Pilates empowers individuals to strengthen, heal, and realign their bodies from within." },
+    { a: 0.72, b: 0.86, e: "Where",      t: "NW3 &amp;<br>Hampstead.",          x: "I offer 1-2-1 classes for women in NW3 and group classes in Hampstead, London." },
+    { a: 0.86, b: 1.01, e: "Every body", t: "For every<br>body.",   x: "The body is the greatest investment we can make in ourselves. Pilates is a beautiful, powerful, and accessible practice for every body." }
   ];
   var N = CH.length;
-  var UNROLL_END = 0.16, HANDOFF_END = 0.22;   // mat rolls open, then dissolves to the flow
+  // mat unrolls slowly across hero→signature→hiring (ease-in: holds rolled, falls open, lies flat),
+  // ~half-open under "Made for grip", fully flat by UNROLL_END, then dissolves to Cristina at HANDOFF_START
+  var UNROLL_START = 0.05, UNROLL_END = 0.43, HANDOFF_START = 0.45, HANDOFF_END = 0.51;
 
   root.innerHTML =
     '<div class="mj-track">' +
@@ -41,7 +48,10 @@ export function initMobileJourney() {
           '<canvas class="mj-matgl"></canvas>' +
           '<canvas class="mj-flow"></canvas>' +
           '<div class="mj-beacon">' +
-            '<div class="mj-bcue"><span class="mj-mouse"></span><span class="mj-cue-lbl">Scroll</span></div>' +
+            '<div class="mj-bcue">' +
+            '<div class="mj-swipe"><img class="mj-hand-img" src="assets/swipe-hand.png?v=1" alt=""></div>' +
+            '<span class="mj-cue-lbl">Swipe up</span>' +
+          '</div>' +
             '<div class="mj-ladder"></div>' +
           '</div>' +
         '</div>' +
@@ -83,8 +93,13 @@ export function initMobileJourney() {
     ctx.drawImage(img, (cw - w) / 2, (chh - h) * FIG_Y, w, h);
   }
 
-  /* ---- 3D mat (rolls open via morph clip, scrubbed) ---- */
-  var renderer, scene, camera, mixer, matReady = false, matDur = 4, MAT_OPEN = 0.72;
+  /* ---- 3D mat — the real branded GLB (assets/mat yoga.glb) ----
+     A morph-target "unroll" clip (SAIA_Mat_Unroll, 13 targets) scrubbed by scroll: the mat
+     starts rolled and unfurls to lie dead flat. Oriented horizontal (length left-right) so it
+     matches Cristina's watercolour mat for a seam-free handoff. Orientation + camera dialled
+     in tools/lab/mat-glb-lab.html. */
+  var renderer, scene, camera, matReady = false, matPivot, matMixer, matAction, matClipDur = 1, matRoot;
+
   function initMat() {
     renderer = new THREE.WebGLRenderer({ canvas: matgl, antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
@@ -92,37 +107,45 @@ export function initMobileJourney() {
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     scene = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(32, anim.clientWidth / anim.clientHeight, 0.1, 100);
-    camera.position.set(0, 1.15, 5.6); camera.lookAt(0, 0.08, 0);
-    scene.add(new THREE.AmbientLight(0xffffff, 0.85));
-    var key = new THREE.DirectionalLight(0xfff3e6, 1.5); key.position.set(2.5, 6, 4); scene.add(key);
-    var rim = new THREE.DirectionalLight(0xffffff, 0.5); rim.position.set(-3, 2, -2); scene.add(rim);
-    new GLTFLoader().load('assets/saia-mat-roll-open.glb', function (gltf) {
-      var m = gltf.scene;
-      var box = new THREE.Box3().setFromObject(m);
-      var size = box.getSize(new THREE.Vector3()), center = box.getCenter(new THREE.Vector3());
-      m.position.sub(center);
-      var span = Math.max(size.x, size.y, size.z) || 1;
-      var pivot = new THREE.Group(); pivot.add(m);
-      pivot.rotation.x = -1.18; pivot.scale.setScalar(2.1 / span);
-      scene.add(pivot);
-      if (gltf.animations && gltf.animations[0]) {
-        mixer = new THREE.AnimationMixer(m);
-        mixer.clipAction(gltf.animations[0]).play();
-        matDur = gltf.animations[0].duration || 4;
+    camera.position.set(0, 3.6, 3.4); camera.lookAt(0, -0.15, -0.2);
+    scene.add(new THREE.AmbientLight(0xffffff, 0.72));
+    var key = new THREE.DirectionalLight(0xfff3e6, 1.45); key.position.set(2, 6, 4.5); scene.add(key);
+    var rim = new THREE.DirectionalLight(0xffffff, 0.4); rim.position.set(-3, 2.5, 2); scene.add(rim);
+
+    matPivot = new THREE.Group();
+    matPivot.rotation.set(-Math.PI / 2, 0, Math.PI / 2);   // lay the mat flat, length left-right (matches Cristina's mat)
+    matPivot.scale.setScalar(0.82);                          // sized to match Cristina's watercolour mat at the handoff
+    scene.add(matPivot);
+
+    new GLTFLoader().load('assets/mat yoga.glb', function (gltf) {
+      matRoot = gltf.scene;
+      var box = new THREE.Box3().setFromObject(matRoot);            // recentre on the mat's own centre so it pivots cleanly
+      matRoot.position.sub(box.getCenter(new THREE.Vector3()));
+      matPivot.add(matRoot);
+      if (gltf.animations && gltf.animations.length) {
+        matMixer = new THREE.AnimationMixer(matRoot);
+        var clip = gltf.animations[0];
+        matClipDur = clip.duration || 1;
+        matAction = matMixer.clipAction(clip); matAction.play();
       }
       matReady = true; draw(curP);
-    }, undefined, function (err) { console.warn('SAÏA mat GLB failed', err); });
+    }, undefined, function (err) { console.warn('[mj] mat GLB failed to load', err); });
   }
   initMat();
-  function renderMat(u) { if (!matReady) return; if (mixer) mixer.setTime(clamp(u, 0, 1) * matDur * MAT_OPEN); renderer.render(scene, camera); }
+  function renderMat(u) {
+    if (!matReady) return;
+    var e = clamp(u, 0, 1); e = e * e;   // ease-in: holds rolled, falls open, lies flat
+    if (matMixer && matAction) { matAction.time = e * matClipDur; matMixer.update(0); }   // scrub the unroll morph
+    renderer.render(scene, camera);
+  }
 
   function draw(p) {
-    var u = clamp(p / UNROLL_END, 0, 1);
+    var u = clamp((p - UNROLL_START) / (UNROLL_END - UNROLL_START), 0, 1);   // unroll progress across hero→signature→hiring
     if (p < HANDOFF_END + 0.03) renderMat(u);
-    var ho = clamp((p - UNROLL_END) / (HANDOFF_END - UNROLL_END), 0, 1);
-    matgl.style.opacity = 1 - ho;
+    var ho = clamp((p - HANDOFF_START) / (HANDOFF_END - HANDOFF_START), 0, 1);   // flat mat → Cristina dissolve
+    matgl.style.opacity = 1 - clamp(ho / 0.55, 0, 1);   // 3D mat clears early so it doesn't cross the watercolour mat
     cv.style.opacity = ho;
-    var fp = clamp((p - UNROLL_END) / (1 - UNROLL_END), 0, 1);
+    var fp = clamp((p - HANDOFF_START) / (1 - HANDOFF_START), 0, 1);
     drawFlow(1 + fp * (FLOW_COUNT - 1));
     chaps.forEach(function (c, i) { c.classList.toggle('on', p >= CH[i].a && p < CH[i].b); });
     var ai = 0;

@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SAÏA — mat yoga.glb orientation lab</title>
+<script type="importmap">{ "imports": { "three": "../../vendor/three.module.min.js" } }</script>
+<style>
+  :root { --cream:#F5F1E8; --ink:#2B2620; --terra:#B8624A; }
+  * { box-sizing:border-box; }
+  body { margin:0; font:13px/1.4 Inter, system-ui, sans-serif; color:var(--ink); background:#e9e3d6; display:flex; }
+  /* stage = a portrait phone-ish frame so it matches the mobile journey aspect */
+  #stageWrap { flex:1; display:flex; align-items:center; justify-content:center; padding:24px; }
+  #stage { position:relative; width:402px; height:520px; background:var(--cream); border-radius:18px; overflow:hidden; box-shadow:0 16px 50px rgba(0,0,0,.25); }
+  #stage canvas { position:absolute; inset:0; width:100%; height:100%; display:block; }
+  #refcv { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; opacity:.35; }
+  #panel { width:330px; background:var(--ink); color:var(--cream); padding:18px 18px 40px; overflow:auto; height:100vh; }
+  #panel h1 { font-size:14px; margin:0 0 4px; letter-spacing:.04em; }
+  #panel .sub { opacity:.6; margin:0 0 16px; font-size:11px; }
+  .row { margin:0 0 11px; }
+  .row label { display:flex; justify-content:space-between; font-size:11px; opacity:.85; margin-bottom:3px; }
+  .row label b { font-variant-numeric:tabular-nums; color:var(--terra); font-weight:600; }
+  .row input[type=range] { width:100%; accent-color:var(--terra); }
+  .grp { border-top:1px solid rgba(245,241,232,.16); padding-top:12px; margin-top:14px; }
+  .grp h2 { font-size:11px; text-transform:uppercase; letter-spacing:.12em; opacity:.55; margin:0 0 10px; }
+  .btns { display:flex; gap:8px; flex-wrap:wrap; margin-top:6px; }
+  button { background:var(--terra); color:#fff; border:0; border-radius:7px; padding:8px 12px; font-size:11px; cursor:pointer; font-family:inherit; }
+  button.sec { background:rgba(245,241,232,.14); }
+  select { width:100%; background:rgba(245,241,232,.1); color:var(--cream); border:1px solid rgba(245,241,232,.2); border-radius:6px; padding:6px; font-family:inherit; }
+  #out { white-space:pre-wrap; font:11px/1.5 ui-monospace, monospace; background:#0d0b09; color:#bfe6b3; padding:10px; border-radius:7px; margin-top:8px; max-height:220px; overflow:auto; }
+  #status { font-size:11px; opacity:.7; margin-top:6px; min-height:14px; }
+</style>
+</head>
+<body>
+  <div id="stageWrap">
+    <div id="stage">
+      <canvas id="c"></canvas>
+      <canvas id="refcv"></canvas>
+    </div>
+  </div>
+
+  <div id="panel">
+    <h1>mat yoga.glb — orientation lab</h1>
+    <p class="sub">Dial the mat to sit like Cristina's mat, then Copy values into home-mobile-journey.js.</p>
+
+    <div class="grp" style="border-top:0;padding-top:0;margin-top:0">
+      <h2>Unroll (SAIA_Mat_Unroll)</h2>
+      <div class="row"><label>scrub <b id="vUnroll">0.00</b></label><input id="unroll" type="range" min="0" max="1" step="0.001" value="0"></div>
+      <div class="btns">
+        <button id="playBtn" class="sec">▶ play</button>
+        <button id="spinBtn" class="sec">spin cam</button>
+      </div>
+    </div>
+
+    <div class="grp">
+      <h2>Reference overlay</h2>
+      <div class="row"><label>opacity <b id="vRef">0.35</b></label><input id="refOp" type="range" min="0" max="1" step="0.05" value="0.35"></div>
+      <select id="refSel">
+        <option value="f303">f303 — seated (flat mat)</option>
+        <option value="f001">f001 — standing</option>
+        <option value="">none</option>
+      </select>
+    </div>
+
+    <div class="grp">
+      <h2>Mat pivot rotation (deg)</h2>
+      <div class="row"><label>rot X <b id="vRx">0</b></label><input id="rx" type="range" min="-180" max="180" step="1" value="0"></div>
+      <div class="row"><label>rot Y <b id="vRy">90</b></label><input id="ry" type="range" min="-180" max="180" step="1" value="90"></div>
+      <div class="row"><label>rot Z <b id="vRz">0</b></label><input id="rz" type="range" min="-180" max="180" step="1" value="0"></div>
+      <div class="row"><label>scale <b id="vSc">1.00</b></label><input id="sc" type="range" min="0.2" max="4" step="0.01" value="1"></div>
+      <div class="row"><label>pos X <b id="vPx">0.00</b></label><input id="px" type="range" min="-2" max="2" step="0.01" value="0"></div>
+      <div class="row"><label>pos Y <b id="vPy">0.00</b></label><input id="py" type="range" min="-2" max="2" step="0.01" value="0"></div>
+      <div class="row"><label>pos Z <b id="vPz">0.00</b></label><input id="pz" type="range" min="-2" max="2" step="0.01" value="0"></div>
+    </div>
+
+    <div class="grp">
+      <h2>Camera</h2>
+      <div class="row"><label>FOV <b id="vFov">30</b></label><input id="fov" type="range" min="12" max="70" step="1" value="30"></div>
+      <div class="row"><label>cam X <b id="vCx">0.00</b></label><input id="cx" type="range" min="-6" max="6" step="0.05" value="0"></div>
+      <div class="row"><label>cam Y <b id="vCy">2.50</b></label><input id="cy" type="range" min="-1" max="8" step="0.05" value="2.5"></div>
+      <div class="row"><label>cam Z <b id="vCz">4.60</b></label><input id="cz" type="range" min="0.5" max="10" step="0.05" value="4.6"></div>
+      <div class="row"><label>look X <b id="vLx">0.00</b></label><input id="lx" type="range" min="-2" max="2" step="0.01" value="0"></div>
+      <div class="row"><label>look Y <b id="vLy">-0.05</b></label><input id="ly" type="range" min="-2" max="2" step="0.01" value="-0.05"></div>
+      <div class="row"><label>look Z <b id="vLz">-0.20</b></label><input id="lz" type="range" min="-2" max="2" step="0.01" value="-0.2"></div>
+      <div class="btns">
+        <button id="useGlbCam" class="sec">use GLB camera</button>
+      </div>
+    </div>
+
+    <div class="grp">
+      <div class="btns"><button id="copyBtn">Copy values</button></div>
+      <div id="out">load…</div>
+      <div id="status"></div>
+    </div>
+  </div>
+
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from '../../vendor/GLTFLoader.js';
+
+const $ = id => document.getElementById(id);
+const stage = $('stage'), canvas = $('c');
+const status = $('status');
+
+const renderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:true });
+renderer.setPixelRatio(Math.min(devicePixelRatio||1, 2));
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+const scene = new THREE.Scene();
+let camera = new THREE.PerspectiveCamera(30, stage.clientWidth/stage.clientHeight, 0.1, 100);
+
+scene.add(new THREE.AmbientLight(0xffffff, 0.72));
+const key = new THREE.DirectionalLight(0xfff3e6, 1.45); key.position.set(2,6,4.5); scene.add(key);
+const rim = new THREE.DirectionalLight(0xffffff, 0.4); rim.position.set(-3,2.5,2); scene.add(rim);
+
+function resize() {
+  const w = stage.clientWidth, h = stage.clientHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w/h; camera.updateProjectionMatrix();
+}
+resize(); addEventListener('resize', () => { resize(); drawRef(); });
+
+const pivot = new THREE.Group();
+scene.add(pivot);
+
+let mixer=null, action=null, clipDur=0, glbCam=null;
+
+const loader = new GLTFLoader();
+loader.load('../../assets/mat yoga.glb', (gltf) => {
+  pivot.add(gltf.scene);
+  // recentre the loaded model on the pivot origin so rotations spin around the mat centre
+  const box = new THREE.Box3().setFromObject(gltf.scene);
+  const c = box.getCenter(new THREE.Vector3());
+  gltf.scene.position.sub(c);
+
+  // grab embedded camera if present
+  gltf.scene.traverse(o => { if (o.isCamera) glbCam = o; });
+
+  if (gltf.animations && gltf.animations.length) {
+    mixer = new THREE.AnimationMixer(gltf.scene);
+    const clip = gltf.animations[0];
+    clipDur = clip.duration;
+    action = mixer.clipAction(clip);
+    action.play();
+    status.textContent = `loaded · clip "${clip.name}" ${clipDur.toFixed(2)}s · ${gltf.animations.length} anim(s)`;
+  } else {
+    status.textContent = 'loaded · no animation in GLB';
+  }
+  window.__lab = { THREE, scene, pivot, get camera(){return camera;}, get mixer(){return mixer;}, get action(){return action;}, get clipDur(){return clipDur;}, modelRoot: gltf.scene };
+  scrubTo(0);
+  apply();
+  emit();
+}, (p)=>{ if(p.total) status.textContent = `loading ${(p.loaded/p.total*100|0)}%`; },
+   (e)=>{ status.textContent = 'ERROR: '+e.message; $('out').textContent='ERROR loading GLB:\n'+e.message; });
+
+function scrubTo(u) {
+  if (!mixer || !action) return;
+  action.time = Math.max(0, Math.min(1, u)) * clipDur;
+  mixer.update(0);
+}
+
+// ---- controls ----
+const lerpVal = {};
+function bind(id, vId, fmt=(v)=>v) {
+  const el = $(id), out = $(vId);
+  const upd = () => { lerpVal[id] = parseFloat(el.value); out.textContent = fmt(el.value); apply(); emit(); };
+  el.addEventListener('input', upd);
+  lerpVal[id] = parseFloat(el.value);
+  return el;
+}
+['rx','ry','rz'].forEach(id=>bind(id,'v'+id[0].toUpperCase()+id[1], v=>v));
+bind('sc','vSc', v=>(+v).toFixed(2));
+bind('px','vPx', v=>(+v).toFixed(2)); bind('py','vPy', v=>(+v).toFixed(2)); bind('pz','vPz', v=>(+v).toFixed(2));
+bind('fov','vFov', v=>v);
+bind('cx','vCx', v=>(+v).toFixed(2)); bind('cy','vCy', v=>(+v).toFixed(2)); bind('cz','vCz', v=>(+v).toFixed(2));
+bind('lx','vLx', v=>(+v).toFixed(2)); bind('ly','vLy', v=>(+v).toFixed(2)); bind('lz','vLz', v=>(+v).toFixed(2));
+
+const D = Math.PI/180;
+function apply() {
+  pivot.rotation.set(lerpVal.rx*D, lerpVal.ry*D, lerpVal.rz*D);
+  pivot.scale.setScalar(lerpVal.sc);
+  pivot.position.set(lerpVal.px, lerpVal.py, lerpVal.pz);
+  if (!useGlb) {
+    camera.fov = lerpVal.fov;
+    camera.position.set(lerpVal.cx, lerpVal.cy, lerpVal.cz);
+    camera.lookAt(lerpVal.lx, lerpVal.ly, lerpVal.lz);
+    camera.updateProjectionMatrix();
+  }
+}
+
+// unroll scrub
+$('unroll').addEventListener('input', e => { $('vUnroll').textContent=(+e.target.value).toFixed(2); scrubTo(+e.target.value); });
+
+// reference overlay — drawn EXACTLY like the live drawFlow() (ZOOM/FIG_Y), so alignment is real
+const refcv = $('refcv'), refctx = refcv.getContext('2d');
+const REF_ZOOM = 1.12, REF_FIG_Y = 0.12;
+let refImg = new Image();
+function sizeRef(){ const dpr=Math.min(devicePixelRatio||1,2); refcv.width=Math.round(stage.clientWidth*dpr); refcv.height=Math.round(stage.clientHeight*dpr); refctx.setTransform(dpr,0,0,dpr,0,0); }
+function drawRef(){
+  sizeRef();
+  const cw=stage.clientWidth, chh=stage.clientHeight;
+  refctx.clearRect(0,0,cw,chh);
+  if(!refImg.complete||!refImg.naturalWidth) return;
+  const scale=Math.min(cw/refImg.naturalWidth, chh/refImg.naturalHeight)*REF_ZOOM;
+  const w=refImg.naturalWidth*scale, h=refImg.naturalHeight*scale;
+  refctx.drawImage(refImg,(cw-w)/2,(chh-h)*REF_FIG_Y,w,h);
+}
+refImg.onload = drawRef;
+refImg.src = '../../assets/flow-frames/f303.webp';
+$('refOp').addEventListener('input', e => { refcv.style.opacity=e.target.value; $('vRef').textContent=(+e.target.value).toFixed(2); });
+$('refSel').addEventListener('change', e => {
+  const v=e.target.value; refcv.style.display = v?'block':'none';
+  if (v){ refImg = new Image(); refImg.onload=drawRef; refImg.src=`../../assets/flow-frames/${v}.webp`; }
+});
+
+// play / spin
+let playing=false, spinning=false;
+$('playBtn').addEventListener('click', () => { playing=!playing; $('playBtn').textContent = playing?'⏸ pause':'▶ play'; if(action){action.paused=!playing;} });
+$('spinBtn').addEventListener('click', () => { spinning=!spinning; $('spinBtn').classList.toggle('sec',!spinning); });
+
+// glb camera toggle
+let useGlb=false;
+$('useGlbCam').addEventListener('click', () => {
+  if (!glbCam) { status.textContent='no camera in GLB'; return; }
+  useGlb=!useGlb;
+  $('useGlbCam').textContent = useGlb?'use lab camera':'use GLB camera';
+  if (useGlb) { camera = glbCam; resize(); status.textContent='using embedded GLB camera'; }
+  else { camera = new THREE.PerspectiveCamera(lerpVal.fov, stage.clientWidth/stage.clientHeight,0.1,100); resize(); apply(); }
+});
+
+// copy/emit
+function emit() {
+  const txt =
+`// ---- dialled in mat-glb-lab ----
+pivot.rotation.set(${(lerpVal.rx*D).toFixed(4)}, ${(lerpVal.ry*D).toFixed(4)}, ${(lerpVal.rz*D).toFixed(4)}); // ${lerpVal.rx}°,${lerpVal.ry}°,${lerpVal.rz}°
+pivot.scale.setScalar(${lerpVal.sc});
+pivot.position.set(${lerpVal.px}, ${lerpVal.py}, ${lerpVal.pz});
+camera = new THREE.PerspectiveCamera(${lerpVal.fov}, aspect, 0.1, 100);
+camera.position.set(${lerpVal.cx}, ${lerpVal.cy}, ${lerpVal.cz});
+camera.lookAt(${lerpVal.lx}, ${lerpVal.ly}, ${lerpVal.lz});`;
+  $('out').textContent = txt;
+}
+$('copyBtn').addEventListener('click', () => { navigator.clipboard?.writeText($('out').textContent); status.textContent='copied ✓'; });
+
+// loop
+let last=0;
+function tick(t) {
+  const dt=(t-last)/1000; last=t;
+  if (playing && mixer) { mixer.update(dt); $('unroll').value = clipDur? ((mixer.time%clipDur)/clipDur):0; $('vUnroll').textContent=(+$('unroll').value).toFixed(2); }
+  if (spinning) { lerpVal.ry=(lerpVal.ry+0.4)%360; $('ry').value=lerpVal.ry; $('vRy').textContent=Math.round(lerpVal.ry); apply(); }
+  renderer.render(scene, camera);
+  requestAnimationFrame(tick);
+}
+requestAnimationFrame(tick);
+</script>
+</body>
+</html>

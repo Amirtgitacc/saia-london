@@ -488,11 +488,16 @@
   #mobileJourney{ display:none; }
   @media (max-width:767px){
     #mobileJourney{ display:block; background:#F5F1E8; }
-    /* on mobile this journey replaces #top's hero + Pilates-flow bands (the mat-detail
-       bands 2–4 and the guest-list form stay as editorial sections after it) */
-    #top [data-band="0,0.14"], #top .flow-rail:not([data-band="0.972,1"]){ display:none !important; }
+    /* on mobile this journey tells the whole mat-hire story over the opening mat — hero,
+       signature mat & hiring are folded into its chapters — so it replaces #top's hero,
+       the signature-mat & hiring bands, and the Pilates-flow bands (the "Hire the range"
+       grid, estimator, gallery and guest-list form still follow as editorial sections) */
+    #top [data-band="0,0.14"],
+    #top [data-band="0.14,0.30"],
+    #top [data-band="0.30,0.44"],
+    #top .flow-rail:not([data-band="0.972,1"]){ display:none !important; }
   }
-  .mj-track{ position:relative; height:560vh; }
+  .mj-track{ position:relative; height:780vh; }
   .mj-pin{ position:sticky; top:0; height:100vh; display:flex; flex-direction:column; overflow:hidden; }
   .mj-txt{ position:relative; flex:0 0 33%; padding:0 24px; }
   .mj-chap{ position:absolute; left:24px; right:24px; bottom:10px; opacity:0; transition:opacity .45s ease; pointer-events:none; }
@@ -501,24 +506,20 @@
   .mj-h{ font-family:'Playfair Display',serif; font-weight:500; font-size:clamp(32px,9vw,40px); line-height:1.0; margin:0 0 12px; color:#2B2620; padding-left:14px; border-left:2px solid #B8624A; }
   .mj-x{ font-size:15px; line-height:1.6; color:#6B6358; margin:0; padding-left:14px; }
   .mj-anim{ position:relative; flex:1 1 auto; background:radial-gradient(120% 90% at 50% 14%, #F5F1E8 38%, #EFEADF 100%); }
-  .mj-matgl{ position:absolute; inset:0; z-index:1; }
-  .mj-flow{ position:absolute; inset:0; z-index:2; opacity:0; }
-  /* scroll beacon — mouse-wheel cue + per-chapter ladder, right side (same design as desktop #homeBeacon) */
-  .mj-beacon{ position:absolute; right:10px; top:62%; transform:translateY(-50%); z-index:6; display:flex; flex-direction:column; align-items:center; gap:20px; pointer-events:none; }
-  .mj-bcue{ display:flex; flex-direction:column; align-items:center; gap:8px; transition:opacity .4s ease; will-change:opacity; }
-  .mj-ladder{ display:flex; flex-direction:column; align-items:center; gap:5px; }
-  .mj-ladder i{ width:6px; height:15px; border-radius:99px; background:rgba(43,38,32,.2); transition:background .25s ease, height .25s ease; }
-  .mj-ladder i.done{ background:#C98A2E; }
-  .mj-ladder i.on{ background:#C98A2E; height:24px; }
+  .mj-matgl{ position:absolute; inset:0; width:100%; height:100%; z-index:1; }
+  .mj-flow{ position:absolute; inset:0; width:100%; height:100%; z-index:2; opacity:0; }
+  /* swipe cue — hand-on-phone gesture (tap + swipe up) + per-chapter ladder, lower-centre (clear of the concierge S) */
+  .mj-beacon{ position:absolute; left:50%; top:63%; transform:translate(-50%,-50%); z-index:6; display:flex; flex-direction:column; align-items:center; gap:12px; pointer-events:none; }
+  .mj-bcue{ display:flex; flex-direction:column; align-items:center; gap:9px; transition:opacity .4s ease; will-change:opacity; }
+  .mj-swipe{ width:50px; height:59px; display:flex; align-items:center; justify-content:center; }
+  .mj-hand-img{ width:100%; height:auto; display:block; animation:mjFlick 1.7s ease-in-out infinite; will-change:transform; }
   .mj-cue-lbl{ font-size:10px; letter-spacing:.28em; text-transform:uppercase; color:#2B2620; font-weight:600; }
-  .mj-mouse{ width:27px; height:43px; border:2px solid #2B2620; border-radius:15px; position:relative; }
-  .mj-mouse::after{ content:""; position:absolute; left:50%; top:8px; width:3px; height:8px; border-radius:3px; background:#C98A2E; transform:translateX(-50%); animation:mjWheel 1.5s ease-in-out infinite; }
-  .mj-chev{ display:flex; flex-direction:column; align-items:center; margin-top:-2px; }
-  .mj-chev svg{ width:26px; height:26px; color:#B8624A; margin-top:-13px; animation:mjChev 1.5s ease-in-out infinite; }
-  .mj-chev svg:nth-child(2){ animation-delay:.18s; opacity:.55; }
-  @keyframes mjWheel{ 0%{ opacity:1; transform:translate(-50%,0) } 70%{ opacity:0; transform:translate(-50%,12px) } 100%{ opacity:0 } }
-  @keyframes mjChev{ 0%,100%{ transform:translateY(0); opacity:.5 } 50%{ transform:translateY(5px); opacity:1 } }
-  @media (prefers-reduced-motion: reduce){ .mj-mouse::after, .mj-chev svg{ animation:none; } }
+  .mj-ladder{ display:flex; flex-direction:row; align-items:center; gap:5px; }
+  .mj-ladder i{ width:15px; height:6px; border-radius:99px; background:rgba(43,38,32,.2); transition:background .25s ease, width .25s ease; }
+  .mj-ladder i.done{ background:#C98A2E; }
+  .mj-ladder i.on{ background:#C98A2E; width:24px; }
+  @keyframes mjFlick{ 0%,100%{ transform:translateY(5px) } 48%,64%{ transform:translateY(-4px) } }
+  @media (prefers-reduced-motion: reduce){ .mj-hand-img{ animation:none } }
 </style>
 </head>
 <body>
@@ -1405,7 +1406,7 @@
 <!-- mobile-only scroll journey: lazy-loads the vendored three.js ES modules on small screens -->
 <script type="module">
   if (window.matchMedia('(max-width: 767px)').matches) {
-    import('./js/home-mobile-journey.js')
+    import('./js/home-mobile-journey.js?v=20260629m19')
       .then(function (m) { m.initMobileJourney(); })
       .catch(function (e) { console.warn('mobile journey init failed', e); });
   }
