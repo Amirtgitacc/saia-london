@@ -17,7 +17,7 @@
   const KB = NS.KB || {};
   const H = KB.hire || { pricePerMat: 8.5, currency: '£', hireDays: 2, minMats: 10 };
   const money = (v) => (H.currency || '£') + Number(v || 0).toFixed(2);
-  const EMAIL = (KB.contact && KB.contact.email) || 'support@saialondon.com';
+  const EMAIL = (KB.contact && KB.contact.email) || 'Cristina@saialondon.com';
 
   /* ---- bubble + basket styles (home palette: cream / ink / terracotta) ---- */
   const BOT = 'align-self:flex-start; max-width:84%; background:#fff; color:#2B2620; font-size:14px; line-height:1.55; padding:12px 15px; border:1px solid #DAD4C8; border-radius:3px 14px 14px 14px; animation:saiaMsgIn .3s ease both;';
@@ -71,7 +71,7 @@
       chips = INTENT_CHIPS;
     } else if (mode === 'studio') {
       text = 'A studio, wonderful. Tell me your studio name, the days you need mats and roughly how many, and I’ll arrange a recurring rate. Prefer to talk it through? Email Cristina at ' + EMAIL + '.';
-      chips = [{ label: 'Around 60 mats', q: 'I need 60 mats' }];
+      chips = [{ label: 'Around 40 mats', q: 'I need 40 mats' }];
     } else if (mode === 'estimate') {
       text = 'Let’s turn your estimate into a booking.';
     } else {

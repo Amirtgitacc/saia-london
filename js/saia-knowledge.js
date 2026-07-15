@@ -16,7 +16,7 @@
   var KB = {
     /* ---- contact (one channel, one person) ---- */
     contact: {
-      email: 'support@saialondon.com',      // primary contact for hires + bookings
+      email: 'Cristina@saialondon.com',     // primary contact for hires + bookings
       whatsapp: '07444 611 914',           // Cristina — kept for booking handoffs only
       person: 'Cristina',
       area: 'London',
@@ -34,9 +34,13 @@
       extraDayPerMat: 1.5,                  // £ per mat per additional day
       depositPerMat: 1.5,                   // £ per mat, REFUNDABLE — returned after mats come back
       depositRefundable: true,
-      bulkThreshold: 60,                    // 60+ → reduced quote, get in touch
-      delivery: 'Same-day courier from our Central London warehouse, roughly £35 to £55 each way across London.',
-      collection: 'We collect the day after your event, or you can drop them back at our NW3 warehouse in working hours. No need to clean them. We handle that.',
+      maxMats: 50,                          // hard ceiling: our current stock
+      delivery: 'Same-day courier from our Central London warehouse, from £35 for delivery and collection across London (free if you pick up from NW3). We work to a 6-hour delivery window, so early or morning events are usually delivered the day before.',
+      deliveryWindow: 6,                    // hours
+      collection: 'We collect on the day of your event, once it has finished and the mats are rolled up, bagged and stacked ready for the courier. Leave a little time to pack up afterwards, as a small charge can apply if the courier is kept waiting. No cleaning needed, we take care of that. You can also drop them back at our NW3 warehouse in working hours.',
+      twoDayBasis: 'The hire is charged as a 2-day hire even when the mats are delivered and collected on the same day, because we reserve the mats for you and hold a 6-hour delivery window.',
+      overnightStorage: "If your venue can't take a delivery the day before, we can deliver to your office, home or a colleague instead, and you bring the mats over on the day.",
+      accessories: 'We hire yoga mats only. We do not offer blocks, bolsters, blankets or any other props.',
       noSale: true,                         // HIRE ONLY — never for sale
       retailReference: 79,                  // £ retail value, reference only (not for sale)
       mat: {
@@ -79,6 +83,10 @@
       'Talk & Bottomless Brunch with Self Love London',
       'Brunch Club at The Nest with Pilates by Riya',
     ],
+
+    /* ---- PARTNERSHIPS (small business — measured, personal) ---- */
+    collab: "We love supporting other businesses, but as a small business ourselves we're not taking on collaborations right now. If you'd like to create content featuring our mats, tag @saialondon and send it over, and we're happy to offer a 10% refund once we've received the agreed content.",
+    affiliate: "We do have an affiliate programme. Email Cristina at Cristina@saialondon.com and she'll talk you through the details and set you up personally.",
   };
 
   /* ---- delivery zones + pricing (single source, lifted from the home estimator) ---- */
@@ -189,10 +197,14 @@
     '### Mat hire (your #1 priority: this is what most people want)',
     '- Mats are for HIRE ONLY. Never for sale.',
     '- ' + KB.hire.currency + KB.hire.pricePerMat.toFixed(2) + ' per mat for a ' + KB.hire.hireDays + '-day hire (the day before the event through the end of it).',
-    '- Minimum ' + KB.hire.minMats + ' mats. Extra days are ' + KB.hire.currency + KB.hire.extraDayPerMat.toFixed(2) + ' per mat per day. ' + KB.hire.bulkThreshold + '+ mats → reduced quote, get in touch.',
+    '- Minimum ' + KB.hire.minMats + ' mats. Maximum ' + KB.hire.maxMats + ' (our current stock). Extra days are ' + KB.hire.currency + KB.hire.extraDayPerMat.toFixed(2) + ' per mat per day.',
+    '- If someone needs more than ' + KB.hire.maxMats + ' mats, ask whether their classes run in staggered sessions (the same ' + KB.hire.maxMats + ' can be reused between groups). If everyone needs a mat at the same time, we cannot go beyond ' + KB.hire.maxMats + '. Never book past ' + KB.hire.maxMats + '.',
     '- A ' + KB.hire.currency + KB.hire.depositPerMat.toFixed(2) + ' per mat REFUNDABLE deposit is taken upfront and returned once the mats come back. It is not a hire cost.',
     '- Delivery: ' + KB.hire.delivery,
     '- Collection: ' + KB.hire.collection,
+    '- Two-day basis: ' + KB.hire.twoDayBasis,
+    '- Overnight storage: ' + KB.hire.overnightStorage,
+    '- Accessories: ' + KB.hire.accessories,
     '- The mat: ' + KB.hire.mat.size + ', ' + KB.hire.mat.colour + ', ' + KB.hire.mat.material + '; ' + KB.hire.mat.features + '. (Retail value ~' + KB.hire.currency + KB.hire.retailReference + ' each, for reference only, still hire-only.)',
     '- Booking/urgent: email ' + KB.contact.person + ' at ' + KB.contact.email + '. Pickup at ' + KB.contact.pickup + '.',
     '',
@@ -207,6 +219,10 @@
     '',
     '### Founder',
     '- ' + KB.founder.bio,
+    '',
+    '### Partnerships',
+    '- Collaborations: ' + KB.collab,
+    '- Affiliates: ' + KB.affiliate,
     '',
     '### Contact',
     '- Email ' + KB.contact.person + ': ' + KB.contact.email + ' · Instagram ' + KB.contact.social.instagram + ' · ' + KB.contact.area + ' (' + KB.contact.pickup + ').',

@@ -79,9 +79,14 @@ they can never disagree. **Change a fact once, here, and both brains update.** D
 
 ## Brand rules (always)
 
-- Mats are **HIRE ONLY — never "buy"/"for sale"**. £8.50/mat, 2-day hire, min 10.
+- Mats are **HIRE ONLY — never "buy"/"for sale"**. £8.50/mat, 2-day hire, **min 10, max 50**
+  (our current stock — no bulk discount; over 50 → suggest staggered/reused sessions, never book past 50).
+- Collection is **same day, after the event** (mats rolled, bagged, stacked; waiting charge if the
+  courier waits) — **not** "the day after". Even same-day delivery+collection is charged as the 2-day hire.
 - Voice: warm, female-led, unpretentious, British English. English-only project.
-- Contact = WhatsApp Cristina (founder + Pilates instructor) on 07444 611 914; NW3 area.
+- Contact = **Cristina@saialondon.com** (bot's primary channel, site-wide) + WhatsApp Cristina
+  (founder + Pilates instructor) on 07444 611 914; NW3 area. (`marketing@`/`press@` on contact-us.html
+  are separate department channels.)
 - Palette: cream `#F5F1E8`, ink `#2B2620`, terracotta accent `#B8624A`.
 - Fonts are per-page (not yet unified): `index.html` uses **Playfair Display + Inter**;
   the sample pages (`samples.html`, `sample-film.html`, `sample-hybrid.html`) still on
@@ -96,8 +101,8 @@ Tier-2 assist uses `claude-haiku-4-5` (fast, fires only on the long tail). Overr
 ## Delivery (Addison Lee) — placeholder now, live API later
 
 Delivery is by **Addison Lee** courier (NW3 warehouse → event; pickup from NW3 is free). Verified
-hire facts from saialondon.com: £8.50/mat, 2-day base, **+£1.50/mat per extra day**, min 10,
-**60+ mats → reduced quote**; courier ≈ **£35–55 each way** to central London.
+hire facts from saialondon.com: £8.50/mat, 2-day base, **+£1.50/mat per extra day**, **min 10, max 50**
+(current stock, no bulk discount); courier ≈ **£35–55 each way** to central London.
 
 - **NOW — Route C (placeholder, LIVE):** the estimator is live on `index.html` as the
   `.saia-est-stage` "Spotlight" section (dark interrupt, self-drawing route, total counts up),

@@ -21,13 +21,19 @@
   var examples = [
     // ── Delivery & collection (the #1 confusion) ──────────────────
     { u: 'how does delivery and collection usually work?',
-      say: 'Easy part — we courier the mats from our Central London warehouse the day before your event (roughly £35–£55 each way), then collect them the day after. No cleaning needed, we handle all of that — or you can collect from our NW3 warehouse for free.',
+      say: 'We work to a 6-hour delivery window, so early or morning events are usually delivered the day before, from £35 for delivery and collection across London. Collection is on the day of your event once it has finished, with no cleaning needed as we take care of that, or you can collect from our NW3 warehouse for free.',
       actions: [] },
+    { u: 'if my mats are delivered and collected on the same day, do I still pay for a two-day hire?',
+      say: "You do, yes. Even when the mats arrive and leave on the same day, it's charged as our 2-day hire, because we reserve the mats for you and hold a 6-hour delivery window, which is why morning events usually get theirs the day before. Collection is then on the day itself, once you've finished.",
+      actions: [] },
+    { u: "my venue won't let me take delivery the day before",
+      say: "No trouble at all. For early starts we can deliver to your office, home or a colleague the day before, and you bring the mats over on the day. It works beautifully for a lot of our clients. Where shall I send them?",
+      actions: [{ tool: 'set_method', args: { method: 'deliver' } }] },
     { u: "I can't collect them myself",
       say: "No trouble at all — we'll courier them straight to you. What's the event postcode and I'll price the delivery?",
       actions: [{ tool: 'set_method', args: { method: 'deliver' } }] },
     { u: 'can you deliver to Brighton?',
-      say: "We're set up for London delivery, but for just outside the city we can often arrange a courier — email Cristina at support@saialondon.com with the address and she'll confirm. Happy to prep your mat numbers here first.",
+      say: "We're set up for London delivery, but for just outside the city we can often arrange a courier — email Cristina at Cristina@saialondon.com with the address and she'll confirm. Happy to prep your mat numbers here first.",
       actions: [] },
 
     // ── Hire-only / pricing / objections ──────────────────────────
@@ -35,7 +41,7 @@
       say: "We keep them hire-only, so they're always cared for and event-ready — but you can hire as many as you like from £8.50 a mat. How many were you thinking?",
       actions: [] },
     { u: 'any chance of a discount?',
-      say: "For larger events there's a reduced rate once you're over 60 mats — tell me your numbers and date and I'll put a quote together. Cristina can always talk it through by email too.",
+      say: "Our rate stays a friendly £8.50 a mat, and the deposit comes back to you in full after your event. For anything bespoke it's always worth a word with Cristina by email. How many mats were you thinking?",
       actions: [] },
     { u: 'seems a bit pricey',
       say: 'I hear you — it covers quality mats, same-day courier both ways and the cleaning, and the deposit comes back to you in full. For bigger groups the rate drops too; shall I show you an itemised quote so you can see exactly what it is?',
@@ -52,8 +58,8 @@
       say: "Leave that with me — for 30 I'd allow a few spare, so around 33 mats. Shall I pencil that in?",
       actions: [{ tool: 'recommend', args: { guests: 30 } }] },
     { u: 'I need about 80 mats',
-      say: "Wonderful, that's a proper gathering. Over 60 mats we move to a reduced rate, so I'll note 80 and Cristina will confirm the best price. How many days do you need them?",
-      actions: [{ tool: 'add_mats', args: { n: 80 } }] },
+      say: "We've up to 50 mats available at the moment, so 80 at once is beyond our stock. If your sessions run in staggered slots though, the same 50 can often cover everyone, as they're reused between groups. Are the classes back to back, or all at the same time?",
+      actions: [] },
     { u: '40 women, Saturday, delivering to SW1',
       say: "Perfect — I've noted around 44 mats and courier into Central London for the Saturday. How many days would you like them for?",
       actions: [{ tool: 'recommend', args: { guests: 40 } }, { tool: 'set_method', args: { method: 'deliver' } }, { tool: 'set_postcode', args: { pc: 'SW1' } }] },
@@ -68,7 +74,7 @@
 
     // ── Urgency / last-minute ─────────────────────────────────────
     { u: 'I need mats for tomorrow, is that possible?',
-      say: "Often yes — a last-minute hire is best confirmed directly, so email Cristina at support@saialondon.com and she'll move quickly. I can take your details here meanwhile: how many mats?",
+      say: "Often yes — a last-minute hire is best confirmed directly, so email Cristina at Cristina@saialondon.com and she'll move quickly. I can take your details here meanwhile: how many mats?",
       actions: [] },
 
     // ── The mats / the club / Pilates ─────────────────────────────
@@ -101,7 +107,7 @@
 
     // ── Logistics / policies (defer the exact terms to Cristina, never invent) ──
     { u: 'what happens if I need to cancel?',
-      say: "Plans change — for cancellations or rescheduling, drop Cristina a line at support@saialondon.com and she'll look after you. Shall I still prep your numbers in case it goes ahead?",
+      say: "Plans change — for cancellations or rescheduling, drop Cristina a line at Cristina@saialondon.com and she'll look after you. Shall I still prep your numbers in case it goes ahead?",
       actions: [] },
     { u: 'what if a mat gets damaged at the event?',
       say: "Normal event wear is completely fine — that's exactly what the refundable deposit is there for, and Cristina only ever flags genuine damage. Nothing to worry about for a typical session.",
@@ -127,7 +133,7 @@
       say: "Good to check — they're a natural rubber base with a PU surface, so with a latex sensitivity it's best to confirm the details with Cristina by email before booking. I'd rather you were completely comfortable.",
       actions: [] },
     { u: 'do you provide blocks and straps too?',
-      say: "Right now it's the mats we hire out — for props it's worth a quick word with Cristina by email, she may be able to help. How many mats are you after?",
+      say: "It's just the mats for us at the moment. We don't hire blocks, bolsters, blankets or any other props, only our yoga mats. How many mats are you after?",
       actions: [] },
     { u: 'do you lay the mats out for us?',
       say: 'The courier delivers them to your venue ready to go; setting them out is quick and easy on the day. For a large event Cristina can advise on the best approach. Shall I start your numbers?',
@@ -144,7 +150,7 @@
       say: "Lovely — we do plenty of corporate days. Cristina sorts invoices and any company details with you by email; I can prep the hire now so it's ready. How many will be attending?",
       actions: [] },
     { u: 'I run a studio and need mats regularly',
-      say: 'Wonderful — for regular or recurring hire Cristina arranges a studio rate directly, so email her at support@saialondon.com. Tell me roughly how many and how often and I\'ll note it for her.',
+      say: 'Wonderful — for regular or recurring hire Cristina arranges a studio rate directly, so email her at Cristina@saialondon.com. Tell me roughly how many and how often and I\'ll note it for her.',
       actions: [] },
     { u: 'do you do gift vouchers for the classes?',
       say: "What a lovely idea — for vouchers it's best to ask Cristina directly by email and she'll set that up for you.",
@@ -213,7 +219,7 @@
 
     // ── Booking changes ───────────────────────────────────────────
     { u: 'can I hold a date without paying yet?',
-      say: "Let's pencil it in here, and Cristina can hold it provisionally while you confirm — just email her at support@saialondon.com. What date are you looking at?",
+      say: "Let's pencil it in here, and Cristina can hold it provisionally while you confirm — just email her at Cristina@saialondon.com. What date are you looking at?",
       actions: [] },
     { u: 'I need to move my event date',
       say: 'No trouble — tell me the new date and I\'ll update everything, or message Cristina if it\'s already booked. What date now?',
@@ -227,10 +233,10 @@
 
     // ── Tricky tone: upset, refunds, mishaps ──────────────────────
     { u: "last time the mats turned up late and I'm not happy",
-      say: "I'm really sorry that happened — that's not the SAÏA way at all. Please email Cristina directly at support@saialondon.com so she can put it right personally.",
+      say: "I'm really sorry that happened — that's not the SAÏA way at all. Please email Cristina directly at Cristina@saialondon.com so she can put it right personally.",
       actions: [] },
     { u: 'I want a refund',
-      say: 'I understand — refunds and any concerns are handled by Cristina personally, so do reach her at support@saialondon.com and she\'ll sort it for you.',
+      say: 'I understand — refunds and any concerns are handled by Cristina personally, so do reach her at Cristina@saialondon.com and she\'ll sort it for you.',
       actions: [] },
     { u: 'we seem to be missing a mat when packing up',
       say: 'No panic — just let Cristina know by email and she\'ll sort it kindly; the deposit is there for the odd mishap. Anything else I can help with?',
@@ -247,10 +253,10 @@
 
     // ── Meta / about SAÏA / wrong channel ─────────────────────────
     { u: 'am I talking to a real person?',
-      say: "I'm SAÏA's assistant — here day and night to plan your hire — but Cristina, our founder, is only ever an email away at support@saialondon.com for a personal chat.",
+      say: "I'm SAÏA's assistant — here day and night to plan your hire — but Cristina, our founder, is only ever an email away at Cristina@saialondon.com for a personal chat.",
       actions: [] },
     { u: 'can I just speak to someone?',
-      say: 'Absolutely — email Cristina at support@saialondon.com and she\'ll look after you personally. I can prep your details here first if that\'s handy.',
+      say: 'Absolutely — email Cristina at Cristina@saialondon.com and she\'ll look after you personally. I can prep your details here first if that\'s handy.',
       actions: [] },
     { u: 'does the club cost anything to join?',
       say: "The guest list is free — pop your email in and you'll hear about upcoming SAÏA experiences. Shall I add you?",
@@ -259,10 +265,16 @@
       say: "We're @saialondon on Instagram — come say hello. Anything I can help you plan while you're here?",
       actions: [] },
     { u: 'do you have any jobs going?',
-      say: "Lovely that you'd like to be part of SAÏA — for collaborations or working together, email Cristina at support@saialondon.com. I'm here for hires and bookings meanwhile.",
+      say: "Lovely that you'd like to be part of SAÏA. For roles or working together, email Cristina at Cristina@saialondon.com. I'm here for hires and bookings in the meantime.",
+      actions: [] },
+    { u: 'are you open to collaborations?',
+      say: "We love supporting other businesses, but as a small business ourselves we're not taking on collaborations right now. That said, if you'd like to create content featuring our mats, tag @saialondon and send it over, and we're happy to offer a 10% refund once we've received the agreed content.",
+      actions: [] },
+    { u: 'how do I become an affiliate?',
+      say: "We do have an affiliate programme. Email Cristina at Cristina@saialondon.com and she'll talk you through the details and set you up personally.",
       actions: [] },
     { u: "I'm a journalist, can I ask about SAÏA?",
-      say: "Happy to point you the right way — for press and partnerships, Cristina's the one to speak to at support@saialondon.com.",
+      say: "Happy to point you the right way — for press and partnerships, Cristina's the one to speak to at Cristina@saialondon.com.",
       actions: [] },
     { u: 'can you ship to Paris?',
       say: "We're London-based, so international isn't something we cover — but Cristina's always glad to chat ideas by email. Is your event in London?",
@@ -282,8 +294,8 @@
       say: 'Thoughtful of you — the mats are for floor work, but Cristina can suggest how to make a mixed-ability session lovely; do ask her by email. How many mats meanwhile?',
       actions: [] },
     { u: 'I need around 200 mats',
-      say: "A wonderful scale — over 60 mats we move to a reduced rate, and for 200 Cristina confirms the logistics and best price personally. I'll note 200; how many days?",
-      actions: [{ tool: 'add_mats', args: { n: 200 } }] },
+      say: "That's a wonderful scale. We've up to 50 mats available at the moment though, so we couldn't cover 200 all at once. If the classes run in staggered sessions the same 50 can be reused between groups. How are your sessions set up?",
+      actions: [] },
 
     // ── Off-topic / staying in lane ───────────────────────────────
     { u: 'what do you think about the election?',

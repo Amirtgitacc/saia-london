@@ -18,11 +18,11 @@
 })(typeof self !== 'undefined' ? self : this, function (KBin) {
   // Minimal fallback so scripted replies still work if the KB ever fails to load.
   const KB = KBin || {
-    hire: { pricePerMat: 8.5, currency: '£', hireDays: 2, minMats: 10, extraDayPerMat: 1.5, depositPerMat: 1.5, depositRefundable: true, bulkThreshold: 60,
+    hire: { pricePerMat: 8.5, currency: '£', hireDays: 2, minMats: 10, maxMats: 50, extraDayPerMat: 1.5, depositPerMat: 1.5, depositRefundable: true,
       mat: { size: '68 × 185 cm, 4 mm thick', colour: 'black', material: 'natural rubber with a PU surface', features: 'non-slip and anti-odour' },
-      delivery: 'Same-day courier across London from our Central London warehouse.',
-      collection: 'We collect the day after. No need to clean them, we handle that.' },
-    contact: { email: 'support@saialondon.com', whatsapp: '07444 611 914', person: 'Cristina', pickup: 'NW3 warehouse' },
+      delivery: 'Same-day courier across London from our Central London warehouse, with a 6-hour delivery window.',
+      collection: 'We collect on the day, once your event has finished and the mats are packed away. No cleaning needed, we take care of that.' },
+    contact: { email: 'Cristina@saialondon.com', whatsapp: '07444 611 914', person: 'Cristina', pickup: 'NW3 warehouse' },
     club: { ethos: 'women who lift each other up', join: 'pop your email in to hear about gatherings' },
     pilates: { method: 'small, slow and breath-led', format: '1-2-1 in NW3, group in Hampstead' },
     founder: { name: 'Cristina', bio: 'Cristina founded SAÏA in 2020.', meaning: 'SAÏA means “A Woman Who Wins”.' },
@@ -163,13 +163,13 @@
     if (aw === 'confirm' && has(/^(no|nope|not yet|cancel|hold on|wait|stop|actually)\b/))
       return mk("No rush — your quote's saved in the panel. Tell me what you'd like to change, or say 'checkout' when you're ready.", [], null);
     if (aw === 'confirm' && has(/^(yes|yep|yeah|sure|go ahead|do it|lock it|confirm|book it|sounds good|please|ok|okay|perfect)\b/))
-      return mk("Wonderful. Your secure checkout link is in the panel — that's you booked. Delivery the day before, collection after. Welcome to SAÏA.", [{ tool: 'checkout' }], null);
+      return mk("Wonderful. Your secure checkout link is in the panel, so that's you booked. Delivery the day before, collection on the day once you've finished. Welcome to SAÏA.", [{ tool: 'checkout' }], null);
 
     // explicit booking actions — also fired by the home basket buttons
     if (has(/^checkout\b|^pay\b|payment link|secure (checkout )?link/))
       return mk("Your secure checkout link is ready in the panel. That's you joining the club — anything else for your day?", [{ tool: 'checkout' }], null);
     if (has(/^confirm\b|^confirm booking|^book it now\b/))
-      return mk('Confirmed. Delivery the day before, collection after. Welcome to SAÏA.', [{ tool: 'confirm' }], null);
+      return mk('Confirmed. Delivery the day before, collection on the day once your event has finished. Welcome to SAÏA.', [{ tool: 'confirm' }], null);
 
     // ===== build / continue the hire flow =====
     // Trigger: mid-flow, or a fresh hire signal (a count, “hire”, “book”, “rent”, “event with mats”)
@@ -184,6 +184,23 @@
     // flow turns "buy 30 mats to keep" into a booking. Warmly reframe to hire.
     if (has(/\b(buy|buying|purchase|purchasing|sell|selling|for sale|to keep|keep them|own them|owning|permanently|outright|forever)\b/) && (has(/mat/) || inHireFlow || freshHire))
       return m("We don't sell the mats, lovely — they're hire-only, so you get our studio-quality mats for your event and we handle everything after. Happy to set up a hire whenever you like; how many are you after?");
+
+    // MAX-STOCK guard: we hold a hard ceiling of 50 mats. Intercept any bigger ask — a direct
+    // "80 mats", a headcount that would need >50, or a bare number answering "how many mats?" —
+    // BEFORE the hire flow quietly books it. Suggest reusing the same set across staggered
+    // sessions; never book past stock. Re-asks the count so a workable number flows straight on.
+    const MAXM = H.maxMats || 50;
+    const askMats = (matsN != null) ? matsN
+      : (guests != null && !hire.mats) ? rec(guests)
+      : (aw === 'mats' && bareNum) ? parseInt(bareNum, 10)
+      : null;
+    if (askMats != null && askMats > MAXM)
+      return mk("We've got up to " + MAXM + " mats available at the moment. If your classes run in staggered sessions, the same " + MAXM + " can often cover everyone, as they're reused between groups. If everyone needs a mat at the same time though, I'm afraid we couldn't go beyond our " + MAXM + ". How are your sessions running?", [], 'mats');
+
+    // ACCESSORIES guard: mats only. Sits before the hire flow because "do you hire blocks?"
+    // carries the word "hire" and would otherwise start a booking instead of answering.
+    if (has(/\b(blocks?|bolsters?|blankets?|straps?|props?|cushions?|accessor\w*)\b/))
+      return m("It's just the mats for us at the moment. We don't hire blocks, bolsters, blankets or any other props, only our yoga mats. How many mats are you after?");
 
     if (inHireFlow || freshHire || (aw === 'review' && hasSlotSignal)) {
       const h = Object.assign({}, hire);
@@ -233,7 +250,7 @@
       if (need === 'postcode') return mk("What's the event postcode? I'll work out the courier from there.", actions, 'postcode');
 
       // need the date before we quote anything
-      if (need === 'date') return mk('And what date is your event? We deliver the day before and collect the day after.', actions, 'date');
+      if (need === 'date') return mk('And what date is your event? We deliver the day before and collect once it has finished.', actions, 'date');
 
       // everything gathered → DON'T reveal the quote yet. Ask first, so the guest opts in to
       // booking before any price or basket appears; the quote shows only on their 'yes' (above).
@@ -313,11 +330,31 @@
     if (has(/how (does|do|to)\s?(it|this|the hire|i|we)?\s?(work|hire|rent)|how does (it|hire) work|process/))
       return m('Simple: tell me your numbers and date, we deliver the day before (min ' + H.minMats + ' mats, from ' + money(H.pricePerMat) + ' each for a ' + H.hireDays + '-day hire) and collect after. Shall I start a quote?');
 
+    // two-day hire rationale — "same-day delivery+collection, do I still pay two days?"
+    const twoDayQ = (has(/same.?day/) && has(/hire|pay|charg|still|why|both|2.?day|two.?day/))
+      || has(/why.*(2|two).?day|delivered and collected.*same/);
+    if (twoDayQ)
+      return m("It is, yes. Even when the mats arrive and leave on the same day, it's charged as our " + H.hireDays + "-day hire, because we reserve the mats for you and hold a 6-hour delivery window. That's why morning events usually get their mats the day before. Collection is then on the day itself, once you've finished.");
+
+    // venue won't store overnight → deliver to office/home/colleague, bring over on the day
+    const storageQ = has(/overnight|day before|storage|store the mats|store them/)
+      && has(/can'?t|cannot|won'?t|wont|not (allow|accept|able)|no (delivery|deliveries)|doesn'?t|don'?t|refuse|venue/);
+    if (storageQ)
+      return m("No trouble at all. For early starts we can deliver to your office, home or a colleague the day before, and you bring the mats over on the day. It works beautifully for a lot of our clients. Where shall I send them?");
+
+    // collaborations — measured no, with the tag-for-10%-refund offer
+    if (has(/collab|partnership|work (with|together)|feature (your|the) mats|content (creator|in exchange)|influencer|ambassador|\bugc\b|in exchange for/))
+      return m(KB.collab || "We love supporting other businesses, but as a small business we're not taking on collaborations right now. Tag @saialondon in content featuring our mats and share it with us, and we're happy to offer a 10% refund once we've received the agreed content.");
+
+    // affiliate programme — yes, routed to Cristina personally
+    if (has(/affiliate/))
+      return m(KB.affiliate || ("We do have an affiliate programme. Email Cristina at " + (KB.contact && KB.contact.email) + " and she'll set you up personally."));
+
     // delivery / collection facts — answer both halves; they're usually asked together
     if (has(/deliver|courier|ship|drop ?off|bring them/))
-      return m(H.delivery + ' We collect the day after — no cleaning needed, we handle that — or you can drop them at our NW3 warehouse for free. Tell me your numbers and postcode and I\'ll price it.');
+      return m(H.delivery + ' Collection is on the day of your event once it has finished, with no cleaning needed as we take care of that, or you can drop them at our NW3 warehouse for free. Tell me your numbers and postcode and I\'ll price it.');
     if (has(/collect|return|pick.?up|pick them|after the event|clean|wash/))
-      return m(H.collection + ' Prefer it brought to you? We courier across London too — just share your postcode.');
+      return m(H.collection + ' Prefer it brought to you? We courier across London too, just share your postcode.');
 
     // minimum order — MUST precede the location branch, which greedily matches "number"
     if (has(/\b(minimum|min|fewest|least|smallest|how few|at least)\b/) && has(/mat|order|hire|book|rent|need/))
