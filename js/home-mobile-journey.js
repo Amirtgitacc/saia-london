@@ -28,10 +28,10 @@ export function initMobileJourney() {
     { a: 0.00, b: 0.15, e: "A women's club in London", t: "Yoga mat hire,<br>across London.", x: "Rent our mats for £8.50 each, with same-day delivery from our Central London warehouse." },
     { a: 0.15, b: 0.30, e: "The signature mat", t: "Made for grip,<br>made to last.", x: "One mat, exceptionally made: an ethically sourced natural-rubber base with a non-slip, anti-odour PU surface. Weighted to fall open and lie flat the moment you unroll it." },
     { a: 0.30, b: 0.45, e: "Mat hire",   t: "Hiring is<br>effortless.", x: "From a 10-mat morning class to a 50-person retreat, we handle delivery, set-up and collection. £8.50 a mat, 2-day hire, minimum of ten." },
-    { a: 0.45, b: 0.59, e: "Fitness",    t: "Pilates with<br>Cristina.",        x: "I believe that the body is the vessel that takes us through life — designed to do incredible things if you let it." },
-    { a: 0.59, b: 0.72, e: "The method", t: "Strengthen, heal,<br>realign.",  x: "My mission is to share the transformative practice of Joseph Pilates. Through his method, Contrology, Pilates empowers individuals to strengthen, heal, and realign their bodies from within." },
-    { a: 0.72, b: 0.86, e: "Where",      t: "NW3 &amp;<br>Hampstead.",          x: "I offer 1-2-1 classes for women in NW3 and group classes in Hampstead, London." },
-    { a: 0.86, b: 1.01, e: "Every body", t: "For every<br>body.",   x: "The body is the greatest investment we can make in ourselves. Pilates is a beautiful, powerful, and accessible practice for every body." }
+    { a: 0.45, b: 0.59, e: "The person behind SAÏA", t: "Run by<br>Cristina.",        x: "SAÏA Mats is run by Cristina, who looks after every hire herself, from your first enquiry to the moment the mats come home." },
+    { a: 0.59, b: 0.72, e: "Personal service", t: "Every booking,<br>by hand.",  x: "No call centre and no queue. Cristina manages each order personally, so your event is planned with care and nothing slips." },
+    { a: 0.72, b: 0.86, e: "Where we are",      t: "Based in<br>NW3.",          x: "We're a North London business, delivering across the city, with free pickup from our NW3 warehouse." },
+    { a: 0.86, b: 1.01, e: "Why it matters", t: "Smooth and<br>reliable.",   x: "From enquiry to delivery to collection, one person sees it through, so it goes beautifully every time." }
   ];
   var N = CH.length;
   // mat unrolls slowly across hero→signature→hiring (ease-in: holds rolled, falls open, lies flat),
@@ -55,10 +55,12 @@ export function initMobileJourney() {
             '<div class="mj-ladder"></div>' +
           '</div>' +
           '<form class="mj-endcta" data-guest-form novalidate>' +
-            '<span class="mj-endcta-eb">Train with Cristina</span>' +
+            '<span class="mj-endcta-eb">Start your hire</span>' +
+            '<button type="button" class="mj-endcta-hire">Plan my hire <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></button>' +
+            '<span class="mj-endcta-or">or join the guest list</span>' +
             '<div class="mj-endcta-row">' +
               '<input class="mj-endcta-email" type="email" name="email" required placeholder="Your email" aria-label="Email address">' +
-              '<button type="submit" class="mj-endcta-btn" aria-label="Join the list">Join <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></button>' +
+              '<button type="submit" class="mj-endcta-btn" aria-label="Join the guest list">Join <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></button>' +
             '</div>' +
             '<span class="mj-endcta-msg" data-guest-msg aria-live="polite"></span>' +
           '</form>' +
@@ -86,6 +88,11 @@ export function initMobileJourney() {
       return;
     }
     window.location.href = 'guest-list.html';
+  });
+  var hireBtn = root.querySelector('.mj-endcta-hire');
+  if (hireBtn) hireBtn.addEventListener('click', function () {
+    if (window.SAIA && window.SAIA.startHire) window.SAIA.startHire();
+    else window.location.hash = '#estimate';
   });
   for (var _li = 0; _li < N; _li++) ladEl.appendChild(document.createElement('i'));
   var ladder = [].slice.call(ladEl.children);
