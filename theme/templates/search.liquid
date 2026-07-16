@@ -1,2 +1,27 @@
-{% comment %} stub — SAÏA does not use this template {% endcomment %}
-<main style="background:#F5F1E8; min-height:40vh;"></main>
+{% render 'blog-chrome-head' %}
+<main>
+  <section class="bhead">
+    <div class="eyebrow">Search</div>
+    <h1>{% if search.performed %}Results for “{{ search.terms | escape }}”{% else %}Search SAÏA London{% endif %}</h1>
+  </section>
+  <div class="bwrap">
+    <form action="/search" method="get" role="search" style="display:flex; gap:12px; border-bottom:1px solid var(--saia-line); padding-bottom:10px; margin-bottom:40px;">
+      <input type="search" name="q" value="{{ search.terms | escape }}" placeholder="Search articles and pages" aria-label="Search"
+             style="flex:1; background:none; border:none; font-family:'Inter',sans-serif; font-size:16px; color:var(--saia-ink); outline:none;">
+      <button type="submit" style="background:none; border:none; cursor:pointer; font-size:12px; letter-spacing:.2em; text-transform:uppercase; color:var(--saia-accent);">Search</button>
+    </form>
+    {% if search.performed %}
+      {% paginate search.results by 12 %}
+      {% for item in search.results %}
+      <p style="margin:0 0 26px;">
+        <a href="{{ item.url }}" style="font-family:'Playfair Display',serif; font-size:21px; text-decoration:none; color:var(--saia-ink);">{{ item.title }}</a><br>
+        <span style="font-size:14px; color:#5A554C;">{{ item.content | strip_html | truncate: 150 }}</span>
+      </p>
+      {% else %}
+      <p style="color:#5A554C;">Nothing found — try another word, or <a href="/pages/contact-us" style="color:var(--saia-accent);">ask us directly</a>.</p>
+      {% endfor %}
+      {% endpaginate %}
+    {% endif %}
+  </div>
+</main>
+{% render 'blog-chrome-foot' %}

@@ -1,0 +1,207 @@
+
+  <link rel="stylesheet" href="{{ 'base.css' | asset_url }}">
+  <link rel="stylesheet" href="{{ 'buttons.css' | asset_url }}">
+  <style>
+    body{ font-family:'Inter',system-ui,sans-serif; background:var(--saia-cream); color:var(--saia-ink); -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility; }
+    a{ color:inherit; }
+    img{ display:block; max-width:100%; }
+
+    /* ---------- nav (matches index.html) ---------- */
+    .nav{ position:sticky; top:0; z-index:50; background:rgba(245,241,232,.92); backdrop-filter:blur(10px); border-bottom:1px solid var(--saia-line); }
+    .nav-desk{ display:grid; grid-template-columns:1fr auto 1fr; align-items:center; padding:22px 48px; max-width:1480px; margin:0 auto; }
+    .nav-desk nav{ display:flex; gap:32px; font-size:12px; letter-spacing:.18em; text-transform:uppercase; white-space:nowrap; }
+    .nav-desk nav a{ color:var(--saia-ink); text-decoration:none; }
+    .nav-desk nav a[aria-current]{ color:var(--saia-accent); }
+    .brand{ text-align:center; text-decoration:none; color:var(--saia-ink); }
+    .brand .mark{ font-family:'Playfair Display',serif; font-size:30px; letter-spacing:.2em; line-height:1; }
+    .brand .sub{ font-size:9px; letter-spacing:.52em; text-transform:uppercase; color:var(--saia-ink-soft); margin-top:3px; }
+    .nav-spacer{ }
+    .nav-mob{ display:none; }
+    .nav-mob-in{ display:flex; align-items:center; justify-content:space-between; padding:16px 20px; }
+    .drawer{ display:none; position:fixed; inset:0; z-index:60; background:var(--saia-cream); padding:24px 28px; }
+    .drawer-top{ display:flex; justify-content:space-between; align-items:center; margin-bottom:48px; }
+    .drawer nav{ display:flex; flex-direction:column; gap:6px; }
+    .drawer nav a{ font-family:'Playfair Display',serif; font-size:38px; color:var(--saia-ink); text-decoration:none; padding:10px 0; border-bottom:1px solid var(--saia-line); }
+    .iconbtn{ background:none; border:none; padding:6px; cursor:pointer; display:flex; }
+
+    /* ---------- page head ---------- */
+    .pagehead{ max-width:760px; margin:0 auto; padding:clamp(56px,8vw,104px) 6vw clamp(28px,4vw,44px); text-align:center; }
+    .eyebrow{ font-size:12px; letter-spacing:.34em; text-transform:uppercase; color:var(--saia-accent); margin-bottom:22px; }
+    .pagehead h1{ font-family:'Playfair Display',serif; font-weight:500; font-size:clamp(44px,7vw,82px); line-height:1; letter-spacing:-.01em; margin:0 0 26px; }
+    .pagehead .lede{ font-family:'Playfair Display',serif; font-style:italic; font-weight:400; font-size:clamp(19px,2.2vw,25px); line-height:1.5; color:#43403A; max-width:34ch; margin:0 auto; }
+    .hours{ font-size:13px; letter-spacing:.04em; color:var(--saia-ink-soft); margin-top:26px; line-height:1.7; }
+
+    /* ---------- contact cards ---------- */
+    .contact{ max-width:920px; margin:0 auto; padding:0 6vw clamp(48px,7vw,84px); }
+    .featured{ background:var(--saia-night); color:#F5F1E8; border-radius:6px; padding:clamp(32px,5vw,52px); text-align:center; box-shadow:0 30px 70px -34px rgba(43,38,32,.5); margin-bottom:clamp(28px,4vw,44px); }
+    .featured .eyebrow{ color:var(--saia-accent); }
+    .featured h2{ font-family:'Playfair Display',serif; font-weight:500; font-size:clamp(26px,3.4vw,38px); line-height:1.1; margin:0 0 14px; }
+    .featured p{ font-size:15px; line-height:1.7; color:rgba(245,241,232,.72); max-width:42ch; margin:0 auto 28px; }
+    .featured .saia-btn{ text-decoration:none; }
+
+    .grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:clamp(16px,2.4vw,24px); }
+    .card{ background:#FCFAF4; border:1px solid var(--saia-line); border-radius:6px; padding:clamp(24px,3vw,32px); }
+    .card h3{ font-size:11px; letter-spacing:.22em; text-transform:uppercase; color:var(--saia-ink-soft); margin:0 0 14px; font-weight:500; }
+    .card a, .card .val{ font-family:'Playfair Display',serif; font-size:clamp(18px,2vw,21px); color:var(--saia-ink); text-decoration:none; word-break:break-word; }
+    .card a:hover{ color:var(--saia-accent); }
+    .card p{ font-size:13.5px; line-height:1.65; color:#5C574E; margin:12px 0 0; }
+    .card p a{ font-family:'Inter',sans-serif; font-size:13.5px; color:var(--saia-accent); }
+
+    /* ---------- footer (matches index.html) ---------- */
+    footer{ background:var(--saia-ink); color:#F5F1E8; padding:clamp(64px,8vw,100px) 6vw 40px; }
+    .foot-in{ max-width:1320px; margin:0 auto; }
+    .foot-top{ display:flex; flex-wrap:wrap; gap:48px; justify-content:space-between; }
+    .foot-brand{ flex:1 1 280px; max-width:360px; }
+    .foot-brand .mark{ font-family:'Playfair Display',serif; font-size:34px; letter-spacing:.2em; line-height:1; }
+    .foot-brand .sub{ font-size:10px; letter-spacing:.5em; text-transform:uppercase; color:rgba(245,241,232,.55); margin:6px 0 22px; }
+    .foot-brand p{ font-size:14px; line-height:1.75; color:rgba(245,241,232,.65); margin:0 0 24px; max-width:300px; }
+    .foot-social{ display:flex; gap:18px; margin-top:24px; }
+    .foot-social a{ color:rgba(245,241,232,.7); text-decoration:none; }
+    .foot-cols{ flex:0 1 auto; display:flex; flex-wrap:wrap; gap:48px; }
+    .foot-col h4{ font-size:11px; letter-spacing:.22em; text-transform:uppercase; color:rgba(245,241,232,.5); margin:0 0 18px; font-weight:500; }
+    .foot-col .links{ display:flex; flex-direction:column; gap:12px; font-size:14px; }
+    .foot-col .links a{ color:rgba(245,241,232,.78); text-decoration:none; }
+    .foot-col .links a:hover{ color:#F5F1E8; }
+    .foot-bottom{ display:flex; flex-wrap:wrap; gap:14px; justify-content:space-between; align-items:center; margin-top:56px; padding-top:26px; border-top:1px solid rgba(245,241,232,.16); font-size:12px; color:rgba(245,241,232,.5); }
+
+    /* ---------- responsive ---------- */
+    @media (max-width:760px){
+      .nav-desk{ display:none; }
+      .nav-mob{ display:block; position:sticky; top:0; z-index:50; background:rgba(245,241,232,.94); backdrop-filter:blur(10px); border-bottom:1px solid var(--saia-line); }
+    }
+  </style>
+
+
+
+  <!-- ============ HEADER (stacked) ============ -->
+  <header class="snav">
+    <div class="snav-desk">
+      <a class="snav-brand" href="/#top" aria-label="SAÏA London — home"><img src="{{ 'saia-logo.avif' | asset_url }}" alt="SAÏA London"></a>
+      <div class="snav-row">
+        <nav class="snav-links" aria-label="Primary">
+          <a href="/pages/pilates-with-cristina">Pilates with Cristina</a>
+          <a href="/pages/events">Events</a>
+          <a href="/pages/story">Our Story</a>
+        </nav>
+        <a class="snav-cta" href="/#estimate">Hire mats</a>
+      </div>
+    </div>
+    <div class="snav-mob">
+      <button class="snav-burger" id="navToggle" aria-label="Open menu" aria-expanded="false"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><line x1="3" y1="7" x2="21" y2="7"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="17" x2="21" y2="17"/></svg></button>
+      <a class="snav-brand" href="/#top" aria-label="SAÏA London — home"><img src="{{ 'saia-logo.avif' | asset_url }}" alt="SAÏA London"></a>
+      <a class="snav-cta" href="/#estimate">Hire</a>
+    </div>
+  </header>
+  <div class="snav-drawer" id="drawer">
+    <div class="snav-drawer-top">
+      <a class="snav-brand" href="/#top" aria-label="SAÏA London — home"><img src="{{ 'saia-logo.avif' | asset_url }}" alt="SAÏA London"></a>
+      <button class="snav-burger" id="navClose" aria-label="Close menu"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg></button>
+    </div>
+    <nav>
+      <a href="/pages/pilates-with-cristina">Pilates with Cristina</a>
+      <a href="/pages/events">Events</a>
+      <a href="/pages/story">Our Story</a>
+      <a href="/#estimate">Hire mats</a>
+    </nav>
+  </div>
+
+  <main>
+    <!-- ============ PAGE HEAD ============ -->
+    <section class="pagehead">
+      <div class="eyebrow">Get in touch</div>
+      <h1>Contact Us</h1>
+      <p class="lede">We would love to hear from you. For the quickest answer, please reach the contact most relevant to your query.</p>
+      <p class="hours">Our business hours are Monday to Friday, 9am–6pm UK time.<br>
+        We deal with a high volume of messages and will get back to you as soon as we can.</p>
+    </section>
+
+    <!-- ============ CONTACT ============ -->
+    <section class="contact">
+      <div class="featured">
+        <div class="eyebrow">Mat hire &amp; events</div>
+        <h2>Message Cristina directly</h2>
+        <p>Cristina — our founder and Pilates instructor — handles mat hire and event enquiries personally across the NW3 area.</p>
+        <a href="https://wa.me/447444611914" class="saia-btn saia-btn--terra">WhatsApp 07444 611 914</a>
+      </div>
+
+      <div class="grid">
+        <div class="card">
+          <h3>Customer service</h3>
+          <a href="mailto:Cristina@saialondon.com">Cristina@saialondon.com</a>
+        </div>
+        <div class="card">
+          <h3>Marketing enquiries</h3>
+          <a href="mailto:marketing@saialondon.com">marketing@saialondon.com</a>
+        </div>
+        <div class="card">
+          <h3>Press enquiries</h3>
+          <a href="mailto:press@saialondon.com">press@saialondon.com</a>
+          <p>View our <a href="https://drive.google.com/file/d/11KVEgByCQnRwgwS4451fT4MJW1ROKD5B/view?usp=sharing" rel="noopener">Press Kit</a>.</p>
+        </div>
+        <div class="card">
+          <h3>Social media</h3>
+          <a href="https://www.instagram.com/saialondon" rel="noopener">Instagram @saialondon</a>
+          <p><a href="https://www.facebook.com/saialondon" rel="noopener">Facebook</a> · <a href="https://www.pinterest.com/saialondon" rel="noopener">Pinterest</a></p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ============ FOOTER (matches index.html) ============ -->
+  <footer>
+    <div class="foot-in">
+      <div class="foot-top">
+        <div class="foot-brand">
+          <div class="mark">SAÏA</div>
+          <div class="sub">London</div>
+          <p>A female-led club empowering women through fitness, community &amp; mindset. Premium yoga-mat hire across London.</p>
+          <a href="/#estimate" class="saia-btn saia-btn--terra" style="text-decoration:none;">Hire mats for your event</a>
+          <div class="foot-social">
+            <a href="https://www.instagram.com/saialondon" aria-label="SAÏA on Instagram"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg></a>
+            <a href="https://www.facebook.com/saialondon" aria-label="SAÏA on Facebook"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M15 8h-2a2 2 0 0 0-2 2v11"/><path d="M8 13h6"/><path d="M11 21V10a3 3 0 0 1 3-3h1"/></svg></a>
+            <a href="https://www.pinterest.com/saialondon" aria-label="SAÏA on Pinterest"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M9 19c-.5-2 .5-5 1-7"/><circle cx="12" cy="10" r="7"/><path d="M9.5 13c.5 1 3 1.5 4.5-.5S15 8 13 8s-3 1.5-2.5 3"/></svg></a>
+          </div>
+        </div>
+        <div class="foot-cols">
+          <div class="foot-col">
+            <h4>Customer care</h4>
+            <div class="links">
+              <a href="/pages/contact-us">Contact us</a>
+              <a href="/pages/terms-and-conditions">Terms &amp; conditions</a>
+            </div>
+          </div>
+          <div class="foot-col">
+            <h4>About us</h4>
+            <div class="links">
+              <a href="/pages/story">Our story</a>
+              <a href="/pages/events">Events</a>
+              <a href="/#estimate">Yoga mat hire</a>
+              <a href="/#events">Gallery</a>
+            </div>
+          </div>
+          <div class="foot-col" style="max-width:240px;">
+            <h4>Subscribe</h4>
+            <p style="font-size:13px; line-height:1.6; color:rgba(245,241,232,.6); margin:0 0 14px;">Get on the guest list of our upcoming events.</p>
+            <div style="display:flex; border-bottom:1px solid rgba(245,241,232,.35);"><input type="email" placeholder="Email" aria-label="Email address" style="flex:1; background:none; border:none; color:#F5F1E8; font-family:'Inter',sans-serif; font-size:14px; padding:8px 0; outline:none;"><span style="font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:#B8624A; padding:8px 0; cursor:pointer;">Join</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="foot-bottom">
+        <span>© 2026 SAÏA London</span>
+        <span style="letter-spacing:.16em; text-transform:uppercase;">SAÏA community &amp; club</span>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      var d = document.getElementById('drawer');
+      var open = document.getElementById('navToggle');
+      var close = document.getElementById('navClose');
+      if (open) open.addEventListener('click', function () { d.style.display = 'block'; });
+      if (close) close.addEventListener('click', function () { d.style.display = 'none'; });
+      Array.prototype.slice.call(d.querySelectorAll('a')).forEach(function (a) {
+        a.addEventListener('click', function () { d.style.display = 'none'; });
+      });
+    })();
+  </script>

@@ -1,4 +1,19 @@
-{% comment %} stub — SAÏA does not use this template {% endcomment %}
-<main style="background:#F5F1E8; min-height:40vh;">
+{% comment %} Routes by page handle — pages need no template assignment in admin. {% endcomment %}
+{% case page.handle %}
+  {% when 'contact-us' %}{% render 'page-contact-us' %}
+  {% when 'event-book-club-petersham' %}{% render 'page-event-book-club-petersham' %}
+  {% when 'event-morena-self-love' %}{% render 'page-event-morena-self-love' %}
+  {% when 'event-mortimer-house' %}{% render 'page-event-mortimer-house' %}
+  {% when 'event-the-nest' %}{% render 'page-event-the-nest' %}
+  {% when 'event-watercolour-regents-park' %}{% render 'page-event-watercolour-regents-park' %}
+  {% when 'events' %}{% render 'page-events' %}
+  {% when 'guest-list' %}{% render 'page-guest-list' %}
+  {% when 'pilates-with-cristina' %}{% render 'page-pilates-with-cristina' %}
+  {% when 'story' %}{% render 'page-story' %}
+  {% when 'terms-and-conditions' %}{% render 'page-terms-and-conditions' %}
+  {% else %}
+<main style="background:#F5F1E8; color:#2B2620; min-height:40vh; max-width:720px; margin:0 auto; padding:64px 24px; font-family:'Inter',system-ui,sans-serif;">
+  <h1 style="font-family:'Playfair Display',serif; font-weight:500;">{{ page.title }}</h1>
   {{ page.content }}
 </main>
+{% endcase %}

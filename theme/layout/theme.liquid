@@ -4,6 +4,25 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{{ page_title | default: shop.name }}</title>
+  {%- if page_description %}
+  <meta name="description" content="{{ page_description | escape }}">
+  {%- endif %}
+  <link rel="canonical" href="{{ canonical_url }}">
+  {%- if request.page_type == 'product' or page.handle == 'guest-list' %}
+  {%- comment %} checkout plumbing products + post-signup page — never meant to rank {% endcomment %}
+  <meta name="robots" content="noindex">
+  {%- endif %}
+  <meta property="og:site_name" content="{{ shop.name }}">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="{{ page_title | default: shop.name }}">
+  {%- if page_description %}
+  <meta property="og:description" content="{{ page_description | escape }}">
+  {%- endif %}
+  <meta property="og:url" content="{{ canonical_url }}">
+  {%- assign og_image = 'SAIABRUNCHCLUB_38.png' | asset_url -%}
+  {%- unless og_image contains 'https:' -%}{%- assign og_image = og_image | prepend: 'https:' -%}{%- endunless %}
+  <meta property="og:image" content="{{ og_image }}">
+  <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" href="{{ 'saia-logo.avif' | asset_url }}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

@@ -1,2 +1,35 @@
-{% comment %} stub — SAÏA does not use this template {% endcomment %}
-<main style="background:#F5F1E8; min-height:40vh;"></main>
+{% render 'blog-chrome-head' %}
+
+<main>
+  <section class="bhead">
+    <div class="eyebrow">The journal</div>
+    <h1>{{ blog.title }}</h1>
+  </section>
+
+  {% paginate blog.articles by 12 %}
+  <section class="bgrid">
+    {% for article in blog.articles %}
+    <a class="bcard" href="{{ article.url }}">
+      {% if article.image %}
+      <div class="ph"><img src="{{ article.image | image_url: width: 900 }}" alt="{{ article.image.alt | default: article.title | escape }}" loading="lazy" width="900" height="600"></div>
+      {% endif %}
+      <div class="date">{{ article.published_at | date: '%-d %B %Y' }}</div>
+      <h2>{{ article.title }}</h2>
+      <p>{{ article.excerpt_or_content | strip_html | truncate: 140 }}</p>
+    </a>
+    {% else %}
+    <p style="grid-column:1/-1; text-align:center; color:#5A554C;">Nothing here yet — check back soon.</p>
+    {% endfor %}
+  </section>
+
+  {% if paginate.pages > 1 %}
+  <nav class="bpage" aria-label="Pagination">
+    {% if paginate.previous %}<a href="{{ paginate.previous.url }}">&larr; Newer</a>{% endif %}
+    <span class="current">Page {{ paginate.current_page }} of {{ paginate.pages }}</span>
+    {% if paginate.next %}<a href="{{ paginate.next.url }}">Older &rarr;</a>{% endif %}
+  </nav>
+  {% endif %}
+  {% endpaginate %}
+</main>
+
+{% render 'blog-chrome-foot' %}

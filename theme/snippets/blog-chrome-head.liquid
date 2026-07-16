@@ -1,0 +1,74 @@
+<script>document.documentElement.className="js";</script>
+<link rel="stylesheet" href="{{ 'base.css' | asset_url }}">
+<link rel="stylesheet" href="{{ 'buttons.css' | asset_url }}">
+<style>
+  body{ font-family:'Inter',system-ui,sans-serif; background:var(--saia-cream); color:var(--saia-ink); -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility; }
+  a{ color:inherit; }
+  img{ display:block; max-width:100%; }
+
+  .bnav{ position:sticky; top:0; z-index:50; background:rgba(245,241,232,.92); backdrop-filter:blur(10px); border-bottom:1px solid var(--saia-line); }
+  .bnav-in{ display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:14px 28px; padding:18px 6vw; max-width:1480px; margin:0 auto; }
+  .bnav-brand{ text-decoration:none; color:var(--saia-ink); }
+  .bnav-brand .mark{ font-family:'Playfair Display',serif; font-size:26px; letter-spacing:.2em; line-height:1; }
+  .bnav-brand .sub{ font-size:9px; letter-spacing:.52em; text-transform:uppercase; color:var(--saia-ink-soft); margin-top:3px; }
+  .bnav-links{ display:flex; flex-wrap:wrap; gap:12px 26px; font-size:12px; letter-spacing:.18em; text-transform:uppercase; }
+  .bnav-links a{ color:var(--saia-ink); text-decoration:none; }
+  .bnav-links a:hover{ color:var(--saia-accent); }
+
+  .bhead{ max-width:820px; margin:0 auto; padding:clamp(48px,7vw,96px) 6vw clamp(30px,4vw,48px); text-align:center; }
+  .bhead .eyebrow{ font-size:12px; letter-spacing:.34em; text-transform:uppercase; color:var(--saia-accent); margin-bottom:20px; }
+  .bhead h1{ font-family:'Playfair Display',serif; font-weight:500; font-size:clamp(38px,6vw,72px); line-height:1.08; letter-spacing:-.015em; margin:0 0 20px; }
+  .bhead .meta{ font-size:12px; letter-spacing:.22em; text-transform:uppercase; color:var(--saia-ink-soft); }
+
+  .bwrap{ max-width:760px; margin:0 auto; padding:0 6vw clamp(64px,8vw,110px); }
+
+  /* article body typography */
+  .article-body{ font-size:17px; line-height:1.8; color:#43403A; }
+  .article-body p{ margin:0 0 1.4em; }
+  .article-body h2, .article-body h3, .article-body h4{ font-family:'Playfair Display',serif; font-weight:500; color:var(--saia-ink); line-height:1.2; margin:1.8em 0 .6em; }
+  .article-body h2{ font-size:clamp(26px,3.4vw,34px); }
+  .article-body h3{ font-size:clamp(21px,2.6vw,26px); }
+  .article-body img{ border-radius:10px; margin:2em auto; }
+  .article-body a{ color:var(--saia-accent); }
+  .article-body blockquote{ font-family:'Playfair Display',serif; font-style:italic; font-size:1.25em; border-left:2px solid var(--saia-accent); margin:2em 0; padding:.2em 0 .2em 1.2em; color:var(--saia-ink); }
+  .article-body ul, .article-body ol{ padding-left:1.3em; margin:0 0 1.4em; }
+  .article-hero{ border-radius:12px; margin:0 0 clamp(28px,4vw,44px); }
+  .backlink{ display:inline-block; font-size:12px; letter-spacing:.22em; text-transform:uppercase; color:var(--saia-accent); text-decoration:none; margin-top:40px; }
+
+  /* blog index cards */
+  .bgrid{ max-width:1100px; margin:0 auto; padding:0 6vw clamp(64px,8vw,110px); display:grid; grid-template-columns:repeat(auto-fill,minmax(290px,1fr)); gap:clamp(28px,4vw,44px); }
+  .bcard{ text-decoration:none; }
+  .bcard .ph{ overflow:hidden; border-radius:10px; background:#E9E2D4; margin-bottom:16px; }
+  .bcard .ph img{ aspect-ratio:3/2; width:100%; object-fit:cover; transition:transform .6s ease; }
+  .bcard:hover .ph img{ transform:scale(1.04); }
+  .bcard .date{ font-size:11px; letter-spacing:.24em; text-transform:uppercase; color:var(--saia-ink-soft); margin-bottom:8px; }
+  .bcard h2{ font-family:'Playfair Display',serif; font-weight:500; font-size:22px; line-height:1.25; margin:0 0 8px; }
+  .bcard p{ font-size:14px; line-height:1.65; color:#5A554C; margin:0; }
+  .bpage{ display:flex; justify-content:center; gap:22px; padding:0 6vw 80px; font-size:12px; letter-spacing:.22em; text-transform:uppercase; }
+  .bpage a, .bpage span{ color:var(--saia-ink); text-decoration:none; }
+  .bpage .current{ color:var(--saia-accent); }
+
+  footer{ background:var(--saia-ink); color:#F5F1E8; padding:clamp(56px,7vw,88px) 6vw 36px; }
+  .foot-in{ max-width:1320px; margin:0 auto; }
+  .foot-brand .mark{ font-family:'Playfair Display',serif; font-size:34px; letter-spacing:.2em; line-height:1; }
+  .foot-brand .sub{ font-size:10px; letter-spacing:.5em; text-transform:uppercase; color:rgba(245,241,232,.55); margin:6px 0 22px; }
+  .foot-links{ display:flex; flex-wrap:wrap; gap:12px 28px; font-size:14px; margin:0 0 40px; }
+  .foot-links a{ color:rgba(245,241,232,.78); text-decoration:none; }
+  .foot-links a:hover{ color:#F5F1E8; }
+  .foot-bottom{ display:flex; flex-wrap:wrap; gap:14px; justify-content:space-between; align-items:center; padding-top:24px; border-top:1px solid rgba(245,241,232,.16); font-size:12px; color:rgba(245,241,232,.5); }
+</style>
+
+<header class="bnav">
+  <div class="bnav-in">
+    <a class="bnav-brand" href="/" aria-label="SAÏA London — home">
+      <div class="mark">SAÏA</div>
+      <div class="sub">London</div>
+    </a>
+    <nav class="bnav-links" aria-label="Primary">
+      <a href="/pages/pilates-with-cristina">Pilates with Cristina</a>
+      <a href="/pages/events">Events</a>
+      <a href="/pages/story">Our Story</a>
+      <a href="/#estimate">Hire mats</a>
+    </nav>
+  </div>
+</header>

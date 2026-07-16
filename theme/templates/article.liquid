@@ -1,2 +1,42 @@
-{% comment %} stub — SAÏA does not use this template {% endcomment %}
-<main style="background:#F5F1E8; min-height:40vh;"></main>
+{% render 'blog-chrome-head' %}
+
+<main>
+  <article>
+    <section class="bhead">
+      <div class="eyebrow">{{ blog.title }}</div>
+      <h1>{{ article.title }}</h1>
+      <div class="meta">{{ article.published_at | date: '%-d %B %Y' }}</div>
+    </section>
+
+    <div class="bwrap">
+      {% if article.image %}
+      <img class="article-hero" src="{{ article.image | image_url: width: 1400 }}" alt="{{ article.image.alt | default: article.title | escape }}" width="1400" height="{{ 1400 | divided_by: article.image.aspect_ratio | round }}">
+      {% endif %}
+
+      <div class="article-body">
+        {{ article.content }}
+      </div>
+
+      <a class="backlink" href="{{ blog.url }}">&larr; Back to {{ blog.title }}</a>
+    </div>
+  </article>
+</main>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": {{ article.title | json }},
+  "datePublished": {{ article.published_at | date: '%Y-%m-%d' | json }},
+  {%- assign ld_img = '' -%}
+  {%- if article.image -%}{%- assign ld_img = article.image | image_url: width: 1400 -%}
+  {%- unless ld_img contains 'https:' -%}{%- assign ld_img = ld_img | prepend: 'https:' -%}{%- endunless -%}
+  "image": {{ ld_img | json }},
+  {%- endif %}
+  "author": { "@type": "Organization", "name": "SAÏA London" },
+  "publisher": { "@type": "Organization", "name": "SAÏA London" },
+  "mainEntityOfPage": {{ canonical_url | json }}
+}
+</script>
+
+{% render 'blog-chrome-foot' %}
