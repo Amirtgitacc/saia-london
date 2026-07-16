@@ -50,7 +50,7 @@
       fetch('/cart/change.js', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ line: l.line, quantity: q })
-      }).then(function () { location.reload(); });
+      }).then(function (res) { if (res.ok) location.reload(); }).catch(function () { /* ignore */ });
     });
   })();
 </script>
