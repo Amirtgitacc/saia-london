@@ -1,0 +1,19 @@
+[
+  {
+    "name": "theme_info",
+    "theme_name": "SAÏA London",
+    "theme_version": "1.0.0",
+    "theme_author": "SAÏA",
+    "theme_documentation_url": "https://saia-london.vercel.app",
+    "theme_support_url": "https://saia-london.vercel.app"
+  },
+  {
+    "name": "SAÏA concierge & checkout",
+    "settings": [
+      { "type": "text", "id": "concierge_endpoint", "label": "Concierge endpoint URL", "default": "https://saia-london.vercel.app/api/concierge" },
+      { "type": "text", "id": "variant_mat_hire", "label": "Variant ID — Mat hire (2-day)", "info": "From Products → Mat hire → variant ID (Task 8)" },
+      { "type": "text", "id": "variant_extra_day", "label": "Variant ID — Extra hire day" },
+      { "type": "text", "id": "variant_deposit", "label": "Variant ID — Refundable deposit" }
+    ]
+  }
+]

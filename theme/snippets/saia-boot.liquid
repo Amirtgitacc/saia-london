@@ -1,0 +1,23 @@
+<script>
+  window.SAIA = window.SAIA || {};
+  {%- assign asset_base = 'saia-logo.avif' | asset_url | split: 'saia-logo.avif' | first %}
+  window.SAIA_ASSETS = {
+    base:        {{ asset_base | json }},
+    matGlb:      {{ 'saia-mat.glb' | asset_url | json }},
+    matTexture:  {{ 'saia-mat-texture.png' | asset_url | json }},
+    matFlatPng:  {{ 'mat-flat.png' | asset_url | json }},
+    flowFrameDir: {{ asset_base | json }},
+    flowFrameCount: 303
+  };
+  window.SAIA.assetUrl = function (p) {
+    var base = (window.SAIA_ASSETS || {}).base;
+    if (!base) return p;
+    return base + p.split('/').pop().replace(/\s+/g, '-');
+  };
+  window.SAIA_CONFIG = {
+    conciergeEndpoint: {{ settings.concierge_endpoint | json }},
+    matHireVariant:    {{ settings.variant_mat_hire | json }},
+    extraDayVariant:   {{ settings.variant_extra_day | json }},
+    depositVariant:    {{ settings.variant_deposit | json }}
+  };
+</script>
