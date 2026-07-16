@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SAÏA — Device Lab (iPhone 17 Pro · Pro Max, side by side)</title>
+<style>
+  :root{
+    --bg:#1a1714; --panel:#262019; --ink:#F5F1E8; --muted:#b9ad9b;
+    --accent:#B8624A; --frame:#0c0a08;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; min-height:100%; }
+  body{
+    background:var(--bg); color:var(--ink);
+    font:14px/1.4 -apple-system,"Inter",system-ui,sans-serif; -webkit-font-smoothing:antialiased;
+  }
+  .bar{
+    display:flex; align-items:center; gap:16px; flex-wrap:wrap;
+    padding:12px 20px; background:var(--panel);
+    border-bottom:1px solid rgba(255,255,255,.08);
+    position:sticky; top:0; z-index:10;
+  }
+  .bar h1{ font:600 15px/1 "Inter",sans-serif; letter-spacing:.14em; text-transform:uppercase; margin:0; }
+  .bar h1 .accent{ color:var(--accent); }
+  .controls{ margin-left:auto; display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .controls label{ color:var(--muted); font-size:12px; letter-spacing:.04em; }
+  .controls input[type="text"]{
+    background:#14110d; border:1px solid rgba(255,255,255,.12); color:var(--ink);
+    padding:6px 10px; border-radius:6px; width:260px; font:inherit;
+  }
+  .controls button{
+    background:var(--accent); color:#fff; border:0; padding:7px 14px; border-radius:6px;
+    font:600 12px/1 "Inter"; letter-spacing:.06em; text-transform:uppercase; cursor:pointer;
+  }
+  .controls button.ghost{ background:transparent; border:1px solid rgba(255,255,255,.2); color:var(--muted); }
+  .controls button.ghost.on{ border-color:var(--accent); color:var(--accent); }
+
+  .stage{ display:flex; gap:60px; justify-content:center; align-items:flex-start; padding:40px 32px 90px; flex-wrap:wrap; }
+  .device{ display:flex; flex-direction:column; align-items:center; gap:14px; }
+  .device .label{ text-align:center; }
+  .device .label .name{ font-weight:600; letter-spacing:.08em; text-transform:uppercase; font-size:13px; }
+  .device .label .dims{ color:var(--muted); font-size:12px; margin-top:2px; font-variant-numeric:tabular-nums; }
+
+  .phone{
+    position:relative; background:var(--frame); border-radius:56px; padding:14px;
+    box-shadow:0 0 0 2px #2b2620, 0 30px 60px -20px rgba(0,0,0,.7), inset 0 0 0 1px rgba(255,255,255,.05);
+    transform-origin:top center;
+  }
+  .phone::before{ /* dynamic island */
+    content:""; position:absolute; top:26px; left:50%; transform:translateX(-50%);
+    width:100px; height:30px; background:#000; border-radius:16px; z-index:3; pointer-events:none;
+  }
+  .screen{ position:relative; border-radius:44px; overflow:hidden; background:#F5F1E8; }
+  .screen iframe{ display:block; border:0; background:#F5F1E8; }
+
+  .promax .screen, .promax iframe{ width:440px; height:956px; }
+  .pro    .screen, .pro    iframe{ width:402px; height:874px; }
+
+  body.fit .phone{ transform:scale(var(--fit,1)); }
+</style>
+</head>
+<body>
+  <div class="bar">
+    <h1>SA<span class="accent">Ï</span>A · Device Lab</h1>
+    <div class="controls">
+      <label for="url">URL</label>
+      <input id="url" type="text" value="/index.html">
+      <button id="go">Load</button>
+      <button id="reload" class="ghost">Reload both</button>
+      <button id="fit" class="ghost">Fit height</button>
+      <button id="sync" class="ghost on">Sync scroll: on</button>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div class="device pro">
+      <div class="label"><div class="name">iPhone 17 Pro</div><div class="dims">402 × 874 · @3x</div></div>
+      <div class="phone"><div class="screen"><iframe id="f-pro" src="/index.html" title="iPhone 17 Pro"></iframe></div></div>
+    </div>
+    <div class="device promax">
+      <div class="label"><div class="name">iPhone 17 Pro Max</div><div class="dims">440 × 956 · @3x</div></div>
+      <div class="phone"><div class="screen"><iframe id="f-promax" src="/index.html" title="iPhone 17 Pro Max"></iframe></div></div>
+    </div>
+  </div>
+
+  <script>
+    const fPro = document.getElementById('f-pro');
+    const fMax = document.getElementById('f-promax');
+    const urlInput = document.getElementById('url');
+    const frames = [fPro, fMax];
+
+    function load(){ const u = urlInput.value.trim() || '/index.html'; frames.forEach(f => f.src = u); }
+    function reload(){ frames.forEach(f => { try{ f.contentWindow.location.reload(); }catch(e){ f.src = f.src; } }); }
+    document.getElementById('go').addEventListener('click', load);
+    urlInput.addEventListener('keydown', e => { if(e.key === 'Enter') load(); });
+    document.getElementById('reload').addEventListener('click', reload);
+
+    /* fit-to-height */
+    const fitBtn = document.getElementById('fit');
+    function applyFit(){
+      const avail = window.innerHeight - 60 - 40 - 54 - 28 - 50;
+      document.body.style.setProperty('--fit', Math.min(1, avail/956).toFixed(3));
+    }
+    fitBtn.addEventListener('click', () => {
+      const on = document.body.classList.toggle('fit');
+      fitBtn.classList.toggle('on', on);
+      if(on) applyFit();
+    });
+    window.addEventListener('resize', () => { if(document.body.classList.contains('fit')) applyFit(); });
+
+    /* sync scroll between the two phones (same-origin iframes) */
+    const syncBtn = document.getElementById('sync');
+    let syncOn = true, guard = false;
+    syncBtn.addEventListener('click', () => {
+      syncOn = !syncOn;
+      syncBtn.classList.toggle('on', syncOn);
+      syncBtn.textContent = 'Sync scroll: ' + (syncOn ? 'on' : 'off');
+    });
+    function wire(src, dst){
+      src.addEventListener('load', () => {
+        try{
+          src.contentWindow.addEventListener('scroll', () => {
+            if(!syncOn || guard) return;
+            guard = true;
+            try{
+              const sw = src.contentWindow, dw = dst.contentWindow;
+              const sMax = sw.document.documentElement.scrollHeight - sw.innerHeight;
+              const dMax = dw.document.documentElement.scrollHeight - dw.innerHeight;
+              const ratio = sMax > 0 ? sw.scrollY / sMax : 0;
+              dw.scrollTo(0, ratio * dMax);
+            }catch(e){}
+            requestAnimationFrame(() => { guard = false; });
+          }, { passive:true });
+        }catch(e){}
+      });
+    }
+    wire(fPro, fMax);
+    wire(fMax, fPro);
+  </script>
+</body>
+</html>

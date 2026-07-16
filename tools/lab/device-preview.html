@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SAÏA — Device preview lab (13″ laptop + iPhone 17 Pro)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cream:#F5F1E8; --ink:#2B2620; --terra:#B8624A;
+    --bg:#100F0D; --panel:#1A1815; --line:#2c2924; --muted:#9a948a;
+    /* true CSS viewport of each device */
+    --laptop-w:1280; --laptop-h:800;
+    --phone-w:402; --phone-h:874;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; height:100%; }
+  body{
+    background:radial-gradient(120% 90% at 50% -10%, #1c1a17 0%, var(--bg) 60%);
+    color:var(--cream); font-family:'Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased;
+    min-height:100%;
+  }
+
+  /* ---------- lab chrome ---------- */
+  .lab-top{ position:sticky; top:0; z-index:50; background:rgba(26,24,21,.92);
+    backdrop-filter:blur(8px); border-bottom:1px solid var(--line); padding:14px 26px;
+    display:flex; align-items:center; gap:24px; flex-wrap:wrap; }
+  .lab-top h1{ font-family:'Playfair Display',serif; font-weight:500; font-size:18px; margin:0; letter-spacing:.01em; }
+  .lab-top h1 small{ color:var(--muted); font-family:'Inter',sans-serif; font-weight:300; font-size:12px; margin-left:10px; letter-spacing:.04em; }
+
+  .controls{ display:flex; align-items:center; gap:18px; margin-left:auto; flex-wrap:wrap; }
+  .ctrl{ display:flex; align-items:center; gap:9px; font-size:12px; color:var(--muted); }
+  .ctrl label{ letter-spacing:.06em; }
+  .ctrl input[type=text]{ background:#0d0c0a; border:1px solid var(--line); color:var(--cream);
+    border-radius:6px; padding:7px 10px; font-size:12px; font-family:'Inter',sans-serif; width:220px; }
+  .ctrl input[type=range]{ accent-color:var(--terra); width:120px; }
+  .ctrl .val{ font-variant-numeric:tabular-nums; color:var(--cream); min-width:38px; }
+  .btn{ background:#0d0c0a; border:1px solid var(--line); color:var(--cream); border-radius:6px;
+    padding:7px 13px; font-size:12px; cursor:pointer; letter-spacing:.04em; transition:.15s; }
+  .btn:hover{ border-color:var(--terra); color:#fff; }
+  .btn.on{ background:var(--terra); border-color:var(--terra); color:#fff; }
+
+  /* ---------- stage ---------- */
+  .stage{ display:flex; gap:64px; justify-content:center; align-items:flex-start;
+    padding:48px 40px 80px; flex-wrap:wrap; }
+  .stage.fit{ flex-wrap:nowrap; }
+  .device{ flex:0 0 auto; display:flex; flex-direction:column; align-items:center; gap:18px; }
+  .cap{ text-align:center; }
+  .cap .tag{ font-size:10px; letter-spacing:.26em; text-transform:uppercase; color:var(--terra); }
+  .cap .nm{ font-family:'Playfair Display',serif; font-size:18px; color:var(--cream); margin-top:3px; }
+  .cap .sub{ font-size:11px; color:var(--muted); margin-top:3px; font-variant-numeric:tabular-nums; }
+
+  /* the iframe always renders at TRUE device size; we scale the whole frame visually,
+     so the site's own responsive breakpoints behave exactly as on the real device. */
+  .scaler{ transform-origin:top center; }
+
+  /* ---- laptop bezel (MacBook-ish) ---- */
+  .laptop{ background:#1f1d1a; border:1px solid #34302a; border-radius:22px; padding:16px 16px 14px;
+    box-shadow:0 50px 90px -30px rgba(0,0,0,.8); position:relative; }
+  .laptop::before{ content:""; position:absolute; top:9px; left:50%; transform:translateX(-50%);
+    width:7px; height:7px; border-radius:50%; background:#000; box-shadow:inset 0 0 0 1px #2a2620; }
+  .laptop .scr{ border-radius:6px; overflow:hidden; background:var(--cream); }
+  .laptop-base{ width:calc(100% + 96px); height:14px; margin:-1px 0 0 -48px;
+    background:linear-gradient(#3a352e,#23201c); border-radius:0 0 14px 14px; position:relative; }
+  .laptop-base::after{ content:""; position:absolute; top:0; left:50%; transform:translateX(-50%);
+    width:120px; height:7px; background:#19150f; border-radius:0 0 9px 9px; }
+
+  /* ---- phone bezel (iPhone 17 Pro, Dynamic Island) ---- */
+  .phone{ background:#0a0a0a; border:1px solid #2a2724; border-radius:56px; padding:13px;
+    box-shadow:0 50px 90px -30px rgba(0,0,0,.85); position:relative; }
+  .phone .scr{ border-radius:44px; overflow:hidden; background:var(--cream); position:relative; }
+  .phone .island{ position:absolute; top:11px; left:50%; transform:translateX(-50%);
+    width:108px; height:30px; background:#000; border-radius:18px; z-index:5; pointer-events:none; }
+
+  .scr iframe{ border:0; display:block; background:var(--cream); }
+
+  .hint{ text-align:center; color:#6f6a61; font-size:11px; padding:0 0 40px; letter-spacing:.04em; }
+</style>
+</head>
+<body>
+  <div class="lab-top">
+    <h1>Device Preview <small>13″ laptop · iPhone 17 Pro — side by side</small></h1>
+    <div class="controls">
+      <div class="ctrl">
+        <label for="url">Page</label>
+        <input id="url" type="text" value="../../index.html" spellcheck="false">
+        <button class="btn" id="go">Load</button>
+      </div>
+      <div class="ctrl">
+        <label for="zoom">Zoom</label>
+        <input id="zoom" type="range" min="40" max="110" value="100">
+        <span class="val" id="zoomVal">100%</span>
+      </div>
+      <button class="btn on" id="fit">Fit to screen</button>
+      <button class="btn" id="reload">↻ Reload both</button>
+    </div>
+  </div>
+
+  <div class="stage" id="stage">
+    <!-- 13" laptop -->
+    <div class="device">
+      <div class="cap">
+        <div class="tag">Laptop</div>
+        <div class="nm">13″ MacBook</div>
+        <div class="sub">1280 × 800 viewport</div>
+      </div>
+      <div class="scaler" id="scaleLaptop">
+        <div class="laptop">
+          <div class="scr">
+            <iframe id="frameLaptop" title="Site on 13-inch laptop"></iframe>
+          </div>
+        </div>
+        <div class="laptop-base"></div>
+      </div>
+    </div>
+
+    <!-- iPhone 17 Pro -->
+    <div class="device">
+      <div class="cap">
+        <div class="tag">Phone</div>
+        <div class="nm">iPhone 17 Pro</div>
+        <div class="sub">402 × 874 viewport</div>
+      </div>
+      <div class="scaler" id="scalePhone">
+        <div class="phone">
+          <div class="scr">
+            <div class="island"></div>
+            <iframe id="framePhone" title="Site on iPhone 17 Pro"></iframe>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="hint" id="hint"></div>
+
+<script>
+  const D = {
+    laptop:{ w:1280, h:800, frame:document.getElementById('frameLaptop'), scaler:document.getElementById('scaleLaptop') },
+    phone: { w:402,  h:874, frame:document.getElementById('framePhone'),  scaler:document.getElementById('scalePhone')  },
+  };
+  const stage   = document.getElementById('stage');
+  const urlBox  = document.getElementById('url');
+  const zoom    = document.getElementById('zoom');
+  const zoomVal = document.getElementById('zoomVal');
+  const fitBtn  = document.getElementById('fit');
+  const hint    = document.getElementById('hint');
+  let fitMode = true;
+
+  // set the iframes to their TRUE device pixel size (once)
+  for (const k in D){
+    D[k].frame.style.width  = D[k].w + 'px';
+    D[k].frame.style.height = D[k].h + 'px';
+  }
+
+  function load(){
+    const u = urlBox.value.trim() || '../../index.html';
+    D.laptop.frame.src = u;
+    D.phone.frame.src  = u;
+  }
+
+  // compute a scale that lets both devices sit side by side within the viewport width
+  function fitScale(){
+    const GAP = 64, PAD = 80;       // matches CSS .stage gap + side padding
+    const avail = window.innerWidth - PAD - GAP;
+    // laptop bezel adds ~32px horiz padding, phone ~26px — approximate true widths
+    const totalNatural = (D.laptop.w + 32) + (D.phone.w + 26);
+    let s = avail / totalNatural;
+    return Math.max(0.4, Math.min(1, s));
+  }
+
+  function apply(){
+    let s;
+    if (fitMode){
+      s = fitScale();
+      stage.classList.add('fit');
+    } else {
+      s = zoom.value / 100;
+      stage.classList.remove('fit');
+    }
+    for (const k in D){ D[k].scaler.style.transform = 'scale(' + s + ')'; }
+    // scaled element keeps its layout box at natural size; counteract so the row stays tight
+    for (const k in D){
+      const el = D[k].scaler;
+      el.style.height = '';            // let natural flow, margin trick below
+    }
+    zoom.value = Math.round(s*100);
+    zoomVal.textContent = Math.round(s*100) + '%';
+    hint.textContent = 'Both frames load the same page at true device resolution; only the visual size is scaled (' + Math.round(s*100) + '%), so responsive breakpoints render exactly as on the real device.';
+    // collapse the empty space transform leaves behind
+    for (const k in D){
+      const el = D[k].scaler;
+      const natH = el.offsetHeight;
+      el.style.marginBottom = (-(natH*(1-s))) + 'px';
+    }
+  }
+
+  document.getElementById('go').onclick = load;
+  document.getElementById('reload').onclick = load;
+  urlBox.addEventListener('keydown', e=>{ if(e.key==='Enter') load(); });
+  zoom.addEventListener('input', ()=>{ fitMode=false; fitBtn.classList.remove('on'); apply(); });
+  fitBtn.onclick = ()=>{ fitMode=true; fitBtn.classList.add('on'); apply(); };
+  window.addEventListener('resize', ()=>{ if(fitMode) apply(); });
+
+  load();
+  apply();
+</script>
+</body>
+</html>

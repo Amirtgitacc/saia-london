@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SAÏA · Estimator — 4 redesign directions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..600;1,9..144,400&family=Marcellus&family=Jost:wght@300;400;500&family=Bricolage+Grotesque:opsz,wght@12..96,400..700&family=IBM+Plex+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400..500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{ --cream:#F5F1E8; --paper:#FBF8F1; --ink:#2B2620; --muted:#6B6358; --terra:#B8624A; --terra-dk:#A9573F; --line:#E2DBCC; }
+*{ box-sizing:border-box; }
+body{ margin:0; background:#EDE7DA; color:var(--ink); font-family:'Inter',system-ui,sans-serif; }
+.page-head{ max-width:1080px; margin:0 auto; padding:46px 6vw 6px; }
+.page-head h1{ font-family:'Fraunces',serif; font-weight:500; font-size:30px; margin:0 0 6px; }
+.page-head p{ color:var(--muted); font-size:14px; max-width:620px; line-height:1.6; margin:0; }
+.opt-meta{ max-width:1080px; margin:0 auto; padding:34px 6vw 0; }
+.opt-tag{ display:inline-flex; align-items:center; gap:9px; font-size:11px; letter-spacing:.26em; text-transform:uppercase; color:var(--terra); font-weight:600; }
+.opt-tag b{ font-size:18px; letter-spacing:0; color:var(--ink); font-weight:600; text-transform:none; font-family:'Fraunces',serif; }
+.opt-meta h2{ font-family:'Fraunces',serif; font-weight:500; font-size:22px; margin:8px 0 4px; }
+.opt-notes{ display:flex; flex-wrap:wrap; gap:8px 14px; margin:10px 0 0; padding:0; list-style:none; }
+.opt-notes li{ font-size:12.5px; color:var(--muted); background:#fff; border:1px solid var(--line); border-radius:20px; padding:5px 12px; }
+.opt-notes li b{ color:var(--ink); }
+
+/* ===== shared stage scaffold ===== */
+.stage{ position:relative; overflow:hidden; padding:clamp(48px,6vw,72px) 6vw; }
+.wrap{ position:relative; z-index:2; max-width:1080px; margin:0 auto; display:grid; grid-template-columns:1fr 1fr; gap:48px; align-items:center; }
+.pitch .eyebrow{ display:flex; align-items:center; gap:9px; font-size:11px; letter-spacing:.3em; text-transform:uppercase; color:var(--terra); margin:0; }
+.pitch .eyebrow::before{ content:""; width:18px; height:1px; background:currentColor; }
+.pitch .lead{ color:var(--muted); max-width:330px; font-size:14px; line-height:1.6; }
+.card{ background:#fff; border:1px solid var(--line); border-radius:16px; padding:26px; box-shadow:0 30px 70px -42px rgba(43,38,32,.4); }
+.card .ceyebrow{ display:flex; align-items:center; gap:9px; font-size:11px; letter-spacing:.28em; text-transform:uppercase; color:var(--terra); margin:0 0 14px; font-weight:600; }
+.card .ceyebrow::before{ content:""; width:16px; height:1px; background:currentColor; }
+.row2{ display:flex; gap:12px; }
+.fld{ flex:1; margin-bottom:13px; }
+.fld.full{ flex-basis:100%; }
+.fld label{ display:block; font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:var(--muted); margin-bottom:7px; }
+.fld input{ width:100%; font-size:15px; color:var(--ink); background:#fff; border:1px solid var(--line); border-radius:9px; padding:12px 13px; font-family:inherit; }
+.seg{ display:flex; background:#fff; border:1px solid var(--line); border-radius:10px; padding:4px; position:relative; }
+.seg .thumb{ position:absolute; top:4px; bottom:4px; left:4px; width:calc(50% - 4px); background:var(--ink); border-radius:7px; }
+.seg button{ flex:1; position:relative; z-index:1; background:none; border:none; cursor:pointer; font-family:inherit; font-size:12px; padding:11px 6px; color:var(--muted); }
+.seg button.on{ color:var(--cream); }
+.result{ position:relative; border:1px solid var(--terra); border-radius:8px; padding:30px 18px 16px; margin-top:18px; }
+.flag{ position:absolute; top:-11px; left:18px; background:var(--terra); color:#F5F1E8; font-size:10px; letter-spacing:.22em; text-transform:uppercase; padding:4px 12px; border-radius:2px; }
+.zone{ display:inline-flex; align-items:center; gap:7px; font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--terra); background:rgba(184,98,74,.1); border-radius:30px; padding:4px 11px; margin-bottom:14px; }
+.zone .dot{ width:6px; height:6px; border-radius:50%; background:var(--terra); }
+.line{ display:flex; justify-content:space-between; align-items:baseline; gap:16px; margin-bottom:11px; }
+.line .kk{ font-size:12.5px; color:var(--muted); }
+.line .kk small{ display:block; font-size:10px; color:#a59c8d; margin-top:1px; }
+.total{ display:flex; justify-content:space-between; align-items:center; gap:16px; border-top:1px solid var(--line); padding-top:14px; margin-top:6px; }
+.total .kk{ font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); }
+.disc{ font-size:10.5px; line-height:1.55; color:var(--muted); margin-top:11px; }
+.disc b{ color:var(--ink); }
+.cta{ display:flex; align-items:center; justify-content:center; gap:10px; width:100%; background:var(--terra); color:#fff; font-size:11px; letter-spacing:.2em; text-transform:uppercase; padding:15px; border-radius:9px; border:none; cursor:pointer; margin-top:16px; }
+.cta svg{ width:15px; height:15px; }
+@media(max-width:860px){ .wrap{ grid-template-columns:1fr; gap:30px; } }
+
+/* ============================================================
+   OPTION A — ATELIER  (Fraunces + Inter · quiet-luxury editorial)
+   ============================================================ */
+.A{ background:radial-gradient(120% 90% at 70% 0%, #FBF8F1 0%, #F2EDE1 60%, #ECE5D6 100%); }
+.A::before{ content:""; position:absolute; inset:-20%; z-index:1; pointer-events:none;
+  background:radial-gradient(closest-side, rgba(184,98,74,.16), transparent 70%);
+  filter:blur(8px); animation:aGlow 14s ease-in-out infinite alternate; }
+.A::after{ content:""; position:absolute; inset:0; z-index:1; pointer-events:none; opacity:.5; mix-blend-mode:multiply;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E"); }
+@keyframes aGlow{ 0%{transform:translate(-6%,4%) scale(1)} 100%{transform:translate(8%,-4%) scale(1.15)} }
+.A .pitch h2{ font-family:'Fraunces',serif; font-weight:400; font-size:clamp(40px,5.4vw,64px); line-height:.98; letter-spacing:-.01em; margin:.2em 0 .3em; }
+.A .pitch h2 em{ font-style:italic; color:var(--terra); }
+.A .card{ font-family:'Inter',sans-serif; }
+.A .card .ceyebrow{ font-family:'Inter',sans-serif; }
+.A .line .vv{ font-family:'Inter',sans-serif; font-variant-numeric:tabular-nums; font-size:16px; font-weight:500; color:var(--ink); white-space:nowrap; }
+.A .total .vv{ font-family:'Fraunces',serif; font-weight:500; font-size:30px; line-height:1; color:var(--terra); font-variant-numeric:tabular-nums; }
+.A .total .vv .pre{ font-family:'Fraunces',serif; font-style:italic; font-size:13px; color:var(--muted); margin-right:5px; }
+
+/* ============================================================
+   OPTION B — BOUTIQUE  (Marcellus + Jost · airy, soft sage)
+   ============================================================ */
+.B{ background:linear-gradient(160deg,#F3F1E6 0%, #ECEDE0 100%); }
+.B .blob{ position:absolute; z-index:1; border-radius:50%; filter:blur(46px); pointer-events:none; }
+.B .blob.b1{ width:46vw; height:46vw; top:-14%; right:-8%; background:rgba(184,98,74,.18); animation:bMorph 18s ease-in-out infinite alternate; }
+.B .blob.b2{ width:38vw; height:38vw; bottom:-18%; left:-6%; background:rgba(124,138,107,.22); animation:bMorph 22s ease-in-out infinite alternate-reverse; }
+@keyframes bMorph{ 0%{transform:translate(0,0) scale(1)} 100%{transform:translate(6%,-8%) scale(1.18)} }
+.B .pitch h2{ font-family:'Marcellus',serif; font-weight:400; font-size:clamp(42px,5.6vw,66px); line-height:1.02; letter-spacing:.005em; margin:.22em 0 .3em; color:var(--ink); }
+.B .pitch .eyebrow,.B .pitch .lead{ font-family:'Jost',sans-serif; }
+.B .pitch .lead{ letter-spacing:.01em; }
+.B .card{ font-family:'Jost',sans-serif; border-radius:22px; border-color:#E4E0CF; background:#FCFBF5; }
+.B .card .ceyebrow{ font-family:'Jost',sans-serif; }
+.B .result{ border-color:#CBC6B2; border-radius:18px; background:#fff; }
+.B .flag{ background:#7C8A6B; border-radius:20px; }
+.B .zone{ color:#7C8A6B; background:rgba(124,138,107,.14); }
+.B .zone .dot{ background:#7C8A6B; }
+.B .line .vv{ font-family:'Marcellus',serif; font-size:18px; color:var(--ink); white-space:nowrap; }
+.B .total .vv{ font-family:'Marcellus',serif; font-size:32px; line-height:1; color:var(--terra); }
+.B .total .vv .pre{ font-family:'Jost',sans-serif; font-size:12px; letter-spacing:.04em; color:var(--muted); margin-right:6px; text-transform:lowercase; }
+.B .cta{ border-radius:30px; background:var(--ink); letter-spacing:.18em; }
+.B .seg .thumb{ background:#7C8A6B; }
+
+/* ============================================================
+   OPTION C — RECEIPT  (Bricolage Grotesque + IBM Plex Mono · modern, structured)
+   ============================================================ */
+.C{ background:#F4F0E6; }
+.C .grid{ position:absolute; inset:0; z-index:1; pointer-events:none; opacity:.55;
+  background-image:linear-gradient(rgba(43,38,32,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(43,38,32,.05) 1px,transparent 1px);
+  background-size:34px 34px; mask-image:radial-gradient(120% 80% at 60% 30%, #000 30%, transparent 80%); }
+.C .pitch h2{ font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:clamp(40px,5.4vw,62px); line-height:.96; letter-spacing:-.02em; margin:.2em 0 .3em; }
+.C .pitch .eyebrow{ font-family:'IBM Plex Mono',monospace; letter-spacing:.18em; }
+.C .pitch .lead{ font-family:'IBM Plex Mono',monospace; font-size:12.5px; line-height:1.7; }
+.C .card{ font-family:'Bricolage Grotesque',sans-serif; border-radius:6px; border-color:#D9D2C0; box-shadow:0 24px 60px -44px rgba(43,38,32,.5); }
+.C .card .ceyebrow{ font-family:'IBM Plex Mono',monospace; letter-spacing:.2em; }
+.C .fld label{ font-family:'IBM Plex Mono',monospace; }
+.C .result{ border-style:dashed; border-radius:6px; }
+.C .flag{ border-radius:3px; font-family:'IBM Plex Mono',monospace; }
+.C .line{ border-bottom:1px dashed #E2DBCC; padding-bottom:9px; }
+.C .line .kk{ font-family:'Bricolage Grotesque',sans-serif; }
+.C .line .vv{ font-family:'IBM Plex Mono',monospace; font-size:15px; font-weight:500; color:var(--ink); font-variant-numeric:tabular-nums; white-space:nowrap; }
+.C .total .vv{ font-family:'IBM Plex Mono',monospace; font-weight:500; font-size:27px; line-height:1; color:var(--terra); letter-spacing:-.02em; }
+.C .total .vv .pre{ font-size:12px; color:var(--muted); margin-right:6px; }
+.C .cta{ border-radius:6px; font-family:'IBM Plex Mono',monospace; letter-spacing:.14em; }
+
+/* ============================================================
+   OPTION D — NOCTURNE  (Newsreader + Inter · magazine, inverse ink card)
+   ============================================================ */
+.D{ background:linear-gradient(180deg,#2B2620 0%, #221E18 100%); }
+.D .sheen{ position:absolute; inset:0; z-index:1; pointer-events:none;
+  background:radial-gradient(80% 60% at 75% 8%, rgba(184,98,74,.28), transparent 60%); animation:dSheen 12s ease-in-out infinite alternate; }
+@keyframes dSheen{ 0%{opacity:.7; transform:translateX(-4%)} 100%{opacity:1; transform:translateX(6%)} }
+.D .grain{ position:absolute; inset:0; z-index:1; pointer-events:none; opacity:.35; mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E"); }
+.D .pitch .eyebrow{ color:#E0A98F; }
+.D .pitch h2{ font-family:'Newsreader',serif; font-weight:400; font-size:clamp(42px,5.6vw,66px); line-height:1.0; color:#F5F1E8; margin:.2em 0 .3em; }
+.D .pitch h2 em{ font-style:italic; color:#E0A98F; }
+.D .pitch .lead{ color:#C7BEAE; }
+.D .card{ font-family:'Inter',sans-serif; background:#332D26; border:1px solid #463E34; box-shadow:0 40px 90px -50px rgba(0,0,0,.8); }
+.D .card .ceyebrow{ color:#E0A98F; }
+.D .fld label{ color:#A89E8E; }
+.D .fld input{ background:#2B2620; border-color:#463E34; color:#F5F1E8; }
+.D .seg{ background:#2B2620; border-color:#463E34; }
+.D .seg .thumb{ background:var(--terra); }
+.D .seg button{ color:#A89E8E; }
+.D .seg button.on{ color:#fff; }
+.D .result{ border-color:#5A4C3E; background:#2B2620; }
+.D .flag{ background:var(--terra); color:#fff; }
+.D .zone{ color:#E0A98F; background:rgba(184,98,74,.18); }
+.D .zone .dot{ background:#E0A98F; }
+.D .line .kk{ color:#C7BEAE; }
+.D .line .kk small{ color:#8C8273; }
+.D .line .vv{ font-family:'Newsreader',serif; font-size:19px; color:#F5F1E8; white-space:nowrap; }
+.D .total{ border-top-color:#463E34; }
+.D .total .kk{ color:#A89E8E; }
+.D .total .vv{ font-family:'Newsreader',serif; font-weight:500; font-size:32px; line-height:1; color:#E0A98F; }
+.D .total .vv .pre{ font-style:italic; font-size:13px; color:#A89E8E; margin-right:6px; }
+.D .disc{ color:#A89E8E; }
+.D .disc b{ color:#F5F1E8; }
+.D .cta{ background:var(--terra); }
+</style>
+</head>
+<body>
+
+<div class="page-head">
+  <h1>Estimator — four redesign directions</h1>
+  <p>Same numbers in every version (20 mats · 2 days · EC2Y 8DS → <b>from £235</b>) so only the design differs. Each one fixes the three things you flagged: the price is sized down to a confident-but-quiet figure, the font pairing changes, and the boxy static background is replaced with a living one.</p>
+</div>
+
+<!-- ========================== OPTION A ========================== -->
+<div class="opt-meta">
+  <div class="opt-tag">Option A <b>· Atelier</b></div>
+  <h2>Quiet-luxury editorial — Aesop / The Row energy</h2>
+  <ul class="opt-notes">
+    <li><b>Fonts:</b> Fraunces (italic accents) + Inter</li>
+    <li><b>Price:</b> 30px Fraunces, italic “from”</li>
+    <li><b>Background:</b> drifting warm glow + paper grain</li>
+    <li><b>Numbers:</b> tabular Inter — neat columns</li>
+  </ul>
+</div>
+<section class="stage A">
+  <div class="wrap">
+    <div class="pitch">
+      <p class="eyebrow">Mat hire · instant estimate</p>
+      <h2>See your <em>number.</em></h2>
+      <p class="lead">From our NW3 base to your event: mats, days and courier, totalled live.</p>
+    </div>
+    <form class="card" onsubmit="return false">
+      <p class="ceyebrow">Build your quote</p>
+      <div class="row2">
+        <div class="fld"><label>Mats</label><input value="20"></div>
+        <div class="fld"><label>Days</label><input value="2"></div>
+      </div>
+      <div class="fld full"><label>Getting the mats</label>
+        <div class="seg"><span class="thumb"></span><button class="on">Deliver</button><button>Collect NW3 (free)</button></div>
+      </div>
+      <div class="fld full"><label>Event postcode</label><input value="EC2Y 8DS"></div>
+      <div class="result">
+        <span class="flag">Estimate</span>
+        <span class="zone"><span class="dot"></span>Zone 1 · Central London</span>
+        <div class="line"><span class="kk">Mat hire<small>20 mats · 2 days</small></span><span class="vv">£170.00</span></div>
+        <div class="line"><span class="kk">Delivery &amp; collection<small>Addison Lee, low estimate</small></span><span class="vv">from £35.00</span></div>
+        <div class="line"><span class="kk">Refundable deposit<small>20 × £1.50, returned after</small></span><span class="vv">£30.00</span></div>
+        <div class="total"><span class="kk">Due today</span><span class="vv"><span class="pre">from</span>£235.00</span></div>
+        <p class="disc"><b>£30.00</b> of this is a refundable deposit — back to you once the mats are returned.</p>
+        <button class="cta"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 5h16v11H7l-3 3z"/></svg> Book this with the concierge</button>
+        <p class="disc"><b>Estimate only.</b> Addison Lee courier guide; Cristina confirms on booking.</p>
+      </div>
+    </form>
+  </div>
+</section>
+
+<!-- ========================== OPTION B ========================== -->
+<div class="opt-meta">
+  <div class="opt-tag">Option B <b>· Boutique</b></div>
+  <h2>Airy &amp; soft — classical type, sage second accent</h2>
+  <ul class="opt-notes">
+    <li><b>Fonts:</b> Marcellus + Jost</li>
+    <li><b>Price:</b> 32px Marcellus, lowercase “from”</li>
+    <li><b>Background:</b> two slow-morphing colour blobs</li>
+    <li><b>New accent:</b> soft sage green beside terracotta</li>
+  </ul>
+</div>
+<section class="stage B">
+  <span class="blob b1"></span><span class="blob b2"></span>
+  <div class="wrap">
+    <div class="pitch">
+      <p class="eyebrow">Mat hire · instant estimate</p>
+      <h2>See your number.</h2>
+      <p class="lead">From our NW3 base to your event: mats, days and courier, totalled live.</p>
+    </div>
+    <form class="card" onsubmit="return false">
+      <p class="ceyebrow">Build your quote</p>
+      <div class="row2">
+        <div class="fld"><label>Mats</label><input value="20"></div>
+        <div class="fld"><label>Days</label><input value="2"></div>
+      </div>
+      <div class="fld full"><label>Getting the mats</label>
+        <div class="seg"><span class="thumb"></span><button class="on">Deliver</button><button>Collect NW3 (free)</button></div>
+      </div>
+      <div class="fld full"><label>Event postcode</label><input value="EC2Y 8DS"></div>
+      <div class="result">
+        <span class="flag">Estimate</span>
+        <span class="zone"><span class="dot"></span>Zone 1 · Central London</span>
+        <div class="line"><span class="kk">Mat hire<small>20 mats · 2 days</small></span><span class="vv">£170.00</span></div>
+        <div class="line"><span class="kk">Delivery &amp; collection<small>Addison Lee, low estimate</small></span><span class="vv">from £35.00</span></div>
+        <div class="line"><span class="kk">Refundable deposit<small>20 × £1.50, returned after</small></span><span class="vv">£30.00</span></div>
+        <div class="total"><span class="kk">Due today</span><span class="vv"><span class="pre">from</span>£235.00</span></div>
+        <p class="disc"><b>£30.00</b> of this is a refundable deposit — back to you once the mats are returned.</p>
+        <button class="cta"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 5h16v11H7l-3 3z"/></svg> Book this with the concierge</button>
+        <p class="disc"><b>Estimate only.</b> Addison Lee courier guide; Cristina confirms on booking.</p>
+      </div>
+    </form>
+  </div>
+</section>
+
+<!-- ========================== OPTION C ========================== -->
+<div class="opt-meta">
+  <div class="opt-tag">Option C <b>· Receipt</b></div>
+  <h2>Modern &amp; structured — the total reads like a clean invoice</h2>
+  <ul class="opt-notes">
+    <li><b>Fonts:</b> Bricolage Grotesque + IBM Plex Mono</li>
+    <li><b>Price:</b> 27px mono, tabular — feels precise</li>
+    <li><b>Background:</b> faint engineering grid, masked</li>
+    <li><b>Detail:</b> dashed “torn receipt” rules between lines</li>
+  </ul>
+</div>
+<section class="stage C">
+  <span class="grid"></span>
+  <div class="wrap">
+    <div class="pitch">
+      <p class="eyebrow">Mat hire · instant estimate</p>
+      <h2>See your number.</h2>
+      <p class="lead">From our NW3 base to your event: mats, days and courier, totalled live.</p>
+    </div>
+    <form class="card" onsubmit="return false">
+      <p class="ceyebrow">Build your quote</p>
+      <div class="row2">
+        <div class="fld"><label>Mats</label><input value="20"></div>
+        <div class="fld"><label>Days</label><input value="2"></div>
+      </div>
+      <div class="fld full"><label>Getting the mats</label>
+        <div class="seg"><span class="thumb"></span><button class="on">Deliver</button><button>Collect NW3 (free)</button></div>
+      </div>
+      <div class="fld full"><label>Event postcode</label><input value="EC2Y 8DS"></div>
+      <div class="result">
+        <span class="flag">Estimate</span>
+        <span class="zone"><span class="dot"></span>Zone 1 · Central London</span>
+        <div class="line"><span class="kk">Mat hire<small>20 mats · 2 days</small></span><span class="vv">£170.00</span></div>
+        <div class="line"><span class="kk">Delivery &amp; collection<small>Addison Lee, low estimate</small></span><span class="vv">from £35.00</span></div>
+        <div class="line"><span class="kk">Refundable deposit<small>20 × £1.50, returned after</small></span><span class="vv">£30.00</span></div>
+        <div class="total"><span class="kk">Due today</span><span class="vv"><span class="pre">from</span>£235.00</span></div>
+        <p class="disc"><b>£30.00</b> of this is a refundable deposit — back to you once the mats are returned.</p>
+        <button class="cta"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 5h16v11H7l-3 3z"/></svg> Book this with the concierge</button>
+        <p class="disc"><b>Estimate only.</b> Addison Lee courier guide; Cristina confirms on booking.</p>
+      </div>
+    </form>
+  </div>
+</section>
+
+<!-- ========================== OPTION D ========================== -->
+<div class="opt-meta">
+  <div class="opt-tag">Option D <b>· Nocturne</b></div>
+  <h2>Dark interrupt — the card itself becomes the spotlight</h2>
+  <ul class="opt-notes">
+    <li><b>Fonts:</b> Newsreader (italics) + Inter</li>
+    <li><b>Price:</b> 32px Newsreader on ink — high contrast</li>
+    <li><b>Background:</b> ink gradient, moving terracotta sheen + grain</li>
+    <li><b>Mood:</b> matches the existing dark spotlight band</li>
+  </ul>
+</div>
+<section class="stage D">
+  <span class="sheen"></span><span class="grain"></span>
+  <div class="wrap">
+    <div class="pitch">
+      <p class="eyebrow">Mat hire · instant estimate</p>
+      <h2>See your <em>number.</em></h2>
+      <p class="lead">From our NW3 base to your event: mats, days and courier, totalled live.</p>
+    </div>
+    <form class="card" onsubmit="return false">
+      <p class="ceyebrow">Build your quote</p>
+      <div class="row2">
+        <div class="fld"><label>Mats</label><input value="20"></div>
+        <div class="fld"><label>Days</label><input value="2"></div>
+      </div>
+      <div class="fld full"><label>Getting the mats</label>
+        <div class="seg"><span class="thumb"></span><button class="on">Deliver</button><button>Collect NW3 (free)</button></div>
+      </div>
+      <div class="fld full"><label>Event postcode</label><input value="EC2Y 8DS"></div>
+      <div class="result">
+        <span class="flag">Estimate</span>
+        <span class="zone"><span class="dot"></span>Zone 1 · Central London</span>
+        <div class="line"><span class="kk">Mat hire<small>20 mats · 2 days</small></span><span class="vv">£170.00</span></div>
+        <div class="line"><span class="kk">Delivery &amp; collection<small>Addison Lee, low estimate</small></span><span class="vv">from £35.00</span></div>
+        <div class="line"><span class="kk">Refundable deposit<small>20 × £1.50, returned after</small></span><span class="vv">£30.00</span></div>
+        <div class="total"><span class="kk">Due today</span><span class="vv"><span class="pre">from</span>£235.00</span></div>
+        <p class="disc"><b>£30.00</b> of this is a refundable deposit — back to you once the mats are returned.</p>
+        <button class="cta"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 5h16v11H7l-3 3z"/></svg> Book this with the concierge</button>
+        <p class="disc"><b>Estimate only.</b> Addison Lee courier guide; Cristina confirms on booking.</p>
+      </div>
+    </form>
+  </div>
+</section>
+
+</body>
+</html>

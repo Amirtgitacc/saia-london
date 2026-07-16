@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SAÏA — Scroll-progress indicator lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cream:#F5F1E8; --cream2:#FBF8F1; --ink:#2B2620; --mute:#6B6358;
+    --line:#DAD4C8; --terra:#B8624A; --panel:#1c1916; --panel2:#262019;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    font-family:'Inter',sans-serif; color:var(--ink); background:#0f0d0b;
+    min-height:100vh;
+  }
+
+  /* ====== shell: control rail (left) + stages (right) ====== */
+  .shell{ display:grid; grid-template-columns:320px 1fr; min-height:100vh; }
+  @media (max-width:1080px){ .shell{ grid-template-columns:1fr; } }
+
+  /* ---- control panel ---- */
+  .ctrl{
+    background:var(--panel); color:#E9E3D7; padding:22px 20px 60px;
+    border-right:1px solid #322a22; position:sticky; top:0; align-self:start;
+    height:100vh; overflow-y:auto;
+  }
+  @media (max-width:1080px){ .ctrl{ position:static; height:auto; } }
+  .ctrl h1{ font-family:'Playfair Display',serif; font-weight:500; font-size:21px; margin:0 0 2px; color:#fff; }
+  .ctrl .sub{ font-size:12px; color:#9a9082; margin:0 0 20px; line-height:1.5; }
+
+  .grp{ border-top:1px solid #322a22; padding:16px 0 6px; }
+  .grp:first-of-type{ border-top:0; }
+  .grp h2{ font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:#b6ab9a; margin:0 0 12px; font-weight:600; }
+
+  .concepts{ display:flex; flex-direction:column; gap:7px; }
+  .cbtn{
+    display:flex; align-items:flex-start; gap:10px; text-align:left; cursor:pointer;
+    background:var(--panel2); border:1px solid #3a3127; border-radius:9px; padding:10px 12px; color:#E9E3D7;
+    font:inherit; transition:border-color .15s, background .15s;
+  }
+  .cbtn:hover{ border-color:#6a5a45; }
+  .cbtn.on{ border-color:var(--terra); background:#2e231c; }
+  .cbtn .k{ font-family:'Playfair Display',serif; font-size:16px; color:var(--terra); line-height:1.1; min-width:18px; }
+  .cbtn .t{ font-size:12.5px; font-weight:600; }
+  .cbtn .d{ font-size:11px; color:#9a9082; font-weight:400; margin-top:2px; line-height:1.35; }
+
+  .row{ margin:0 0 13px; }
+  .row label{ display:flex; justify-content:space-between; font-size:11.5px; color:#cfc6b6; margin-bottom:6px; }
+  .row label b{ color:#fff; font-weight:600; font-variant-numeric:tabular-nums; }
+  input[type=range]{ width:100%; accent-color:var(--terra); height:4px; }
+  .seg2{ display:flex; gap:6px; }
+  .seg2 button, .toggle button{
+    flex:1; cursor:pointer; font:inherit; font-size:11.5px; padding:7px 8px; border-radius:7px;
+    background:var(--panel2); border:1px solid #3a3127; color:#cfc6b6; transition:.15s;
+  }
+  .seg2 button.on, .toggle button.on{ background:var(--terra); border-color:var(--terra); color:#fff; }
+  .toggle{ display:flex; gap:6px; flex-wrap:wrap; }
+  .swatches{ display:flex; gap:8px; }
+  .sw{ width:26px; height:26px; border-radius:50%; cursor:pointer; border:2px solid transparent; }
+  .sw.on{ border-color:#fff; }
+
+  .readout{ font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:10.5px; color:#9a9082;
+    background:#141109; border:1px solid #322a22; border-radius:8px; padding:10px 11px; white-space:pre-wrap; line-height:1.55; margin-top:4px; }
+
+  /* ---- stages ---- */
+  .stages{ padding:26px 26px 60px; display:flex; flex-direction:column; gap:30px; }
+  .stages.both{ }
+  .stageHead{ display:flex; align-items:baseline; gap:12px; margin-bottom:10px; }
+  .stageHead .nm{ font-size:12px; letter-spacing:.16em; text-transform:uppercase; color:#b6ab9a; font-weight:600; }
+  .stageHead .dim{ font-size:11px; color:#6f665a; }
+
+  /* the cream scene a single indicator sits inside */
+  .scene{
+    position:relative; background:
+      radial-gradient(120% 90% at 78% 18%, #FBF8F1 0%, var(--cream) 55%);
+    border-radius:12px; overflow:hidden; border:1px solid #2a241d;
+    box-shadow:0 30px 60px rgba(0,0,0,.4);
+  }
+  .scene.desk{ aspect-ratio:16/9; width:100%; max-width:1180px; }
+  .scene.mob{ width:374px; max-width:100%; aspect-ratio:374/760; }
+
+  /* mock content of the pinned chapter */
+  .mock{ position:absolute; inset:0; padding:7% 7%; display:flex; flex-direction:column; justify-content:center; }
+  .scene.mob .mock{ padding:34% 9% 0; justify-content:flex-start; }
+  .mock .eb{ font-size:11px; letter-spacing:.3em; text-transform:uppercase; color:var(--mute); margin-bottom:14px; }
+  .scene.mob .mock .eb{ font-size:10px; margin-bottom:9px; }
+  .mock h3{ font-family:'Playfair Display',serif; font-weight:500; line-height:1.02; margin:0 0 16px; color:var(--ink);
+    font-size:clamp(26px,4vw,52px); }
+  .scene.mob .mock h3{ font-size:30px; }
+  .mock p{ font-size:15px; line-height:1.6; color:var(--mute); max-width:60%; margin:0; }
+  .scene.mob .mock p{ font-size:13px; max-width:90%; }
+  /* faint mat silhouette so the scene reads like the real hero */
+  .matghost{ position:absolute; right:-6%; bottom:-12%; width:62%; height:70%;
+    background:linear-gradient(135deg,#cfc7b6,#bdb4a2); border-radius:18px;
+    transform:rotate(-18deg); opacity:.5; filter:blur(1px); }
+  .scene.mob .matghost{ right:-20%; bottom:6%; width:90%; height:38%; }
+
+  /* indicator host layer */
+  .ind{ position:absolute; inset:0; pointer-events:none; z-index:5; }
+
+  /* ===== shared indicator primitives (built by JS, styled here) ===== */
+  /* A — segmented vertical rail */
+  .segrail{ position:absolute; display:flex; flex-direction:column; }
+  .segrail .s{ width:100%; border-radius:99px; background:rgba(43,38,32,.14); position:relative; overflow:hidden; transition:background .2s; }
+  .segrail .s i{ position:absolute; left:0; top:0; width:100%; background:var(--ink); height:0; }
+  .segrail .s.done{ background:var(--ink); }
+  .segrail .lbl{ position:absolute; right:calc(100% + 12px); white-space:nowrap; font-size:11px; letter-spacing:.04em;
+    color:var(--ink); font-weight:600; text-align:right; }
+  .segrail .lbl small{ display:block; font-weight:400; color:var(--mute); letter-spacing:.16em; text-transform:uppercase; font-size:9px; }
+
+  /* B — TOC dots */
+  .toc{ position:absolute; display:flex; flex-direction:column; align-items:flex-end; }
+  .toc .row2{ display:flex; align-items:center; gap:10px; justify-content:flex-end; }
+  .toc .pill{ font-size:11px; font-weight:600; color:var(--ink); background:var(--cream2); border:1px solid var(--line);
+    border-radius:99px; padding:4px 11px; white-space:nowrap; box-shadow:0 6px 16px rgba(43,38,32,.10);
+    opacity:0; transform:translateX(8px); transition:.2s; }
+  .toc .row2.on .pill{ opacity:1; transform:none; }
+  .toc .dot{ border-radius:50%; background:rgba(43,38,32,.22); flex:0 0 auto; transition:.2s; }
+  .toc .row2.done .dot{ background:var(--ink); }
+  .toc .row2.on .dot{ background:var(--terra); box-shadow:0 0 0 4px rgba(184,98,74,.18); }
+
+  /* C — progress ring + counter */
+  .ring{ position:absolute; display:flex; align-items:center; gap:12px; }
+  .ring .name{ text-align:right; }
+  .ring .name b{ display:block; font-family:'Playfair Display',serif; font-weight:500; color:var(--ink); font-size:15px; }
+  .ring .name small{ font-size:9px; letter-spacing:.22em; text-transform:uppercase; color:var(--mute); }
+  .ring svg{ display:block; transform:rotate(-90deg); }
+  .ring .cnt{ position:absolute; font-variant-numeric:tabular-nums; font-weight:600; color:var(--ink); }
+
+  /* D — bottom stories bar */
+  .stories{ position:absolute; left:50%; transform:translateX(-50%); display:flex; flex-direction:column; align-items:center; gap:10px; }
+  .stories .bars{ display:flex; gap:6px; }
+  .stories .b{ border-radius:99px; background:rgba(43,38,32,.16); position:relative; overflow:hidden; }
+  .stories .b i{ position:absolute; left:0; top:0; height:100%; width:0; background:var(--ink); }
+  .stories .b.done i{ width:100%; }
+  .stories .cue{ font-size:10px; letter-spacing:.28em; text-transform:uppercase; color:var(--ink); font-weight:600;
+    display:flex; align-items:center; gap:7px; }
+
+  /* E — scroll beacon + mini ladder */
+  .beacon{ position:absolute; display:flex; flex-direction:column; align-items:center; gap:13px; }
+  .beacon .mouse{ width:24px; height:38px; border:2px solid var(--ink); border-radius:14px; position:relative; }
+  .beacon .mouse::after{ content:""; position:absolute; left:50%; top:7px; width:3px; height:7px; border-radius:2px;
+    background:var(--terra); transform:translateX(-50%); animation:wheel 1.4s ease-in-out infinite; }
+  @keyframes wheel{ 0%{opacity:0; transform:translate(-50%,0)} 30%{opacity:1} 70%{opacity:1} 100%{opacity:0; transform:translate(-50%,9px)} }
+  .beacon .word{ font-size:10px; letter-spacing:.28em; text-transform:uppercase; color:var(--ink); font-weight:600; }
+  .beacon .ladder{ display:flex; flex-direction:column; gap:4px; align-items:center; }
+  .beacon .ladder .s{ border-radius:99px; background:rgba(43,38,32,.2); }
+  .beacon .ladder .s.done{ background:var(--ink); }
+  .beacon .ladder .s.on{ background:var(--terra); }
+
+  /* ===== E — alternate scroll cues (the "say scroll" treatments) ===== */
+  .cue-chev{ display:flex; flex-direction:column; align-items:center; }
+  .cue-chev i{ width:14px; height:14px; border-right:2px solid var(--ink); border-bottom:2px solid var(--ink);
+    transform:rotate(45deg); margin-top:-5px; opacity:.25; animation:chev 1.5s ease-in-out infinite; }
+  .cue-chev i:nth-child(2){ animation-delay:.18s } .cue-chev i:nth-child(3){ animation-delay:.36s }
+  @keyframes chev{ 0%,100%{opacity:.18} 40%{opacity:.95} }
+
+  .cue-vword{ writing-mode:vertical-rl; text-orientation:mixed; font-size:10px; letter-spacing:.42em;
+    text-transform:uppercase; color:var(--ink); font-weight:600; }
+
+  .cue-drop{ width:2px; height:34px; background:rgba(43,38,32,.18); border-radius:2px; position:relative; overflow:hidden; }
+  .cue-drop::after{ content:""; position:absolute; left:50%; top:0; width:6px; height:6px; border-radius:50%;
+    background:var(--terra); transform:translateX(-50%); animation:drop 1.5s cubic-bezier(.5,0,.2,1) infinite; }
+  @keyframes drop{ 0%{top:-6px; opacity:0} 20%{opacity:1} 80%{opacity:1} 100%{top:34px; opacity:0} }
+
+  .cue-pulse{ position:relative; width:30px; height:30px; display:flex; align-items:center; justify-content:center; }
+  .cue-pulse::before{ content:""; position:absolute; inset:0; border-radius:50%; border:1.5px solid var(--terra);
+    animation:pulse 1.8s ease-out infinite; }
+  .cue-pulse i{ width:11px; height:11px; border-right:2px solid var(--ink); border-bottom:2px solid var(--ink);
+    animation:bob 1.5s ease-in-out infinite; }
+  @keyframes pulse{ 0%{transform:scale(.6); opacity:.7} 100%{transform:scale(1.35); opacity:0} }
+  @keyframes bob{ 0%,100%{transform:rotate(45deg) translate(-2px,-2px)} 50%{transform:rotate(45deg) translate(1px,1px)} }
+
+  .cue-line{ width:2px; height:36px; background:rgba(43,38,32,.16); border-radius:2px; position:relative; overflow:hidden; }
+  .cue-line::after{ content:""; position:absolute; left:0; top:0; width:100%; height:100%; background:var(--terra);
+    transform-origin:top; animation:linedraw 1.7s ease-in-out infinite; }
+  @keyframes linedraw{ 0%{transform:scaleY(0)} 50%{transform:scaleY(1)} 100%{transform:scaleY(0)} }
+
+  .playbar{ display:flex; align-items:center; gap:10px; margin-top:8px; }
+  .playbar button{ cursor:pointer; font:inherit; font-size:11.5px; padding:7px 14px; border-radius:7px;
+    background:var(--terra); border:0; color:#fff; font-weight:600; }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- ============ CONTROL PANEL ============ -->
+  <aside class="ctrl">
+    <h1>Scroll-indicator lab</h1>
+    <p class="sub">Five ways to signal “this page scrolls” and show which of the 9 chapters you’re in. Pick one, tune size &amp; position, then I’ll port it into <b style="color:#cfc6b6">home.html</b>.</p>
+
+    <div class="grp">
+      <h2>Concept</h2>
+      <div class="concepts" id="concepts"></div>
+    </div>
+
+    <div class="grp">
+      <h2>Scroll position</h2>
+      <div class="row">
+        <label>Progress <b><span id="pVal">0</span>%</b></label>
+        <input type="range" id="p" min="0" max="100" value="6" step="0.5">
+      </div>
+      <div class="playbar">
+        <button id="play">▶ Auto-scroll</button>
+        <span style="font-size:11px;color:#9a9082" id="chapNow">01 · Welcome</span>
+      </div>
+    </div>
+
+    <div class="grp">
+      <h2>Size &amp; position</h2>
+      <div class="row"><label>Editing values for</label>
+        <div class="toggle" id="editTog"><button data-v="desk" class="on">Desktop</button><button data-v="mob">Mobile</button></div></div>
+      <div class="row"><label>Edge inset <b><span id="insetV">28</span>px</b></label><input type="range" id="inset" min="6" max="80" value="28"></div>
+      <div class="row" data-only="vertical"><label>Vertical anchor <b><span id="posV">50</span>%</b></label><input type="range" id="pos" min="10" max="90" value="50"></div>
+      <div class="row"><label>Overall scale <b><span id="scaleV">1.00</span>×</b></label><input type="range" id="scale" min="0.6" max="1.8" value="1" step="0.05"></div>
+      <div class="row"><label>Thickness <b><span id="thickV">5</span>px</b></label><input type="range" id="thick" min="2" max="16" value="5"></div>
+      <div class="row" data-only="segment"><label>Segment length <b><span id="lenV">26</span>px</b></label><input type="range" id="len" min="10" max="60" value="26"></div>
+      <div class="row" data-only="segment"><label>Gap <b><span id="gapV">7</span>px</b></label><input type="range" id="gap" min="2" max="20" value="7"></div>
+      <div class="row"><label>Track opacity <b><span id="trackV">0.16</span></b></label><input type="range" id="track" min="0.06" max="0.45" value="0.16" step="0.01"></div>
+    </div>
+
+    <div class="grp">
+      <h2>Style</h2>
+      <div class="row">
+        <label>Accent</label>
+        <div class="swatches" id="swatches"></div>
+      </div>
+      <div class="row">
+        <label>Chapter labels</label>
+        <div class="toggle" id="labelTog">
+          <button data-v="on" class="on">Show</button>
+          <button data-v="off">Hide</button>
+        </div>
+      </div>
+      <div class="row">
+        <label>Show on devices</label>
+        <div class="toggle" id="devTog">
+          <button data-v="both" class="on">Both</button>
+          <button data-v="desk">Desktop</button>
+          <button data-v="mob">Mobile</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="grp" id="cueGrp">
+      <h2>Scroll cue — “say scroll”</h2>
+      <div class="concepts" id="cues"></div>
+      <div class="row" style="margin-top:13px"><label>Cue label</label></div>
+      <div class="toggle" id="cueLabelTog"></div>
+    </div>
+
+    <div class="grp">
+      <h2>Current values</h2>
+      <div class="readout" id="readout"></div>
+    </div>
+  </aside>
+
+  <!-- ============ STAGES ============ -->
+  <main class="stages both" id="stages">
+    <section data-pane="desk">
+      <div class="stageHead"><span class="nm">Desktop</span><span class="dim">16 : 9 · pinned scene</span></div>
+      <div class="scene desk"><div class="matghost"></div><div class="mock"></div><div class="ind"></div></div>
+    </section>
+    <section data-pane="mob">
+      <div class="stageHead"><span class="nm">Mobile</span><span class="dim">374 px · pinned scene</span></div>
+      <div class="scene mob"><div class="matghost"></div><div class="mock"></div><div class="ind"></div></div>
+    </section>
+  </main>
+</div>
+
+<script>
+/* ---- the 9 real chapters from home.html (data-band ranges) ---- */
+const CHAPTERS = [
+  {n:'01', eb:'Welcome',           t:'A women’s club,<br>on the mat.', a:0.00,  b:0.14 },
+  {n:'02', eb:'The signature mat', t:'Made for grip,<br>made to last.', a:0.14,  b:0.30 },
+  {n:'03', eb:'Mat hire',          t:'Hiring is<br>effortless.',       a:0.30,  b:0.44 },
+  {n:'04', eb:'Hire the range',    t:'For every<br>gathering.',        a:0.44,  b:0.556},
+  {n:'05', eb:'Fitness',           t:'Move with<br>Cristina.',         a:0.576, b:0.66 },
+  {n:'06', eb:'The method',        t:'Strength from<br>the inside out.',a:0.675, b:0.755},
+  {n:'07', eb:'Where',             t:'NW3 &amp;<br>Hampstead.',        a:0.778, b:0.86 },
+  {n:'08', eb:'Why',               t:'Breath-led,<br>for every body.', a:0.882, b:0.955},
+  {n:'09', eb:'Guest list',        t:'Reserve<br>your spot.',          a:0.972, b:1.00 },
+];
+const N = CHAPTERS.length;
+
+const CONCEPTS = [
+  {id:'A', name:'Segmented rail', desc:'Vertical ticks, one per chapter — current fills terracotta.', kind:'segment'},
+  {id:'B', name:'Chapter index',  desc:'Scroll-spy dots; active expands to a named pill.',            kind:'vertical'},
+  {id:'C', name:'Ring + counter', desc:'Circular fill with “02 / 09” and the chapter name.',           kind:'corner'},
+  {id:'D', name:'Stories bar',    desc:'Bottom segmented bar, like reels — strongly says “scroll”.',   kind:'bottom'},
+  {id:'E', name:'Scroll beacon',  desc:'Bold animated cue + a mini segment ladder.',                   kind:'segment'},
+];
+
+/* the six "say scroll" cue treatments offered inside concept E */
+const CUES = [
+  {id:'wheel',    name:'Mouse wheel',     desc:'Outlined mouse with a dot that drops inside.'},
+  {id:'chevrons', name:'Chevron cascade', desc:'Three chevrons fading downward in sequence.'},
+  {id:'vword',    name:'Vertical word',   desc:'The word set vertically down the rail.'},
+  {id:'drop',     name:'Dropping dot',    desc:'A dot falling down a thin guide line.'},
+  {id:'pulse',    name:'Pulse arrow',     desc:'A bobbing arrow inside a pulsing ring.'},
+  {id:'line',     name:'Drawing line',    desc:'A line that draws itself downward, on loop.'},
+];
+const CUE_LABELS = ['Scroll','Scroll to explore','Scroll down','Begin','Explore'];
+
+/* geometry is stored PER DEVICE so desktop & mobile can differ; the rest is shared */
+const DESK0 = { inset:14, pos:31, scale:1.20, thick:5, len:26, gap:7, track:0.2 };
+const MOB0  = { inset:10, pos:62, scale:1.15, thick:5, len:26, gap:7, track:0.2 };
+const state = {
+  concept:'E', p:0.02, accent:'#C98A2E', labels:true, dev:'both',
+  cue:'wheel', cueText:'Scroll', editing:'desk', playing:false,
+  desk:{...DESK0}, mob:{...MOB0},
+};
+const ACCENTS = ['#B8624A','#2B2620','#7C8A5A','#9A6A8C','#C98A2E'];
+const g   = (mob)=> mob ? state.mob : state.desk;   // geometry a pane renders with
+const cur = ()=> state[state.editing];              // geometry the sliders edit
+
+/* ---- active chapter from progress ---- */
+function activeIndex(p){
+  for(let i=0;i<N;i++){ if(p>=CHAPTERS[i].a && p<=CHAPTERS[i].b) return i; }
+  // in a gap between bands: snap to nearest boundary
+  for(let i=0;i<N-1;i++){ if(p>CHAPTERS[i].b && p<CHAPTERS[i+1].a){ return (p-CHAPTERS[i].b)<(CHAPTERS[i+1].a-p)?i:i+1; } }
+  return p<=0?0:N-1;
+}
+function chapterFill(p,i){ const c=CHAPTERS[i]; return Math.max(0,Math.min(1,(p-c.a)/(c.b-c.a))); }
+
+/* =================== BUILDERS (one per concept) =================== */
+function build(host, mob){
+  host.innerHTML='';
+  const v=g(mob);                                   // per-device geometry
+  const p=state.p, ai=activeIndex(p), s=v.scale, accent=state.accent;
+  host.style.setProperty('--terra',accent);
+  const mk=(cls)=>{ const d=document.createElement('div'); d.className=cls; return d; };
+
+  if(state.concept==='A'){            /* ---- segmented vertical rail ---- */
+    const rail=mk('segrail');
+    const w=v.thick*s, len=v.len*s, gap=v.gap*s;
+    rail.style.width=w+'px'; rail.style.gap=gap+'px';
+    rail.style.right=v.inset+'px'; rail.style.top=v.pos+'%'; rail.style.transform='translateY(-50%)';
+    CHAPTERS.forEach((c,i)=>{
+      const s1=mk('s'); s1.style.height=len+'px';
+      s1.style.background='rgba(43,38,32,'+v.track+')';
+      if(i<ai){ s1.classList.add('done'); s1.style.background=accent; }
+      if(i===ai){ const fi=mk(''); fi.style.cssText='position:absolute;left:0;top:0;width:100%;background:'+accent+';height:'+(chapterFill(p,i)*100)+'%'; s1.appendChild(fi); }
+      rail.appendChild(s1);
+    });
+    if(state.labels){
+      const lbl=mk('lbl');
+      const segH=len+gap, totalH=N*len+(N-1)*gap, centreY=ai*segH + len/2 - totalH/2;
+      lbl.innerHTML='<small>'+CHAPTERS[ai].n+'</small>'+CHAPTERS[ai].eb;
+      lbl.style.top='50%'; lbl.style.transform='translateY(calc(-50% + '+centreY.toFixed(0)+'px))';
+      rail.appendChild(lbl);
+    }
+    host.appendChild(rail);
+
+  } else if(state.concept==='B'){     /* ---- TOC dots ---- */
+    const toc=mk('toc');
+    const dot=Math.max(7,v.thick*1.6*s), gap=Math.max(10,v.gap*1.7*s);
+    toc.style.right=v.inset+'px'; toc.style.top=v.pos+'%'; toc.style.transform='translateY(-50%)'; toc.style.gap=gap+'px';
+    CHAPTERS.forEach((c,i)=>{
+      const r=mk('row2'); if(i<ai) r.classList.add('done'); if(i===ai) r.classList.add('on');
+      if(state.labels){ const pl=mk('pill'); pl.innerHTML=c.n+' · '+c.eb; r.appendChild(pl); }
+      const dd=mk('dot'); const dsz=(i===ai?dot*1.25:dot); dd.style.width=dsz+'px'; dd.style.height=dsz+'px';
+      if(i<ai) dd.style.background='var(--ink)';
+      if(i===ai){ dd.style.background=accent; dd.style.boxShadow='0 0 0 4px '+hexA(accent,.18); }
+      r.appendChild(dd); toc.appendChild(r);
+    });
+    host.appendChild(toc);
+
+  } else if(state.concept==='C'){     /* ---- progress ring + counter ---- */
+    const wrap=mk('ring');
+    const R=Math.round(26*s+v.thick*1.4), sw=Math.max(2,v.thick*0.8*s), rad=R-sw, C=2*Math.PI*rad;
+    wrap.style.right=v.inset+'px'; wrap.style.bottom=v.inset+'px';
+    let html='';
+    if(state.labels){ html+='<div class="name"><small>Chapter '+CHAPTERS[ai].n+' / 0'+N+'</small><b>'+CHAPTERS[ai].eb+'</b></div>'; }
+    html+='<div style="position:relative;display:flex;align-items:center;justify-content:center">'+
+      '<svg width="'+(R*2)+'" height="'+(R*2)+'">'+
+      '<circle cx="'+R+'" cy="'+R+'" r="'+rad+'" fill="none" stroke="rgba(43,38,32,'+v.track+')" stroke-width="'+sw+'"/>'+
+      '<circle cx="'+R+'" cy="'+R+'" r="'+rad+'" fill="none" stroke="'+accent+'" stroke-width="'+sw+'" stroke-linecap="round" stroke-dasharray="'+C+'" stroke-dashoffset="'+(C*(1-p))+'"/>'+
+      '</svg>'+
+      '<span class="cnt" style="font-size:'+(R*0.5)+'px">'+CHAPTERS[ai].n+'</span></div>';
+    wrap.innerHTML=html;
+    host.appendChild(wrap);
+
+  } else if(state.concept==='D'){     /* ---- bottom stories bar ---- */
+    const st=mk('stories');
+    st.style.bottom=v.inset+'px';
+    const segW=Math.max(14,(mob?16:34)*s), h=Math.max(3,v.thick*0.8*s), gap=Math.max(4,v.gap*0.8*s);
+    const bars=mk('bars'); bars.style.gap=gap+'px';
+    CHAPTERS.forEach((c,i)=>{
+      const b=mk('b'); b.style.width=segW+'px'; b.style.height=h+'px';
+      b.style.background='rgba(43,38,32,'+v.track+')';
+      const fi=document.createElement('i'); fi.style.background=accent;
+      if(i<ai){ b.classList.add('done'); fi.style.width='100%'; }
+      else if(i===ai){ fi.style.width=(chapterFill(p,i)*100)+'%'; }
+      else fi.style.width='0';
+      b.appendChild(fi); bars.appendChild(b);
+    });
+    st.appendChild(bars);
+    if(state.labels){
+      const cue=mk('cue'); cue.style.color='var(--ink)';
+      cue.innerHTML='<span style="color:'+accent+'">'+CHAPTERS[ai].n+'</span> '+CHAPTERS[ai].eb+' · scroll';
+      st.appendChild(cue);
+    }
+    host.appendChild(st);
+
+  } else if(state.concept==='E'){     /* ---- scroll beacon + ladder ---- */
+    const bc=mk('beacon');
+    bc.style.right=v.inset+'px'; bc.style.top=v.pos+'%'; bc.style.transform='translateY(-50%)';
+    const fade=Math.max(0,1-p/0.06);   // cue prominent at top, recedes once scrolling (floored so it stays visible in the lab)
+    const cueWrap=mk(''); cueWrap.style.cssText='display:flex;flex-direction:column;align-items:center;gap:9px';
+    cueWrap.style.opacity=(0.45+0.55*fade).toFixed(2);
+    cueWrap.style.transform='scale('+(0.85+0.35*s).toFixed(2)+')';
+    const glyph=document.createElement('div');
+    if(state.cue==='wheel'){ glyph.className='mouse'; }
+    else if(state.cue==='chevrons'){ glyph.className='cue-chev'; glyph.innerHTML='<i></i><i></i><i></i>'; }
+    else if(state.cue==='vword'){ glyph.className='cue-vword'; glyph.textContent=state.cueText; }
+    else if(state.cue==='drop'){ glyph.className='cue-drop'; }
+    else if(state.cue==='pulse'){ glyph.className='cue-pulse'; glyph.innerHTML='<i></i>'; }
+    else if(state.cue==='line'){ glyph.className='cue-line'; }
+    cueWrap.appendChild(glyph);
+    if(state.labels && state.cue!=='vword'){ const w=mk('word'); w.textContent=state.cueText; cueWrap.appendChild(w); }
+    bc.appendChild(cueWrap);
+    const lad=mk('ladder'); const dw=v.thick*s, dh=Math.max(6,v.len*0.5*s), gp=Math.max(3,v.gap*0.6*s);
+    lad.style.gap=gp+'px';
+    CHAPTERS.forEach((c,i)=>{
+      const s1=mk('s'); s1.style.width=dw+'px'; s1.style.height=dh+'px'; s1.style.background='rgba(43,38,32,'+v.track+')';
+      if(i<ai) s1.style.background=accent;
+      if(i===ai){ s1.classList.add('on'); s1.style.background=accent; s1.style.height=(dh*1.6)+'px'; }
+      lad.appendChild(s1);
+    });
+    bc.appendChild(lad);
+    host.appendChild(bc);
+  }
+}
+
+function hexA(hex,a){ const n=parseInt(hex.slice(1),16); return 'rgba('+(n>>16&255)+','+(n>>8&255)+','+(n&255)+','+a+')'; }
+
+/* =================== render everything =================== */
+const panes=[...document.querySelectorAll('.scene')];
+function render(){
+  const ai=activeIndex(state.p);
+  // update mock chapter text in each scene
+  document.querySelectorAll('.scene').forEach(sc=>{
+    const m=sc.querySelector('.mock'); const c=CHAPTERS[ai];
+    m.innerHTML='<div class="eb">'+c.eb+'</div><h3>'+c.t+'</h3><p>The progress indicator updates as you move between chapters.</p>';
+    const isMob=sc.classList.contains('mob');
+    const show=state.dev==='both'||(state.dev==='desk'&&!isMob)||(state.dev==='mob'&&isMob);
+    sc.querySelector('.ind').style.display=show?'':'none';
+    if(show) build(sc.querySelector('.ind'), isMob);
+  });
+  // panel echoes
+  document.getElementById('pVal').textContent=Math.round(state.p*100);
+  document.getElementById('chapNow').textContent=CHAPTERS[ai].n+' · '+CHAPTERS[ai].eb;
+  // show/hide context-only rows
+  const kind=CONCEPTS.find(c=>c.id===state.concept).kind;
+  document.querySelectorAll('[data-only]').forEach(r=>{
+    const o=r.getAttribute('data-only');
+    let on=true;
+    if(o==='vertical') on=(kind==='vertical'||kind==='segment');
+    if(o==='segment') on=(kind==='segment');
+    r.style.display=on?'':'none';
+  });
+  document.getElementById('cueGrp').style.display = state.concept==='E' ? '' : 'none';
+  const dv=(o)=>`inset ${o.inset}px · pos ${o.pos}% · scale ${o.scale.toFixed(2)}× · thick ${o.thick}px · seg ${o.len}/${o.gap} · track ${o.track}`;
+  document.getElementById('readout').textContent=
+`concept  ${state.concept} — ${CONCEPTS.find(c=>c.id===state.concept).name}` +
+(state.concept==='E' ? `\ncue      ${state.cue} · “${state.cueText}”` : '') +
+`\naccent   ${state.accent}   labels ${state.labels?'on':'off'}   show ${state.dev}
+desktop  ${dv(state.desk)}
+mobile   ${dv(state.mob)}`;
+}
+
+/* =================== wire controls =================== */
+const cwrap=document.getElementById('concepts');
+CONCEPTS.forEach(c=>{
+  const b=document.createElement('button'); b.className='cbtn'+(c.id===state.concept?' on':'');
+  b.innerHTML='<span class="k">'+c.id+'</span><span><span class="t">'+c.name+'</span><span class="d">'+c.desc+'</span></span>';
+  b.onclick=()=>{ state.concept=c.id; [...cwrap.children].forEach(x=>x.classList.remove('on')); b.classList.add('on'); render(); };
+  cwrap.appendChild(b);
+});
+
+const sw=document.getElementById('swatches');
+ACCENTS.forEach(col=>{
+  const s=document.createElement('button'); s.className='sw'+(col===state.accent?' on':''); s.style.background=col;
+  s.onclick=()=>{ state.accent=col; [...sw.children].forEach(x=>x.classList.remove('on')); s.classList.add('on'); render(); };
+  sw.appendChild(s);
+});
+
+/* cue-style buttons (concept E) */
+const qwrap=document.getElementById('cues');
+CUES.forEach(c=>{
+  const b=document.createElement('button'); b.className='cbtn'+(c.id===state.cue?' on':'');
+  b.innerHTML='<span class="t">'+c.name+'</span><span class="d">'+c.desc+'</span>';
+  b.onclick=()=>{ state.cue=c.id; [...qwrap.children].forEach(x=>x.classList.remove('on')); b.classList.add('on'); render(); };
+  qwrap.appendChild(b);
+});
+/* cue label presets */
+const lwrap=document.getElementById('cueLabelTog');
+CUE_LABELS.forEach(t=>{
+  const b=document.createElement('button'); b.dataset.v=t; if(t===state.cueText) b.classList.add('on'); b.textContent=t;
+  b.onclick=()=>{ state.cueText=t; [...lwrap.children].forEach(x=>x.classList.remove('on')); b.classList.add('on'); render(); };
+  lwrap.appendChild(b);
+});
+
+/* geometry sliders write to whichever device is being edited */
+const FMT={ scale:v=>(+v).toFixed(2), track:v=>(+v).toFixed(2) };
+const GEO=['inset','pos','scale','thick','len','gap','track'];
+function syncSliders(){
+  const c=cur();
+  GEO.forEach(id=>{ const el=document.getElementById(id); if(!el) return;
+    el.value=c[id]; const o=document.getElementById(id+'V'); if(o) o.textContent=(FMT[id]?FMT[id](c[id]):c[id]); });
+}
+GEO.forEach(id=>{
+  document.getElementById(id).addEventListener('input',e=>{
+    cur()[id]=parseFloat(e.target.value);
+    const o=document.getElementById(id+'V'); if(o) o.textContent=(FMT[id]?FMT[id](cur()[id]):cur()[id]);
+    render();
+  });
+});
+
+/* which device's values the sliders edit */
+document.querySelectorAll('#editTog button').forEach(b=>{
+  b.onclick=()=>{ document.querySelectorAll('#editTog button').forEach(x=>x.classList.remove('on')); b.classList.add('on');
+    state.editing=b.dataset.v; syncSliders(); render(); };
+});
+
+document.getElementById('p').addEventListener('input',e=>{ state.p=parseFloat(e.target.value)/100; render(); });
+
+function bindToggle(id,key,map){
+  document.querySelectorAll('#'+id+' button').forEach(b=>{
+    b.onclick=()=>{ document.querySelectorAll('#'+id+' button').forEach(x=>x.classList.remove('on')); b.classList.add('on');
+      state[key]=map?map(b.dataset.v):b.dataset.v; render(); };
+  });
+}
+bindToggle('labelTog','labels',v=>v==='on');
+bindToggle('devTog','dev');
+
+/* auto-scroll */
+let raf=null, last=null;
+const playBtn=document.getElementById('play');
+playBtn.onclick=()=>{
+  state.playing=!state.playing; playBtn.textContent=state.playing?'❚❚ Pause':'▶ Auto-scroll';
+  if(state.playing){ last=null; raf=requestAnimationFrame(tick); } else cancelAnimationFrame(raf);
+};
+function tick(ts){
+  if(last==null) last=ts;
+  const dt=(ts-last)/1000; last=ts;
+  state.p=(state.p+dt*0.06)%1.0;     // ~17s full pass
+  document.getElementById('p').value=state.p*100;
+  render();
+  if(state.playing) raf=requestAnimationFrame(tick);
+}
+
+document.getElementById('p').value=state.p*100;
+syncSliders();
+render();
+</script>
+</body>
+</html>

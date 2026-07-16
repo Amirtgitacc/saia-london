@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SAÏA — final anchors (Cristina, watercolour)</title>
+<style>
+  :root{ --cream:#ece8dc; --ink:#2B2620; --muted:#6B6358; --terra:#B8624A; }
+  *{ box-sizing:border-box; }
+  body{ margin:0; font-family:'Hanken Grotesk',system-ui,sans-serif; color:var(--ink); background:#f5f1e8; }
+  header{ padding:26px 6vw 6px; }
+  h1{ font-family:'Cormorant Garamond',serif; font-weight:500; font-size:30px; margin:0 0 6px; }
+  p.sub{ color:var(--muted); margin:0; font-size:14px; max-width:680px; line-height:1.6; }
+  .controls{ padding:10px 6vw 18px; display:flex; gap:10px; flex-wrap:wrap; }
+  button{ font:inherit; font-size:13px; padding:9px 16px; border:1px solid #d8d0c0; background:#fff; border-radius:3px; cursor:pointer; color:var(--ink); }
+  button.on{ background:var(--ink); color:#fff; border-color:var(--ink); }
+  .seq .row{ min-height:80vh; display:flex; align-items:center; justify-content:center; position:relative; border-bottom:1px solid rgba(43,38,32,.06); background:var(--cream); }
+  .seq img{ max-width:70%; max-height:74vh; height:auto; }
+  .seq .tag{ position:absolute; left:6vw; top:50%; transform:translateY(-50%); max-width:260px; }
+  .seq .tag .k{ font-size:11px; letter-spacing:.3em; text-transform:uppercase; color:var(--muted); margin-bottom:10px; }
+  .seq .tag .t{ font-family:'Cormorant Garamond',serif; font-size:34px; line-height:1; }
+  .cmp{ display:none; padding:24px 4vw 60px; }
+  .cmp .pair{ display:grid; grid-template-columns:1fr 1fr; gap:18px; align-items:start; margin-bottom:26px; }
+  .cmp h2{ grid-column:1/-1; font-family:'Cormorant Garamond',serif; font-weight:500; font-size:22px; margin:6px 0 0; }
+  .cmp figure{ margin:0; } .cmp img{ width:100%; height:auto; border-radius:6px; background:var(--cream); box-shadow:0 8px 24px rgba(43,38,32,.10); }
+  .cmp figcaption{ font-size:12px; color:var(--muted); margin-top:8px; text-align:center; }
+  .strip{ display:none; gap:0; overflow-x:auto; background:var(--cream); padding:30px 0; }
+  .strip img{ height:48vh; width:auto; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Final anchors — Cristina, watercolour</h1>
+  <p class="sub">The 5 keyframes the whole scroll-flow will be rebuilt from: new <b>mauve cami + taupe</b> outfit,
+  the <b>downward-dog head fixed</b>, and her face now generated from her trained <b>Soul</b> so it actually reads as her.
+  Shown on the cream the live page uses. If these are good, I generate the in-between motion → 303 frames → wire it in.</p>
+</header>
+<div class="controls">
+  <button id="bSeq" class="on">Sequence (on cream)</button>
+  <button id="bCmp">Likeness vs before</button>
+  <button id="bStrip">Filmstrip</button>
+</div>
+
+<div class="seq" id="seq">
+  <div class="row"><div class="tag"><div class="k">Level 1 · Stand</div><div class="t">She arrives.</div></div><img src="anchors-soul/FINAL-stand.png" alt="stand"></div>
+  <div class="row"><div class="tag"><div class="k">Level 2 · Reach</div><div class="t">Reach up.</div></div><img src="anchors-soul/FINAL-reach.png" alt="reach"></div>
+  <div class="row"><div class="tag"><div class="k">Level 3 · Downward dog</div><div class="t">Move with Cristina.</div></div><img src="anchors-soul/FINAL-dog.png" alt="dog"></div>
+  <div class="row"><div class="tag"><div class="k">Level 4 · Low lunge</div><div class="t">Stronger, together.</div></div><img src="anchors-soul/FINAL-lunge.png" alt="lunge"></div>
+  <div class="row"><div class="tag"><div class="k">Level 5 · Seated</div><div class="t">Hands to heart.</div></div><img src="anchors-soul/FINAL-seated.png" alt="seated"></div>
+</div>
+
+<div class="cmp" id="cmp">
+  <div class="pair"><h2>Her real photo → new watercolour face</h2>
+    <figure><img src="/photos/8_db79ce36-e571-48f7-8cb9-90a8640382ed.png" alt=""><figcaption>Real Cristina (reference photo)</figcaption></figure>
+    <figure><img src="anchors-soul/FINAL-seated.png" alt=""><figcaption>NEW — Soul-driven watercolour (seated)</figcaption></figure></div>
+  <div class="pair"><h2>Earlier generic attempt vs now</h2>
+    <figure><img src="anchors-v3/seated-a.jpeg" alt=""><figcaption>BEFORE — generic re-skin face</figcaption></figure>
+    <figure><img src="anchors-soul/FINAL-seated.png" alt=""><figcaption>NOW — trained on her photos</figcaption></figure></div>
+</div>
+
+<div class="strip" id="strip">
+  <img src="anchors-soul/FINAL-stand.png" alt="">
+  <img src="anchors-soul/FINAL-reach.png" alt="">
+  <img src="anchors-soul/FINAL-dog.png" alt="">
+  <img src="anchors-soul/FINAL-lunge.png" alt="">
+  <img src="anchors-soul/FINAL-seated.png" alt="">
+</div>
+
+<script>
+  const views={seq:seq,cmp:cmp,strip:strip}, btns={seq:bSeq,cmp:bCmp,strip:bStrip};
+  function show(n){for(const k in views){views[k].style.display=(k===n)?(k==='seq'?'block':(k==='strip'?'flex':'block')):'none';btns[k].classList.toggle('on',k===n);}}
+  bSeq.onclick=()=>show('seq'); bCmp.onclick=()=>show('cmp'); bStrip.onclick=()=>show('strip');
+</script>
+</body>
+</html>

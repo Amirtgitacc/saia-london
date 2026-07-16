@@ -11,3 +11,5 @@ tmp/
 output/
 **/__pycache__/
 .superpowers/
+.vercel
+.env*

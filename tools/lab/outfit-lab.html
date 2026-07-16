@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Cristina — outfit colourway lab</title>
+<style>
+  :root{
+    --cream:#F5F1E8; --ink:#2B2620; --terra:#B8624A;
+    --page:var(--cream);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:"Inter",system-ui,sans-serif;
+    background:var(--page); color:var(--ink);
+    padding:40px 28px 80px; transition:background .35s ease;
+  }
+  h1{font-family:"Playfair Display",Georgia,serif;font-weight:600;font-size:30px;letter-spacing:-.01em}
+  .sub{max-width:760px;margin-top:10px;font-size:14.5px;line-height:1.55;opacity:.78}
+  .sub b{font-weight:600}
+  .bar{
+    display:flex;flex-wrap:wrap;gap:10px;align-items:center;
+    margin:24px 0 30px;padding:14px 16px;border-radius:14px;
+    background:rgba(0,0,0,.04);backdrop-filter:blur(2px);
+  }
+  .bar .lab{font-size:12px;text-transform:uppercase;letter-spacing:.12em;opacity:.6;margin-right:4px}
+  button{
+    font:inherit;font-size:13px;cursor:pointer;border:1px solid rgba(0,0,0,.18);
+    background:#fff;color:var(--ink);padding:7px 13px;border-radius:999px;transition:.18s;
+  }
+  button:hover{transform:translateY(-1px)}
+  button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .grid{
+    display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));
+    gap:22px;
+  }
+  .card{
+    border-radius:16px;overflow:hidden;background:#fff;
+    border:2px solid transparent;cursor:pointer;
+    box-shadow:0 8px 26px rgba(0,0,0,.08);transition:.2s;
+  }
+  .card:hover{transform:translateY(-3px);box-shadow:0 14px 34px rgba(0,0,0,.13)}
+  .card.pick{border-color:var(--terra);box-shadow:0 0 0 4px rgba(184,98,74,.18),0 14px 34px rgba(0,0,0,.16)}
+  .card img{display:block;width:100%;height:auto;background:#fff}
+  .meta{padding:13px 15px 15px}
+  .meta .name{font-family:"Playfair Display",Georgia,serif;font-size:18px;font-weight:600;display:flex;align-items:center;gap:9px}
+  .dot{width:13px;height:13px;border-radius:50%;flex:none;border:1px solid rgba(0,0,0,.15)}
+  .meta .note{font-size:12.5px;line-height:1.5;opacity:.72;margin-top:5px}
+  .tag{display:inline-block;font-size:10.5px;text-transform:uppercase;letter-spacing:.1em;
+       background:var(--terra);color:#fff;padding:2px 8px;border-radius:999px;margin-top:8px}
+  .foot{margin-top:34px;font-size:13px;opacity:.7;max-width:760px;line-height:1.6}
+  .pickline{margin-top:18px;font-size:14px;font-weight:600;min-height:20px}
+</style>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <h1>Cristina — outfit colourway lab</h1>
+  <p class="sub">
+    Same seated keyframe, outfit recoloured six ways (colour-only edits — face, pose, hair, mat
+    and background are untouched). This is the <b>worst-case contrast frame</b>: she sits directly
+    on the dark mat, so whatever reads here reads everywhere. These prove <b>colour + likeness</b>;
+    the final <b>sharpness</b> comes from the Kling&nbsp;<i>pro</i> re-render, not from these stills.
+    Click a card to mark your pick. Toggle the backdrop to judge contrast.
+  </p>
+
+  <div class="bar">
+    <span class="lab">Backdrop</span>
+    <button data-bg="#F5F1E8" class="on">Cream (the page)</button>
+    <button data-bg="#2B2620">Ink</button>
+    <button data-bg="#ffffff">White</button>
+    <button data-bg="#cfc7b6">Greige</button>
+  </div>
+
+  <div class="grid" id="grid"></div>
+  <div class="pickline" id="pickline"></div>
+
+  <p class="foot">
+    Notes — <b>cream/oatmeal</b> nearly dissolves into the page backdrop (low contrast, but soft &
+    editorial); <b>charcoal-matched</b> vs <b>charcoal-graphite</b> differ only in how far the legs
+    separate from the mat; <b>terracotta</b> is the brand accent (loudest); <b>sage</b> is the calm
+    middle ground. Pick one and I'll lock it into the spec, then re-render the 4 clips once.
+  </p>
+
+<script>
+  const items = [
+    {f:"00-original-mauve.png",   name:"Original",          dot:"#9b8079", tag:"current", note:"Dusty-mauve cami + warm taupe leggings — what's live now."},
+    {f:"02-charcoal-graphite.png",name:"Charcoal · graphite",dot:"#3c3f45", tag:"your pick", note:"Deep ink top + lighter graphite leggings. Best leg-vs-mat separation."},
+    {f:"01-charcoal-matched.png", name:"Charcoal · matched", dot:"#33363b", note:"Deep ink top + slate leggings, tonally matched. Sleeker, legs sit closer to the mat."},
+    {f:"03-terracotta.png",       name:"Terracotta",        dot:"#B8624A", note:"Warm clay/rust — the brand accent. Loudest, highest contrast on the mat."},
+    {f:"04-sage.png",             name:"Sage",              dot:"#8a967e", note:"Muted eucalyptus green — calm, yoga-adjacent, reads well on the mat."},
+    {f:"05-cream.png",            name:"Oatmeal / cream",   dot:"#d8cdb6", note:"Tonal warm cream — soft & editorial, but nearly vanishes on the cream page."},
+  ];
+  const grid = document.getElementById('grid');
+  const pickline = document.getElementById('pickline');
+  items.forEach(it=>{
+    const c=document.createElement('div');c.className='card';c.dataset.name=it.name;
+    c.innerHTML=`<img src="outfit/${it.f}" alt="${it.name}" loading="lazy">
+      <div class="meta">
+        <div class="name"><span class="dot" style="background:${it.dot}"></span>${it.name}</div>
+        <div class="note">${it.note}</div>
+        ${it.tag?`<span class="tag">${it.tag}</span>`:''}
+      </div>`;
+    c.addEventListener('click',()=>{
+      document.querySelectorAll('.card').forEach(x=>x.classList.remove('pick'));
+      c.classList.add('pick');
+      pickline.textContent='Marked: '+it.name+'  →  tell me to lock it in.';
+    });
+    grid.appendChild(c);
+  });
+  document.querySelectorAll('.bar button').forEach(b=>{
+    b.addEventListener('click',()=>{
+      document.querySelectorAll('.bar button').forEach(x=>x.classList.remove('on'));
+      b.classList.add('on');
+      document.body.style.setProperty('--page', b.dataset.bg);
+      // flip text colour on dark backdrops for readability
+      const dark = b.dataset.bg==='#2B2620';
+      document.body.style.color = dark ? '#F5F1E8' : '#2B2620';
+    });
+  });
+</script>
+</body>
+</html>

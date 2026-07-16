@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SAÏA — Handoff lab (mat → Cristina)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500&family=Hanken+Grotesk:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root { --cream:#F5F1E8; --ink:#2B2620; --terra:#B8624A; --line:#d8cfbe; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--cream); color:var(--ink); font-family:'Hanken Grotesk',system-ui,sans-serif; line-height:1.5; }
+  header { padding:32px 5vw 6px; }
+  .kicker { letter-spacing:.18em; text-transform:uppercase; font-size:12px; color:var(--terra); }
+  h1 { font-family:'Cormorant Garamond',serif; font-weight:500; font-size:38px; margin:.1em 0 .15em; }
+  p.lede { max-width:820px; color:#5b5346; margin:.2em 0 0; }
+  .stage-wrap { padding:14px 5vw 0; }
+  .stage { position:relative; width:100%; overflow:hidden; border:1px solid var(--line); border-radius:12px;
+           background:var(--cream); box-shadow:0 18px 40px rgba(43,38,32,.10); }
+  /* the hero renders at a fixed 1880×975 (where the alignment is tuned) then scales to fit */
+  #hero { width:1880px; height:975px; border:0; transform-origin:0 0; display:block; }
+  .controls { padding:18px 5vw 8px; max-width:1100px; }
+  .row { display:flex; align-items:center; gap:16px; margin:10px 0; flex-wrap:wrap; }
+  .row label { font-size:13px; letter-spacing:.04em; color:#6b6356; min-width:128px; }
+  input[type=range] { flex:1; min-width:280px; accent-color:var(--terra); }
+  .read { font-variant-numeric:tabular-nums; font-size:14px; color:var(--ink); min-width:120px; }
+  .jumps { display:flex; gap:8px; flex-wrap:wrap; }
+  button { font-family:inherit; font-size:12px; letter-spacing:.06em; text-transform:uppercase; cursor:pointer;
+           background:#fff; color:var(--ink); border:1px solid var(--line); border-radius:99px; padding:7px 14px; }
+  button:hover { border-color:var(--terra); color:var(--terra); }
+  button.play { background:var(--ink); color:var(--cream); border-color:var(--ink); }
+  .legend { font-size:13px; color:#6b6356; padding:10px 5vw 56px; max-width:980px; }
+  .legend b { color:var(--ink); }
+  .pill { display:inline-block; font-size:11px; letter-spacing:.05em; text-transform:uppercase; background:#e3ecdd; color:#3f6b3a; border-radius:99px; padding:3px 9px; }
+</style>
+</head>
+<body>
+<header>
+  <div class="kicker">SAÏA · Design lab</div>
+  <h1>The handoff — the unrolled mat <em>becomes</em> the mat under Cristina's feet</h1>
+  <p class="lede">Scrub the slider to drive the live hero frame-by-frame. Watch the 3D mat morph to
+  watercolour and <b>glide down into position</b>, then crossfade <b>in place</b> to Cristina's flow —
+  no fading-out then a differently-placed figure. <span class="pill">scrub me</span></p>
+</header>
+
+<div class="stage-wrap">
+  <div class="stage" id="stage"><iframe id="hero" src="/home.html" title="SAÏA hero"></iframe></div>
+</div>
+
+<div class="controls">
+  <div class="row">
+    <label for="fine">Handoff (0.45–0.66)</label>
+    <input id="fine" type="range" min="0.45" max="0.66" step="0.0005" value="0.50">
+    <span class="read" id="read">p = 0.500</span>
+  </div>
+  <div class="row">
+    <label for="full">Whole journey (0–1)</label>
+    <input id="full" type="range" min="0" max="1" step="0.001" value="0.50">
+    <button class="play" id="play">▶ Play handoff</button>
+  </div>
+  <div class="row jumps">
+    <button data-p="0.40">Showcase</button>
+    <button data-p="0.50">Morph begins</button>
+    <button data-p="0.555">Mat gliding</button>
+    <button data-p="0.566">Crossfade</button>
+    <button data-p="0.585">Cristina in</button>
+    <button data-p="0.72">Mid-flow</button>
+    <button data-p="0.96">Final pose</button>
+  </div>
+</div>
+
+<div class="legend">
+  <p><b>What changed:</b> previously the watercolour mat faded and a differently-placed figure appeared
+  (the "pasted PNG"). Now the mat <b>travels to her feet</b> as it paints in, and the medium swaps with
+  the mat held in the same spot. The flow itself is a preloaded image sequence (not a video), so it
+  scrubs smoothly and reaches every pose. <br><span style="color:#9a8f7d">Note: the alignment is tuned
+  for ~1880×975; this lab renders the hero at that size so you see the exact intended result.</span></p>
+</div>
+
+<script>
+  const hero = document.getElementById('hero');
+  const stage = document.getElementById('stage');
+  const fine = document.getElementById('fine');
+  const full = document.getElementById('full');
+  const read = document.getElementById('read');
+  const play = document.getElementById('play');
+  let rig = null;
+
+  // scale the fixed 1880×975 hero to fit the stage width
+  function fit() {
+    const w = stage.clientWidth, s = w / 1880;
+    hero.style.transform = 'scale(' + s + ')';
+    stage.style.height = (975 * s) + 'px';
+  }
+  window.addEventListener('resize', fit); fit();
+
+  function at(p) {
+    p = Math.max(0, Math.min(1, p));
+    read.textContent = 'p = ' + p.toFixed(3);
+    fine.value = p; full.value = p;
+    try { rig && rig.at(p); } catch (e) {}
+  }
+
+  // wait for the hero's debug rig + first flow frame
+  function hookRig() {
+    try {
+      const w = hero.contentWindow;
+      if (w && w.SAIA && w.SAIA._rig) {
+        rig = w.SAIA._rig;
+        // warm the flow frames, then show the morph start
+        rig.at(0.62); setTimeout(() => at(0.50), 400);
+        return;
+      }
+    } catch (e) {}
+    setTimeout(hookRig, 200);
+  }
+  hero.addEventListener('load', () => setTimeout(hookRig, 300));
+
+  fine.addEventListener('input', () => at(parseFloat(fine.value)));
+  full.addEventListener('input', () => at(parseFloat(full.value)));
+  document.querySelectorAll('.jumps button').forEach(b =>
+    b.addEventListener('click', () => at(parseFloat(b.dataset.p))));
+
+  // play the handoff once (0.46 → 0.62) so the motion is visible without dragging
+  let raf = null;
+  play.addEventListener('click', () => {
+    if (raf) { cancelAnimationFrame(raf); raf = null; play.textContent = '▶ Play handoff'; return; }
+    play.textContent = '⏸ Stop';
+    let p = 0.46; const end = 0.62;
+    const step = () => {
+      p += 0.0016; at(p);
+      if (p < end) raf = requestAnimationFrame(step);
+      else { raf = null; play.textContent = '▶ Play handoff'; }
+    };
+    step();
+  });
+</script>
+</body>
+</html>

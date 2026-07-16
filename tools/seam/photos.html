@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cristina photo picker — which are her?</title>
+<style>
+  body{ margin:0; font-family:system-ui,sans-serif; background:#1e1c1a; color:#eee; }
+  header{ padding:24px 28px 8px; }
+  h1{ font-size:22px; margin:0 0 6px; font-weight:600; }
+  p{ color:#bbb; margin:0 0 4px; font-size:14px; max-width:760px; line-height:1.6; }
+  .grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:18px; padding:20px 28px 60px; }
+  figure{ margin:0; background:#2a2724; border-radius:8px; overflow:hidden; }
+  .imgwrap{ position:relative; aspect-ratio:1/1; background:#000; }
+  .imgwrap img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .tag{ position:absolute; top:8px; left:8px; background:#B8624A; color:#fff; font-weight:700;
+    font-size:18px; width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; }
+  figcaption{ padding:8px 10px; font-size:11px; color:#9a948c; word-break:break-all; }
+  .note{ background:#2a2724; border-left:3px solid #B8624A; padding:10px 14px; margin:8px 28px; border-radius:4px; font-size:13px; color:#cdc; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Which of these are Cristina?</h1>
+  <p>These are the real photos pulled from your <code>photos/</code> folder. Each has a letter. Tell me which letters are
+  <b>Cristina</b> (the founder) — I'll train her Soul on those. <b>A</b> and <b>E</b> are the two selfies you already gave me.</p>
+  <p>Skip any that are other women, group shots, or not a clear face.</p>
+</header>
+<div class="note">Tip: zoom your browser (Cmd +) for a closer look at any face. Then just message me the letters, e.g. “A, E, K, L, P are her”.</div>
+<div class="grid" id="grid"></div>
+<script>
+  const photos = [
+    ["A","309619714_5203150786460977_1499657881984341358_n_1.jpg"],
+    ["B","349534240_970086797521664_1584546997448504664_n.jpg"],
+    ["C","85978036-3243-4BC3-9E98-AF5B59AEB391.jpg"],
+    ["D","8_331773cb-b30e-4a9a-875f-a394e54d9d79.jpg"],
+    ["E","8_db79ce36-e571-48f7-8cb9-90a8640382ed.png"],
+    ["F","DSC04109.jpg"],
+    ["G","DSC04133_e81a47c8-ed9f-4b35-a6f1-ec9169347eb2.jpg"],
+    ["H","DSC04139.jpg"],
+    ["I","DSC04282.jpg"],
+    ["J","IMG_2390.jpg"],
+    ["K","IMG_2392.jpg"],
+    ["L","IMG_5106_3.jpg"],
+    ["M","Snapinsta.app_218150491_4681263711902509_5336339906255780718_n_1080.jpg"],
+    ["N","Snapinsta.app_242292911_1079452836196028_3808565095717851061_n_1080.jpg"],
+    ["O","Snapinsta.app_262830446_642595000235284_7056160579951222718_n_1080.jpg"],
+    ["P","Snapinsta.app_273931134_460379012416069_8989016968091085995_n_1080.jpg"],
+    ["Q","Snapinsta.app_274032127_525114362160749_3831275867963670197_n_1080.jpg"],
+    ["R","Snapinsta.app_274042141_476998050588663_3300805879876636614_n_1080.jpg"],
+    ["S","Snapinsta.app_316821809_554430629853980_3601036597804038524_n_1080_1.jpg"],
+    ["T","Snapinsta.app_317006758_6013053755392457_3370483635582872631_n_1080.jpg"],
+    ["U","Snapinsta.app_317036401_665597138385313_2713674032479943115_n_1080.jpg"]
+  ];
+  const grid = document.getElementById('grid');
+  for (const [tag, file] of photos) {
+    const fig = document.createElement('figure');
+    fig.innerHTML = `<div class="imgwrap"><span class="tag">${tag}</span>
+      <img loading="lazy" src="/photos/${encodeURIComponent(file)}" alt="${tag}"></div>
+      <figcaption>${file}</figcaption>`;
+    grid.appendChild(fig);
+  }
+</script>
+</body>
+</html>

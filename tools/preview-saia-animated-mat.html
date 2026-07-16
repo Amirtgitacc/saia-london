@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SAÏA animated mat GLB preview</title>
+<script>
+  // GLB files must be fetched over HTTP. If this preview is opened from its
+  // filesystem link, move to the local static server automatically.
+  if (location.protocol === 'file:') {
+    location.replace('http://localhost:8000/tools/preview-saia-animated-mat.html');
+  }
+</script>
+<script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100svh; display: grid; place-items: center; background: #f5f1e8; color: #2b2620; font: 14px system-ui, sans-serif; }
+  main { width: min(430px, 100vw); padding: 12px; }
+  model-viewer { width: 100%; height: min(82svh, 720px); background: radial-gradient(circle, #fff 0, #e9e1d4 72%); border-radius: 22px; }
+  label { display: flex; align-items: center; gap: 14px; margin-top: 14px; }
+  input { width: 100%; accent-color: #b8624a; }
+</style>
+<main>
+  <model-viewer
+    id="mat"
+    src="../assets/saia-mat-roll-open.glb"
+    animation-name="SAIA_Mat_Unroll"
+    camera-controls
+    camera-orbit="0deg 90deg 3.55m"
+    field-of-view="32deg"
+    shadow-intensity="1"
+    exposure="1.15">
+  </model-viewer>
+  <label>Rolled <input id="scrub" type="range" min="0" max="4" step="0.01" value="2"> Open</label>
+</main>
+<script>
+  const mat = document.getElementById('mat');
+  const scrub = document.getElementById('scrub');
+  // model-viewer loops currentTime === duration back to frame zero; clamp by
+  // one millisecond so the right-hand end of the scrubber shows the open pose.
+  const setTime = () => { mat.currentTime = Math.min(Number(scrub.value), 3.999); };
+  mat.addEventListener('load', setTime);
+  scrub.addEventListener('input', setTime);
+</script>
+</html>

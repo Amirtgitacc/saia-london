@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Recoloured keyframes — charcoal · graphite</title>
+<style>
+  :root{--cream:#F5F1E8;--ink:#2B2620;--terra:#B8624A;--page:var(--cream)}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:"Inter",system-ui,sans-serif;background:var(--page);color:var(--ink);padding:34px 26px 70px;transition:background .3s}
+  h1{font-family:"Playfair Display",Georgia,serif;font-weight:600;font-size:27px}
+  .sub{max-width:780px;margin-top:8px;font-size:14px;line-height:1.5;opacity:.78}
+  .bar{display:flex;gap:9px;align-items:center;margin:20px 0 26px}
+  .bar .lab{font-size:11px;text-transform:uppercase;letter-spacing:.12em;opacity:.6}
+  button{font:inherit;font-size:13px;cursor:pointer;border:1px solid rgba(0,0,0,.18);background:#fff;color:var(--ink);padding:6px 12px;border-radius:999px}
+  button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:18px}
+  .card{border-radius:14px;overflow:hidden;background:#fff;box-shadow:0 8px 24px rgba(0,0,0,.08)}
+  .card img{display:block;width:100%;height:auto}
+  .name{font-family:"Playfair Display",Georgia,serif;font-size:17px;font-weight:600;padding:10px 14px}
+</style>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <h1>Recoloured keyframes — charcoal · graphite</h1>
+  <p class="sub">The 5 anchors that drive the re-render: deep-ink cami crop + graphite leggings,
+  colour-only (face / pose / hair / mat / background unchanged). These are the exact 1104×756
+  KEY frames Kling will animate between. Toggle the backdrop to judge contrast.</p>
+  <div class="bar">
+    <span class="lab">Backdrop</span>
+    <button data-bg="#F5F1E8" class="on">Cream</button>
+    <button data-bg="#2B2620">Ink</button>
+    <button data-bg="#ffffff">White</button>
+  </div>
+  <div class="grid" id="g"></div>
+<script>
+  const frames=[["stand","1 · Stand"],["reach","2 · Reach"],["dog","3 · Down dog"],["lunge","4 · Lunge"],["seated","5 · Seated"]];
+  const g=document.getElementById('g');
+  frames.forEach(([f,n])=>{g.insertAdjacentHTML('beforeend',
+    `<div class="card"><img src="keyframes/${f}.png" alt="${n}"><div class="name">${n}</div></div>`);});
+  document.querySelectorAll('.bar button').forEach(b=>b.addEventListener('click',()=>{
+    document.querySelectorAll('.bar button').forEach(x=>x.classList.remove('on'));b.classList.add('on');
+    document.body.style.setProperty('--page',b.dataset.bg);
+    document.body.style.color=b.dataset.bg==='#2B2620'?'#F5F1E8':'#2B2620';}));
+</script>
+</body>
+</html>

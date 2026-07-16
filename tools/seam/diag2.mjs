@@ -1,0 +1,15 @@
+import { chromium } from 'playwright';
+const browser = await chromium.launch();
+const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+const got = new Set();
+page.on('response', r => { const u = r.url(); const m = u.match(/flow-frames\/f(\d+)\.jpg/); if (m) got.add(parseInt(m[1],10)); });
+await page.goto('http://localhost:8000/home.html', { waitUntil: 'domcontentloaded' });
+await page.waitForFunction(() => window.SAIA && window.SAIA._rig, { timeout: 15000 });
+await page.waitForFunction(() => { const c = document.getElementById('flowCanvas'); return c && c.width > 1; });
+for (let i=0;i<=60;i++) await page.evaluate(pp => window.SAIA._rig.at(pp), 0.576+0.424*(i/60));
+await page.evaluate(() => new Promise(r => setTimeout(r, 5000)));
+const arr = [...got].sort((a,b)=>a-b);
+console.log('frames fetched:', arr.length, 'min', arr[0]||'-', 'max', arr[arr.length-1]||'-');
+const missing=[]; for(let i=1;i<=303;i++) if(!got.has(i)) missing.push(i);
+console.log('MISSING:', missing.length, missing.slice(0,50).join(','));
+await browser.close();

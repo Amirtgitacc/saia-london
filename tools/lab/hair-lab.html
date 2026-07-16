@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Hair match — #1 & #5 → #2</title>
+<style>
+  :root{--cream:#F5F1E8;--ink:#2B2620;--terra:#B8624A;--page:var(--cream)}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:"Inter",system-ui,sans-serif;background:var(--page);color:var(--ink);padding:32px 26px 70px;transition:background .3s}
+  h1{font-family:"Playfair Display",Georgia,serif;font-weight:600;font-size:26px}
+  .sub{max-width:820px;margin-top:8px;font-size:14px;line-height:1.5;opacity:.78}
+  h2{font-family:"Playfair Display",Georgia,serif;font-weight:600;font-size:19px;margin:30px 0 12px}
+  .bar{display:flex;gap:9px;align-items:center;margin:18px 0 4px}
+  .bar .lab{font-size:11px;text-transform:uppercase;letter-spacing:.12em;opacity:.6}
+  button{font:inherit;font-size:13px;cursor:pointer;border:1px solid rgba(0,0,0,.18);background:#fff;color:var(--ink);padding:6px 12px;border-radius:999px}
+  button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .row{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+  .card{border-radius:13px;overflow:hidden;background:#fff;box-shadow:0 8px 22px rgba(0,0,0,.08);position:relative}
+  .card img{display:block;width:100%;height:auto}
+  .tag{position:absolute;top:10px;left:10px;font-size:11px;letter-spacing:.05em;background:rgba(43,38,32,.82);color:#fff;padding:4px 9px;border-radius:999px}
+  .tag.good{background:var(--terra)}
+  .name{font-family:"Inter";font-size:12.5px;opacity:.7;padding:9px 13px}
+  .target{max-width:430px}
+  .target .card{border:2px solid var(--terra)}
+</style>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <h1>Hair match — #1 &amp; #5 → #2</h1>
+  <p class="sub">The new full sleek low braid (after) vs the original (before), against the target #2 (Reach).
+  Note: the braid style now matches #2, but it falls on the <b>opposite shoulder</b> (image-left here vs image-right in #2).
+  Toggle the backdrop to inspect the hair edges.</p>
+
+  <div class="bar">
+    <span class="lab">Backdrop</span>
+    <button data-bg="#F5F1E8" class="on">Cream</button>
+    <button data-bg="#2B2620">Ink</button>
+    <button data-bg="#ffffff">White</button>
+  </div>
+
+  <h2>Target · #2 Reach (braid on image-right)</h2>
+  <div class="target"><div class="card"><span class="tag good">TARGET #2</span><img src="hair/target-reach.png" alt="reach target"></div></div>
+
+  <h2>#1 Stand</h2>
+  <div class="row">
+    <div class="card"><span class="tag">BEFORE</span><img src="hair/stand-before.png" alt="stand before"><div class="name">original — thin braid, left</div></div>
+    <div class="card"><span class="tag good">AFTER</span><img src="hair/stand-after.png" alt="stand after"><div class="name">full sleek braid (image-left)</div></div>
+  </div>
+
+  <h2>#5 Seated</h2>
+  <div class="row">
+    <div class="card"><span class="tag">BEFORE</span><img src="hair/seated-before.png" alt="seated before"><div class="name">original braid</div></div>
+    <div class="card"><span class="tag good">AFTER</span><img src="hair/seated-after.png" alt="seated after"><div class="name">full sleek braid (image-left)</div></div>
+  </div>
+
+<script>
+  document.querySelectorAll('.bar button').forEach(b=>b.addEventListener('click',()=>{
+    document.querySelectorAll('.bar button').forEach(x=>x.classList.remove('on'));b.classList.add('on');
+    document.body.style.setProperty('--page',b.dataset.bg);
+    document.body.style.color=b.dataset.bg==='#2B2620'?'#F5F1E8':'#2B2620';}));
+</script>
+</body>
+</html>

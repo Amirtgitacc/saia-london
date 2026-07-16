@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SAÏA — Mobile scroll journey (mat unrolls → Cristina flows · desktop frames)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<script type="importmap">{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/" } }</script>
+<style>
+  :root{ --cream:#F5F1E8; --cream2:#EFEADF; --paper:#FBF9F4; --ink:#2B2620; --muted:#6B6358; --line:#DAD4C8; --terra:#B8624A; }
+  *{ box-sizing:border-box; }
+  body{ margin:0; background:#11100E; color:#F5F1E8; font-family:'Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; }
+
+  .lab-top{ position:sticky; top:0; z-index:50; background:#1A1815; border-bottom:1px solid #2c2924; padding:16px 22px; }
+  .lab-top h1{ font-family:'Playfair Display',serif; font-weight:500; font-size:19px; margin:0; }
+  .lab-top p{ margin:5px 0 0; font-size:12px; color:#9a948a; max-width:920px; }
+  .lab-stage{ display:flex; gap:46px; padding:34px 30px 60px; align-items:flex-start; justify-content:center; flex-wrap:wrap; }
+
+  /* phase legend */
+  .legend{ max-width:300px; padding-top:18px; }
+  .legend h3{ font-family:'Playfair Display',serif; font-weight:500; font-size:16px; margin:0 0 14px; color:#F5F1E8; }
+  .legend ol{ margin:0; padding:0; list-style:none; counter-reset:s; }
+  .legend li{ counter-increment:s; position:relative; padding:0 0 16px 38px; font-size:12.5px; line-height:1.55; color:#bdb6aa; }
+  .legend li::before{ content:counter(s); position:absolute; left:0; top:-2px; width:26px; height:26px; border-radius:50%;
+    border:1px solid #B8624A; color:#B8624A; font-size:12px; display:flex; align-items:center; justify-content:center; }
+  .legend li b{ color:#F5F1E8; font-weight:500; }
+  .legend .note{ font-size:11px; color:#7d776d; line-height:1.6; margin-top:10px; }
+
+  .col{ display:flex; flex-direction:column; align-items:center; gap:11px; }
+  .col .tag{ font-size:11px; letter-spacing:.22em; text-transform:uppercase; color:#B8624A; }
+  .col .nm{ font-family:'Playfair Display',serif; font-size:18px; color:#F5F1E8; margin-top:-6px; }
+
+  /* phone */
+  .phone{ width:392px; height:812px; border-radius:46px; padding:12px; background:#000; box-shadow:0 34px 80px -20px rgba(0,0,0,.85); }
+  .screen{ width:100%; height:100%; border-radius:34px; overflow:hidden; position:relative; background:var(--cream); }
+  .scroll{ width:100%; height:100%; overflow-y:auto; overflow-x:hidden; position:relative; }
+  .scroll::-webkit-scrollbar{ width:0; }
+
+  .track{ position:relative; }
+  .pin{ position:sticky; top:0; display:flex; flex-direction:column; overflow:hidden; }
+
+  /* ---- TEXT zone (TOP) ---- */
+  .txt{ position:relative; flex:0 0 33%; padding:0 30px; }
+  .chap{ position:absolute; left:30px; right:30px; bottom:10px; opacity:0; transition:opacity .45s ease; pointer-events:none; }
+  .chap.on{ opacity:1; }
+  .chap .eb{ font-size:11px; letter-spacing:.3em; text-transform:uppercase; color:var(--terra); margin:0 0 14px; }
+  .chap h2{ font-family:'Playfair Display',serif; font-weight:500; font-size:38px; line-height:1.0; margin:0 0 14px; color:var(--ink);
+    padding-left:15px; border-left:2px solid var(--terra); }
+  .chap p{ font-size:15px; line-height:1.65; color:var(--muted); margin:0; padding-left:15px; }
+
+  /* ---- ANIMATION zone (BOTTOM) ---- */
+  .anim{ position:relative; flex:1 1 auto; background:
+      radial-gradient(120% 90% at 50% 14%, var(--cream) 38%, var(--cream2) 100%); }
+  .matgl{ position:absolute; inset:0; z-index:1; }            /* WebGL 3D mat (rolls open) */
+  .flowcv{ position:absolute; inset:0; z-index:2; opacity:0; }
+
+  /* big, very visible scroll cue */
+  .cue{ position:absolute; left:50%; bottom:20px; transform:translateX(-50%); z-index:6; display:flex; flex-direction:column;
+    align-items:center; gap:6px; transition:opacity .4s ease; }
+  .cue .lbl{ font-size:12px; letter-spacing:.32em; text-transform:uppercase; color:var(--ink); font-weight:500; }
+  .cue .mouse{ width:30px; height:50px; border:2.5px solid var(--ink); border-radius:16px; position:relative; }
+  .cue .mouse::after{ content:""; position:absolute; left:50%; top:9px; width:4px; height:9px; border-radius:3px; background:var(--terra);
+    transform:translateX(-50%); animation:wheel 1.5s ease-in-out infinite; }
+  .cue .chev{ display:flex; flex-direction:column; align-items:center; margin-top:-2px; }
+  .cue .chev svg{ width:26px; height:26px; color:var(--terra); margin-top:-13px; animation:chev 1.5s ease-in-out infinite; }
+  .cue .chev svg:nth-child(2){ animation-delay:.18s; opacity:.55; }
+  @keyframes wheel{ 0%{ opacity:1; transform:translate(-50%,0) } 70%{ opacity:0; transform:translate(-50%,12px) } 100%{ opacity:0 } }
+  @keyframes chev{ 0%,100%{ transform:translateY(0); opacity:.5 } 50%{ transform:translateY(5px); opacity:1 } }
+
+  /* progress rail */
+  .prail{ position:absolute; right:14px; top:50%; transform:translateY(-50%); width:3px; height:120px; background:rgba(43,38,32,.12); z-index:6; border-radius:3px; }
+  .prail span{ position:absolute; top:0; left:0; width:100%; height:0%; background:var(--terra); border-radius:3px; }
+</style>
+</head>
+<body>
+  <div class="lab-top">
+    <h1>Mobile scroll journey — mat unrolls, then Cristina flows</h1>
+    <p>Rebuilt with the <b>real desktop animation</b> (the 303-frame watercolour flow — correct outfit &amp; poses) and your layout: <b>text on top, animation on the bottom</b>. Scroll the phone: the mat unrolls, hands off to Cristina, and her poses scrub with scroll. Big scroll cue up front.</p>
+  </div>
+
+  <div class="lab-stage">
+    <div class="legend">
+      <h3>What happens as you scroll</h3>
+      <ol>
+        <li><b>Mat unrolls.</b> The signature mat rolls open in the bottom zone — same idea as desktop, kept simple.</li>
+        <li><b>Hand-off.</b> The mat dissolves into Cristina standing on it (frame 1 of the desktop flow).</li>
+        <li><b>She flows.</b> Scroll scrubs her through the poses (stand → fold → downward dog → seated), exactly the desktop frames.</li>
+        <li><b>Text leads on top.</b> Each chapter's words sit above the figure and cross-fade as the pose changes — no overlap.</li>
+      </ol>
+      <p class="note">Lab loads a subset of the 303 frames for a quick preview; the live build streams them like desktop. Tell me what to adjust — split ratio, pacing, the scroll cue, copy.</p>
+    </div>
+
+    <div class="col">
+      <div class="tag">Mobile · live preview</div>
+      <div class="nm">Unroll &amp; Flow</div>
+      <div class="phone"><div class="screen"><div class="scroll" id="scroll"></div></div></div>
+    </div>
+  </div>
+
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+var FLOW_COUNT = 303, STEP = 1;            // load EVERY frame → fine-grained, smooth scrub
+var loaded = {};
+function frameURL(i){ return '../../assets/flow-frames/f'+String(i).padStart(3,'0')+'.webp'; }
+function preload(i){ if(loaded[i]) return; var im = new Image(); im.onload = function(){ if(window.__redrawIdle) window.__redrawIdle(); }; im.src = frameURL(i); loaded[i] = im; }
+function clamp(v,a,b){ return Math.min(b,Math.max(a,v)); }
+
+/* chapters keyed to scroll progress (p of the whole pinned track) */
+var CH = [
+  { a:0.00, b:0.20, e:"A women's club in London", t:"Yoga mat hire,<br>across London.", x:"Rent our mats for £8.50 each, with same-day delivery from our Central London warehouse." },
+  { a:0.20, b:0.40, e:"Fitness",    t:"Move with<br>Cristina.",          x:"Founder-led Pilates for women in London — small, strong and slow, on the same mat you'll know by heart." },
+  { a:0.40, b:0.58, e:"The method", t:"Strength from<br>the inside out.", x:"Classical Pilates and Reformer, drawn from Contrology. Breath-led, built for every level." },
+  { a:0.58, b:0.74, e:"Where",      t:"NW3 &amp;<br>Hampstead.",          x:"One-to-one in NW3, or group classes in Hampstead. Wherever you start, Cristina meets you there." },
+  { a:0.74, b:0.88, e:"Why",        t:"Breath-led,<br>for every body.",   x:"Train for how you feel, not just how you look. Show up, breathe, build control." },
+  { a:0.88, b:1.01, e:"Join the guest list", t:"Reserve<br>your spot.",   x:"First word when Cristina opens new Pilates classes in NW3 &amp; Hampstead — and a place held for you." }
+];
+
+var UNROLL_END = 0.16, HANDOFF_END = 0.22;   // mat rolls open, then dissolves to the flow
+
+var s = document.getElementById('scroll');
+var vh = s.clientHeight;
+s.innerHTML =
+  '<div class="track" id="track">'+
+    '<div class="pin" style="height:'+vh+'px">'+
+      '<div class="txt">'+ CH.map(function(c,i){
+          return '<div class="chap" data-i="'+i+'"><p class="eb">'+c.e+'</p><h2>'+c.t+'</h2><p>'+c.x+'</p></div>';
+        }).join('') +'</div>'+
+      '<div class="anim" id="anim">'+
+        '<canvas class="matgl" id="matgl"></canvas>'+
+        '<canvas class="flowcv" id="flowcv"></canvas>'+
+        '<div class="prail"><span id="prailfill"></span></div>'+
+        '<div class="cue" id="cue"><span class="lbl">Scroll</span>'+
+          '<span class="mouse"></span>'+
+          '<span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>'+
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></span>'+
+        '</div>'+
+      '</div>'+
+    '</div>';
+
+var track = document.getElementById('track');
+track.style.height = Math.round(vh*8)+'px';          // generous scroll runway
+var chaps = [].slice.call(s.querySelectorAll('.chap'));
+var cv = document.getElementById('flowcv');
+var ctx = cv.getContext('2d');
+var cue = document.getElementById('cue');
+var fill = document.getElementById('prailfill');
+var anim = document.getElementById('anim');
+var matgl = document.getElementById('matgl');
+
+/* ---- Cristina flow frames: eager entrance, then stream the rest in the background ---- */
+for(var i=1;i<=14;i++) preload(i);
+var _li = 15;
+(function bgload(){ var end = Math.min(FLOW_COUNT, _li+8); while(_li<=end) preload(_li++); if(_li<=FLOW_COUNT) setTimeout(bgload, 28); })();
+
+function sizeCanvas(){
+  var dpr = Math.min(window.devicePixelRatio||1, 2);
+  cv.width = Math.round(anim.clientWidth*dpr); cv.height = Math.round(anim.clientHeight*dpr);
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+}
+sizeCanvas();
+
+function frameFor(i){
+  var k = clamp(Math.round((i-1)/STEP)*STEP+1, 1, FLOW_COUNT);
+  if(!loaded[k]) preload(k);
+  return loaded[k];
+}
+var ZOOM = 1.12, FIG_Y = 0.12;   // FIG_Y: 0 = top of zone, 1 = bottom — pulled up, tight to the copy
+function drawFlow(idx){
+  var img = frameFor(idx);
+  if(!img || !img.complete || !img.naturalWidth) return;
+  var cw = anim.clientWidth, chh = anim.clientHeight;
+  ctx.clearRect(0,0,cw,chh);
+  var scale = Math.min(cw/img.naturalWidth, chh/img.naturalHeight) * ZOOM;
+  var w = img.naturalWidth*scale, h = img.naturalHeight*scale;
+  ctx.drawImage(img, (cw-w)/2, (chh-h)*FIG_Y, w, h);   // centred horizontally, pulled up toward the text
+}
+
+/* ---- 3D mat (rolls open via morph-target clip, scrubbed by scroll) ---- */
+var renderer, scene, camera, mixer, matClip, matReady=false, matDur=4;
+function initMat(){
+  renderer = new THREE.WebGLRenderer({ canvas:matgl, antialias:true, alpha:true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio||1, 2));
+  renderer.setSize(anim.clientWidth, anim.clientHeight, false);
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  scene = new THREE.Scene();
+  camera = new THREE.PerspectiveCamera(32, anim.clientWidth/anim.clientHeight, 0.1, 100);
+  camera.position.set(0, 1.15, 5.6); camera.lookAt(0, 0.08, 0);   // centred at Cristina's mat height
+  scene.add(new THREE.AmbientLight(0xffffff, 0.85));
+  var key = new THREE.DirectionalLight(0xfff3e6, 1.5); key.position.set(2.5, 6, 4); scene.add(key);
+  var rim = new THREE.DirectionalLight(0xffffff, 0.5); rim.position.set(-3, 2, -2); scene.add(rim);
+
+  new GLTFLoader().load('../../assets/saia-mat-roll-open.glb', function(gltf){
+    var root = gltf.scene;
+    // centre + scale to a known size
+    var box = new THREE.Box3().setFromObject(root);
+    var size = box.getSize(new THREE.Vector3()), center = box.getCenter(new THREE.Vector3());
+    root.position.sub(center);
+    var span = Math.max(size.x, size.y, size.z) || 1;
+    // tilt the mat up toward the camera so the OPEN state reads as a full mat (not edge-on)
+    var pivot = new THREE.Group();
+    pivot.add(root);
+    pivot.rotation.x = -1.18;          // ~ -68° : 3/4 standing view
+    pivot.scale.setScalar(2.1 / span);   // sized to match the watercolour mat under her feet
+    scene.add(pivot);
+    window.__matPivot = pivot;
+    if(gltf.animations && gltf.animations[0]){
+      matClip = gltf.animations[0];
+      mixer = new THREE.AnimationMixer(root);
+      var act = mixer.clipAction(matClip); act.play();
+      matDur = matClip.duration || 4;
+    }
+    matReady = true; draw(curP);
+  }, undefined, function(err){ console.warn('GLB load failed', err); });
+}
+initMat();
+
+var MAT_OPEN = 0.72;             // clip lays flat after this; stop on the nice standing-open pose
+function renderMat(u){            // u: 0 = rolled, 1 = fully open (facing camera)
+  if(!matReady) return;
+  if(mixer){ mixer.setTime(clamp(u,0,1) * matDur * MAT_OPEN); }
+  renderer.render(scene, camera);
+}
+
+function draw(p){
+  // phase 1 — roll open (scrubbed morph)
+  var u = clamp(p/UNROLL_END, 0, 1);
+  if(p < HANDOFF_END + 0.03) renderMat(u);
+
+  // phase 2 — hand-off mat → flow
+  var ho = clamp((p-UNROLL_END)/(HANDOFF_END-UNROLL_END), 0, 1);
+  matgl.style.opacity = 1-ho;
+  cv.style.opacity = ho;
+
+  // phase 3 — flow scrub
+  var fp = clamp((p-UNROLL_END)/(1-UNROLL_END), 0, 1);
+  drawFlow(1 + fp*(FLOW_COUNT-1));
+
+  // text chapters
+  chaps.forEach(function(c,i){ c.classList.toggle('on', p>=CH[i].a && p<CH[i].b); });
+
+  // scroll cue fades after you start
+  cue.style.opacity = p>0.02 ? 0 : 1;
+  fill.style.height = (p*100)+'%';
+}
+
+/* eased render loop — curP chases targetP so the scrub stays smooth between scroll events */
+var targetP = 0, curP = 0, rafId = null;
+function tick(){
+  var d = targetP - curP;
+  curP += d * 0.22;
+  if(Math.abs(d) < 0.0004){ curP = targetP; }
+  draw(curP);
+  rafId = (curP !== targetP) ? requestAnimationFrame(tick) : null;
+}
+function kick(){ if(rafId === null) rafId = requestAnimationFrame(tick); }
+function onScroll(){ var max = track.offsetHeight - vh; targetP = clamp(s.scrollTop / max, 0, 1); kick(); }
+s.addEventListener('scroll', onScroll, {passive:true});
+window.__redrawIdle = function(){ if(rafId === null) draw(curP); };   // refresh when a new frame decodes while idle
+
+setTimeout(function(){ draw(curP); }, 80);
+setTimeout(function(){ draw(curP); }, 500);
+draw(0);
+</script>
+</body>
+</html>

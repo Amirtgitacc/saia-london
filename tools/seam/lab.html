@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SAÏA — flow anchor lab (outfit + dog-head review)</title>
+<style>
+  :root{ --cream:#ece8dc; --ink:#2B2620; --muted:#6B6358; --terra:#B8624A; }
+  *{ box-sizing:border-box; }
+  body{ margin:0; font-family:'Hanken Grotesk',system-ui,sans-serif; color:var(--ink); background:#f5f1e8; }
+  header{ padding:28px 6vw 8px; }
+  h1{ font-family:'Cormorant Garamond',serif; font-weight:500; font-size:32px; margin:0 0 4px; }
+  p.sub{ color:var(--muted); margin:0 0 8px; font-size:14px; max-width:640px; line-height:1.6; }
+  .controls{ padding:8px 6vw 20px; display:flex; gap:10px; flex-wrap:wrap; }
+  button{ font:inherit; font-size:13px; letter-spacing:.04em; padding:9px 16px; border:1px solid #d8d0c0;
+    background:#fff; border-radius:3px; cursor:pointer; color:var(--ink); }
+  button.on{ background:var(--ink); color:#fff; border-color:var(--ink); }
+  .stage{ background:var(--cream); }
+  /* SEQUENCE view — each pose full-width on cream, as it appears in the real flow */
+  .seq .row{ min-height:78vh; display:flex; align-items:center; justify-content:center; position:relative; border-bottom:1px solid rgba(43,38,32,.06); }
+  .seq img{ max-width:72%; max-height:72vh; height:auto; }
+  .seq .tag{ position:absolute; left:6vw; top:50%; transform:translateY(-50%); max-width:260px; }
+  .seq .tag .k{ font-size:11px; letter-spacing:.3em; text-transform:uppercase; color:var(--muted); margin-bottom:10px; }
+  .seq .tag .t{ font-family:'Cormorant Garamond',serif; font-size:34px; line-height:1; }
+  /* COMPARE view — old vs new side by side */
+  .cmp{ display:none; padding:24px 4vw 60px; background:var(--cream); }
+  .cmp .pair{ display:grid; grid-template-columns:1fr 1fr; gap:18px; align-items:center; margin-bottom:26px; }
+  .cmp figure{ margin:0; }
+  .cmp img{ width:100%; height:auto; border-radius:4px; box-shadow:0 8px 24px rgba(43,38,32,.10); background:var(--cream); }
+  .cmp figcaption{ font-size:12px; letter-spacing:.04em; color:var(--muted); margin-top:8px; text-align:center; }
+  .cmp h2{ grid-column:1/-1; font-family:'Cormorant Garamond',serif; font-weight:500; font-size:24px; margin:6px 0 0; }
+  .cmp .old{ outline:2px solid transparent; }
+  .cmp .new{ outline:2px solid var(--terra); outline-offset:-2px; border-radius:4px; }
+  /* STRIP view — all 5 new poses in a horizontal filmstrip on cream */
+  .strip{ display:none; gap:0; overflow-x:auto; background:var(--cream); padding:30px 0; }
+  .strip img{ height:46vh; width:auto; }
+  .hide{ display:none !important; }
+  @media (max-width:760px){ .cmp .pair{ grid-template-columns:1fr; } .seq .tag{ position:static; transform:none; margin-bottom:12px; } .seq .row{ flex-direction:column; min-height:auto; padding:30px 6vw; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>Flow anchor lab</h1>
+  <p class="sub">The 5 new keyframes the whole scroll-flow will be built from — new <b>mauve cami + taupe</b> outfit,
+  and the <b>downward-dog head now hangs straight down</b>. Shown on the same cream the live page uses.
+  This is a preview of the anchors only; the in-between motion gets generated next.</p>
+</header>
+<div class="controls">
+  <button id="bSeq" class="on">Sequence (on cream)</button>
+  <button id="bCmp">Old vs New</button>
+  <button id="bStrip">Filmstrip</button>
+</div>
+
+<!-- SEQUENCE -->
+<div class="stage seq" id="seq">
+  <div class="row"><div class="tag"><div class="k">Level 1 · Stand</div><div class="t">She arrives.</div></div><img src="anchors-v2/FINAL-a1-stand.jpeg" alt="stand"></div>
+  <div class="row"><div class="tag"><div class="k">Level 2 · Reach</div><div class="t">Reach up.</div></div><img src="anchors-v2/FINAL-a2-reach.png" alt="reach"></div>
+  <div class="row"><div class="tag"><div class="k">Level 3 · Downward dog</div><div class="t">Move with Cristina.</div></div><img src="anchors-v2/FINAL-a3-dog.jpeg" alt="dog"></div>
+  <div class="row"><div class="tag"><div class="k">Level 4 · Low lunge</div><div class="t">Stronger, together.</div></div><img src="anchors-v2/FINAL-a4-lunge.jpeg" alt="lunge"></div>
+  <div class="row"><div class="tag"><div class="k">Level 5 · Seated</div><div class="t">Hands to heart.</div></div><img src="anchors-v2/FINAL-a5-seated.png" alt="seated"></div>
+</div>
+
+<!-- COMPARE -->
+<div class="cmp" id="cmp">
+  <div class="pair"><h2>Stand</h2>
+    <figure class="old"><img src="anchors/a1-stand.png" alt=""><figcaption>OLD — cream long-sleeve + terracotta</figcaption></figure>
+    <figure class="new"><img src="anchors-v2/FINAL-a1-stand.jpeg" alt=""><figcaption>NEW — mauve cami + taupe</figcaption></figure></div>
+  <div class="pair"><h2>Reach</h2>
+    <figure class="old"><img src="anchors/a2-reach.png" alt=""><figcaption>OLD</figcaption></figure>
+    <figure class="new"><img src="anchors-v2/FINAL-a2-reach.png" alt=""><figcaption>NEW</figcaption></figure></div>
+  <div class="pair"><h2>Downward dog — head fix</h2>
+    <figure class="old"><img src="anchors/a3-dog.png" alt=""><figcaption>OLD — head tilted to camera</figcaption></figure>
+    <figure class="new"><img src="anchors-v2/FINAL-a3-dog.jpeg" alt=""><figcaption>NEW — head hangs straight down</figcaption></figure></div>
+  <div class="pair"><h2>Low lunge</h2>
+    <figure class="old"><img src="anchors/a4-lunge.png" alt=""><figcaption>OLD</figcaption></figure>
+    <figure class="new"><img src="anchors-v2/FINAL-a4-lunge.jpeg" alt=""><figcaption>NEW</figcaption></figure></div>
+  <div class="pair"><h2>Seated</h2>
+    <figure class="old"><img src="anchors/a5-seated.png" alt=""><figcaption>OLD</figcaption></figure>
+    <figure class="new"><img src="anchors-v2/FINAL-a5-seated.png" alt=""><figcaption>NEW</figcaption></figure></div>
+</div>
+
+<!-- STRIP -->
+<div class="strip" id="strip">
+  <img src="anchors-v2/FINAL-a1-stand.jpeg" alt="">
+  <img src="anchors-v2/FINAL-a2-reach.png" alt="">
+  <img src="anchors-v2/FINAL-a3-dog.jpeg" alt="">
+  <img src="anchors-v2/FINAL-a4-lunge.jpeg" alt="">
+  <img src="anchors-v2/FINAL-a5-seated.png" alt="">
+</div>
+
+<script>
+  const views = { seq:document.getElementById('seq'), cmp:document.getElementById('cmp'), strip:document.getElementById('strip') };
+  const btns = { seq:document.getElementById('bSeq'), cmp:document.getElementById('bCmp'), strip:document.getElementById('bStrip') };
+  function show(name){
+    for(const k in views){ views[k].style.display = (k===name) ? (k==='cmp'?'block':(k==='strip'?'flex':'block')) : 'none'; btns[k].classList.toggle('on', k===name); }
+  }
+  btns.seq.onclick=()=>show('seq'); btns.cmp.onclick=()=>show('cmp'); btns.strip.onclick=()=>show('strip');
+</script>
+</body>
+</html>

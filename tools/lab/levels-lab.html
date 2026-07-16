@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SAÏA — 5 Levels mechanic lab</title>
+<style>
+  :root{
+    --cream:#ece8dc; --ink:#2B2620; --terra:#B8624A;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--cream);color:var(--ink);
+    font-family:'Hanken Grotesk',system-ui,sans-serif;}
+  /* Tall scroll track — drives everything. ~15 screens. */
+  #track{height:1500vh;position:relative;}
+  /* Pinned stage */
+  #stage{position:fixed;inset:0;overflow:hidden;}
+  #flowCanvas{position:absolute;inset:0;width:100%;height:100%;display:block;}
+  /* Text band */
+  #copy{position:fixed;left:7vw;top:50%;transform:translateY(-50%);
+    max-width:34ch;z-index:5;pointer-events:none;}
+  #copy .kicker{font-size:.72rem;letter-spacing:.32em;text-transform:uppercase;
+    color:var(--terra);font-weight:600;margin-bottom:.6rem;}
+  #copy h2{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;
+    font-size:clamp(2.2rem,5.2vw,4rem);line-height:1.02;letter-spacing:-.01em;}
+  #copy p{margin-top:1rem;font-size:1.02rem;line-height:1.5;opacity:.78;max-width:30ch;}
+  #copy.swapping{} /* opacity handled inline by JS */
+  /* progress dots */
+  #dots{position:fixed;right:6vw;top:50%;transform:translateY(-50%);
+    display:flex;flex-direction:column;gap:14px;z-index:5;}
+  #dots .d{width:9px;height:9px;border-radius:50%;border:1.5px solid var(--ink);
+    opacity:.32;transition:opacity .3s,background .3s;}
+  #dots .d.on{opacity:1;background:var(--ink);}
+  /* HUD */
+  #hud{position:fixed;left:10px;bottom:10px;z-index:9;font:12px/1.5 ui-monospace,monospace;
+    background:rgba(43,38,32,.82);color:#f5f1e8;padding:8px 11px;border-radius:8px;
+    white-space:pre;}
+  #hud b{color:var(--terra);}
+  #loading{position:fixed;inset:0;display:grid;place-items:center;z-index:20;
+    background:var(--cream);font:14px/1 ui-monospace,monospace;color:var(--ink);letter-spacing:.1em;}
+  /* scroll hint */
+  #hint{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:6;
+    font:11px/1 ui-monospace,monospace;letter-spacing:.25em;text-transform:uppercase;
+    opacity:.5;animation:bob 1.8s ease-in-out infinite;}
+  @keyframes bob{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(5px)}}
+  @media (max-width:680px){#copy{left:6vw;right:6vw;top:auto;bottom:14vh;transform:none}#dots{display:none}}
+</style>
+</head>
+<body>
+  <div id="loading">loading poses…</div>
+  <div id="track"></div>
+
+  <div id="stage">
+    <canvas id="flowCanvas"></canvas>
+  </div>
+
+  <aside id="copy">
+    <div class="kicker"></div>
+    <h2></h2>
+    <p></p>
+  </aside>
+
+  <nav id="dots" aria-hidden="true"></nav>
+  <div id="hint">scroll ↓</div>
+  <div id="hud"></div>
+
+<script>
+(() => {
+  // ---- Config: the 5 levels -------------------------------------------------
+  // frame = hold pose (0-based index into the 150-frame sequence).
+  // The frames BETWEEN consecutive holds are the animation that plays on scroll.
+  const LEVELS = [
+    { frame: 20, kicker:'Mat hire',   h:'For every gathering', p:'Premium mats, delivered and collected. Hire only — never sold.' },
+    { frame: 40, kicker:'Experiences',h:'We curate the unforgettable', p:'Pop-ups, retreats and gatherings, shaped around your circle.' },
+    { frame: 80, kicker:'Pilates',    h:'Move with Cristina', p:'Founder-led classes in NW3. Strong, slow, considered.' },
+    { frame: 90, kicker:'Community',   h:'Stronger together', p:'A women-led club built on showing up for one another.' },
+    { frame:129, kicker:'Join',       h:'Get on the guest list', p:'First word on classes, drops and gatherings.' },
+  ];
+  // Pacing: relative scroll-length of each hold vs each transition.
+  // Bigger TRANS = slower, more luxurious pose-to-pose animation.
+  const HOLD = 1, TRANS = 3;
+
+  const FRAME_DIR = '../../assets/flow-frames/';
+  const FRAME_COUNT = 150;
+  const pad = n => String(n).padStart(3,'0');
+
+  // ---- Build the scroll→frame timeline -------------------------------------
+  // segments alternate hold,trans,hold,trans,...,hold  (5 holds, 4 trans)
+  const segs = [];
+  for (let i=0;i<LEVELS.length;i++){
+    segs.push({type:'hold', level:i, from:LEVELS[i].frame, to:LEVELS[i].frame, w:HOLD});
+    if (i<LEVELS.length-1)
+      segs.push({type:'trans', from:LEVELS[i].frame, to:LEVELS[i+1].frame, w:TRANS, a:i, b:i+1});
+  }
+  const totalW = segs.reduce((s,x)=>s+x.w,0);
+  let acc=0; segs.forEach(s=>{ s.start=acc/totalW; acc+=s.w; s.end=acc/totalW; });
+
+  const easeInOut = t => t<.5 ? 2*t*t : 1-Math.pow(-2*t+2,2)/2; // smooth settle
+
+  // returns {frame, level (nearest for text), trans (0..1 within a transition or -1)}
+  function sample(p){
+    p = Math.max(0, Math.min(1, p));
+    for (const s of segs){
+      if (p <= s.end || s===segs[segs.length-1]){
+        const local = s.end===s.start ? 0 : (p - s.start)/(s.end - s.start);
+        if (s.type==='hold')
+          return { frame:s.from, level:s.level, transP:-1, a:s.level, b:s.level };
+        const e = easeInOut(Math.max(0,Math.min(1,local)));
+        return { frame: Math.round(s.from + (s.to - s.from)*e),
+                 level: e<.5 ? s.a : s.b, transP:e, a:s.a, b:s.b };
+      }
+    }
+    return { frame:LEVELS[0].frame, level:0, transP:-1, a:0, b:0 };
+  }
+
+  // ---- Canvas draw ----------------------------------------------------------
+  const canvas = document.getElementById('flowCanvas');
+  const ctx = canvas.getContext('2d');
+  const imgs = new Array(FRAME_COUNT);
+  let curDrawn = -1;
+
+  function resize(){
+    const dpr = Math.min(2, window.devicePixelRatio||1);
+    canvas.width = innerWidth*dpr; canvas.height = innerHeight*dpr;
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    curDrawn = -1; draw(lastFrame);
+  }
+  function drawFrame(idx){
+    const im = imgs[idx];
+    if (!im || !im.complete) return;
+    ctx.clearRect(0,0,innerWidth,innerHeight);
+    // contain, biased a touch right so text has room on the left
+    const cw=innerWidth, ch=innerHeight, iw=im.naturalWidth, ih=im.naturalHeight;
+    const scale = Math.min(cw/iw, ch/ih)*0.92;
+    const w=iw*scale, h=ih*scale;
+    const x = cw*0.58 - w/2, y = ch/2 - h/2;
+    ctx.drawImage(im, x, y, w, h);
+    curDrawn = idx;
+  }
+  let lastFrame = LEVELS[0].frame;
+  function draw(idx){ if(idx!==curDrawn) drawFrame(idx); }
+
+  // ---- Text + dots ----------------------------------------------------------
+  const copy = document.getElementById('copy');
+  const kEl = copy.querySelector('.kicker'), hEl = copy.querySelector('h2'), pEl = copy.querySelector('p');
+  let shownLevel = -1;
+  function setText(i){
+    if (i===shownLevel) return;
+    shownLevel = i; const L = LEVELS[i];
+    kEl.textContent=L.kicker; hEl.textContent=L.h; pEl.textContent=L.p;
+  }
+  const dotsWrap = document.getElementById('dots');
+  LEVELS.forEach((_,i)=>{ const d=document.createElement('div'); d.className='d'; dotsWrap.appendChild(d); });
+  const dots=[...dotsWrap.children];
+
+  const hud = document.getElementById('hud');
+
+  // ---- Scroll loop ----------------------------------------------------------
+  let ticking=false, lastP=0;
+  function onScroll(){
+    const max = document.getElementById('track').offsetHeight - innerHeight;
+    lastP = max>0 ? scrollY/max : 0;
+    if(!ticking){ ticking=true; requestAnimationFrame(render); }
+  }
+  function render(){
+    ticking=false;
+    const s = sample(lastP);
+    lastFrame = s.frame;
+    draw(s.frame);
+
+    // text: during a transition, fade out near the midpoint then swap + fade in
+    if (s.transP<0){ copy.style.opacity=1; setText(s.level); }
+    else {
+      const d = Math.abs(s.transP-0.5)*2;     // 1 at hold edges, 0 at mid
+      copy.style.opacity = (0.15+0.85*d).toFixed(2);
+      setText(s.transP<0.5 ? s.a : s.b);
+    }
+    dots.forEach((d,i)=>d.classList.toggle('on', i===s.level));
+    document.getElementById('hint').style.opacity = lastP>0.02 ? 0 : .5;
+
+    hud.innerHTML = `p <b>${lastP.toFixed(3)}</b>  frame <b>f${pad(s.frame+1)}</b>\n`+
+                    `level <b>${s.level+1}</b>  ${s.transP<0?'HOLD':'TRANS '+(s.transP*100|0)+'%'}`;
+  }
+
+  // ---- Preload then go ------------------------------------------------------
+  let loaded=0;
+  function preload(){
+    for (let i=0;i<FRAME_COUNT;i++){
+      const im=new Image();
+      im.onload=()=>{ loaded++;
+        if (loaded===FRAME_COUNT){
+          document.getElementById('loading').remove();
+          resize(); onScroll();
+        }
+      };
+      im.onerror=()=>{ loaded++; };
+      im.src = FRAME_DIR+'f'+pad(i+1)+'.jpg';
+      imgs[i]=im;
+    }
+  }
+  addEventListener('scroll', onScroll, {passive:true});
+  addEventListener('resize', resize);
+  setText(0);
+  preload();
+
+  // expose for tweaking from console
+  window.LAB = { LEVELS, segs, sample, set HOLDTRANS(_){}, };
+})();
+</script>
+</body>
+</html>

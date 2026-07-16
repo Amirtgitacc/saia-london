@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SAÏA · Estimator — combined direction (C type + B background)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{ --cream:#F5F1E8; --paper:#FBF8F1; --ink:#2B2620; --muted:#6B6358; --terra:#B8624A; --terra-dk:#A9573F; --line:#E2DBCC; --sage:#7C8A6B; }
+*{ box-sizing:border-box; }
+body{ margin:0; background:#EDE7DA; color:var(--ink); font-family:'Bricolage Grotesque',sans-serif; }
+.page-head{ max-width:1080px; margin:0 auto; padding:42px 6vw 0; }
+.page-head h1{ font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:26px; margin:0 0 6px; letter-spacing:-.01em; }
+.page-head p{ color:var(--muted); font-size:13px; max-width:640px; line-height:1.6; margin:0; font-family:'IBM Plex Mono',monospace; }
+
+/* ===== stage scaffold ===== */
+.stage{ position:relative; overflow:hidden; padding:clamp(54px,7vw,82px) 6vw; background:linear-gradient(160deg,#F3F1E6 0%, #ECEDE0 100%); }
+.blob{ position:absolute; z-index:1; border-radius:50%; filter:blur(46px); pointer-events:none; }
+.blob.b1{ width:46vw; height:46vw; top:-14%; right:-8%; background:rgba(184,98,74,.18); animation:bMorph 18s ease-in-out infinite alternate; }
+.blob.b2{ width:38vw; height:38vw; bottom:-18%; left:-6%; background:rgba(124,138,107,.22); animation:bMorph 22s ease-in-out infinite alternate-reverse; }
+@keyframes bMorph{ 0%{transform:translate(0,0) scale(1)} 100%{transform:translate(6%,-8%) scale(1.18)} }
+@media (prefers-reduced-motion: reduce){ .blob{ animation:none !important; } }
+
+.wrap{ position:relative; z-index:2; max-width:1080px; margin:0 auto; display:grid; grid-template-columns:1fr 1fr; gap:48px; align-items:center; }
+.pitch .eyebrow{ display:flex; align-items:center; gap:9px; font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.2em; text-transform:uppercase; color:var(--terra); margin:0; }
+.pitch .eyebrow::before{ content:""; width:18px; height:1px; background:currentColor; }
+.pitch h2{ font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:clamp(40px,5.4vw,62px); line-height:.96; letter-spacing:-.02em; margin:.2em 0 .3em; color:var(--ink); }
+.pitch .lead{ font-family:'IBM Plex Mono',monospace; color:var(--muted); max-width:330px; font-size:12.5px; line-height:1.7; }
+
+/* ===== card (receipt) ===== */
+.card{ font-family:'Bricolage Grotesque',sans-serif; background:#fff; border:1px solid #D9D2C0; border-radius:6px; padding:26px; box-shadow:0 26px 64px -44px rgba(43,38,32,.5); }
+.ceyebrow{ display:flex; align-items:center; gap:9px; font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.2em; text-transform:uppercase; color:var(--terra); margin:0 0 16px; }
+.ceyebrow::before{ content:""; width:16px; height:1px; background:currentColor; }
+.row2{ display:flex; gap:12px; }
+.fld{ flex:1; margin-bottom:13px; }
+.fld.full{ flex-basis:100%; }
+.fld label{ display:block; font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:var(--muted); margin-bottom:7px; }
+.fld input{ width:100%; font-family:'IBM Plex Mono',monospace; font-size:15px; color:var(--ink); background:#fff; border:1px solid var(--line); border-radius:6px; padding:12px 13px; }
+.seg{ display:flex; background:#fff; border:1px solid var(--line); border-radius:8px; padding:4px; position:relative; }
+.seg .thumb{ position:absolute; top:4px; bottom:4px; left:4px; width:calc(50% - 4px); background:var(--ink); border-radius:5px; }
+.seg button{ flex:1; position:relative; z-index:1; background:none; border:none; cursor:pointer; font-family:'Bricolage Grotesque',sans-serif; font-size:12px; padding:11px 6px; color:var(--muted); }
+.seg button.on{ color:var(--cream); }
+
+.result{ position:relative; border:1px dashed var(--terra); border-radius:6px; padding:30px 18px 16px; margin-top:18px; }
+.flag{ position:absolute; top:-11px; left:18px; background:var(--terra); color:#F5F1E8; font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:.2em; text-transform:uppercase; padding:4px 12px; border-radius:3px; }
+.zone{ display:inline-flex; align-items:center; gap:7px; font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--terra); background:rgba(184,98,74,.1); border-radius:30px; padding:4px 11px; margin-bottom:14px; }
+.zone .dot{ width:6px; height:6px; border-radius:50%; background:var(--terra); }
+.line{ display:flex; justify-content:space-between; align-items:baseline; gap:16px; margin-bottom:9px; padding-bottom:9px; border-bottom:1px dashed #E2DBCC; }
+.line .kk{ font-family:'Bricolage Grotesque',sans-serif; font-size:12.5px; color:var(--muted); }
+.line .kk small{ display:block; font-family:'IBM Plex Mono',monospace; font-size:10px; color:#a59c8d; margin-top:2px; }
+.line .vv{ font-family:'IBM Plex Mono',monospace; font-size:15px; font-weight:500; color:var(--ink); font-variant-numeric:tabular-nums; white-space:nowrap; }
+.total{ display:flex; justify-content:space-between; align-items:center; gap:16px; padding-top:13px; margin-top:4px; }
+.total .kk{ font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); }
+.total .vv{ font-family:'IBM Plex Mono',monospace; font-weight:500; font-size:21px; line-height:1; color:var(--terra); letter-spacing:-.01em; font-variant-numeric:tabular-nums; }
+.total .vv .pre{ font-size:11px; color:var(--muted); margin-right:6px; }
+.disc{ font-family:'IBM Plex Mono',monospace; font-size:10px; line-height:1.6; color:var(--muted); margin-top:11px; }
+.disc b{ color:var(--ink); }
+.cta{ display:flex; align-items:center; justify-content:center; gap:10px; width:100%; background:var(--terra); color:#fff; font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.14em; text-transform:uppercase; padding:15px; border-radius:6px; border:none; cursor:pointer; margin-top:16px; }
+.cta svg{ width:15px; height:15px; }
+@media(max-width:860px){ .wrap{ grid-template-columns:1fr; gap:30px; } }
+</style>
+</head>
+<body>
+
+<div class="page-head">
+  <h1>Estimator — combined direction</h1>
+  <p>C type (Bricolage Grotesque + IBM Plex Mono) · C receipt estimator · B morphing-blob background · total reduced to 21px · disclaimer reworked for the Addison Lee API.</p>
+</div>
+
+<section class="stage">
+  <span class="blob b1"></span><span class="blob b2"></span>
+  <div class="wrap">
+    <div class="pitch">
+      <p class="eyebrow">Mat hire · instant estimate</p>
+      <h2>See your number.</h2>
+      <p class="lead">From our NW3 base to your event: mats, days and courier, totalled live.</p>
+    </div>
+    <form class="card" onsubmit="return false">
+      <p class="ceyebrow">Build your quote</p>
+      <div class="row2">
+        <div class="fld"><label>Mats</label><input value="20"></div>
+        <div class="fld"><label>Days</label><input value="2"></div>
+      </div>
+      <div class="fld full"><label>Getting the mats</label>
+        <div class="seg"><span class="thumb"></span><button class="on">Deliver</button><button>Collect NW3 (free)</button></div>
+      </div>
+      <div class="fld full"><label>Event postcode</label><input value="EC2Y 8DS"></div>
+      <div class="result">
+        <span class="flag">Estimate</span>
+        <span class="zone"><span class="dot"></span>Zone 1 · Central London</span>
+        <div class="line"><span class="kk">Mat hire<small>20 mats · 2 days</small></span><span class="vv">£170.00</span></div>
+        <div class="line"><span class="kk">Delivery &amp; collection<small>Addison Lee, low estimate</small></span><span class="vv">from £35.00</span></div>
+        <div class="line"><span class="kk">Refundable deposit<small>20 × £1.50, returned after</small></span><span class="vv">£30.00</span></div>
+        <div class="total"><span class="kk">Due today</span><span class="vv"><span class="pre">from</span>£235.00</span></div>
+        <p class="disc"><b>£30.00</b> of this is a refundable deposit — back to you once the mats are returned.</p>
+        <button class="cta"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 5h16v11H7l-3 3z"/></svg> Book this with the concierge</button>
+        <p class="disc"><b>Estimate only.</b> Your exact courier price is calculated at checkout by the Addison Lee API.</p>
+      </div>
+    </form>
+  </div>
+</section>
+
+</body>
+</html>

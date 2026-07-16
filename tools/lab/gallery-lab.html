@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SAÏA — Animated Gallery Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --cream:#F5F1E8;
+    --sand:#EBE3D5;
+    --ink:#2B2620;
+    --terracotta:#B8624A;
+    --espresso:#221C16;
+    --muted:#6F665B;
+    --serif:"Playfair Display", Georgia, serif;
+    --sans:"Inter", system-ui, sans-serif;
+    --radius:10px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:var(--sans);
+    color:var(--ink);
+    background:var(--cream);
+    -webkit-font-smoothing:antialiased;
+  }
+  img{display:block;max-width:100%}
+
+  /* ---------- lab chrome ---------- */
+  .lab-nav{
+    position:fixed; top:0; left:0; right:0; z-index:9999;
+    display:flex; align-items:center; gap:1.5rem;
+    padding:.85rem 1.4rem;
+    background:color-mix(in srgb, var(--cream) 78%, transparent);
+    backdrop-filter:blur(14px);
+    border-bottom:1px solid rgba(43,38,32,.08);
+    font-size:.72rem; letter-spacing:.14em; text-transform:uppercase;
+  }
+  .lab-nav b{font-weight:500; letter-spacing:.18em}
+  .lab-nav .dot{width:5px;height:5px;border-radius:50%;background:var(--terracotta);display:inline-block;margin-right:.5rem;vertical-align:middle}
+  .lab-nav a{color:var(--muted); text-decoration:none; transition:color .25s}
+  .lab-nav a:hover,.lab-nav a:focus-visible{color:var(--terracotta)}
+  .lab-nav .spacer{flex:1}
+
+  .scene-tag{
+    position:absolute; top:6.5rem; left:1.4rem; z-index:50;
+    font-size:.68rem; letter-spacing:.22em; text-transform:uppercase;
+    color:var(--muted);
+  }
+  .scene-tag span{color:var(--terracotta)}
+
+  /* ---------- core scroll mechanic ---------- */
+  .scene{ position:relative; }
+  .sticky{
+    position:sticky; top:0; height:100vh; width:100%;
+    overflow:hidden;
+    display:flex; flex-direction:column; align-items:center;
+    perspective:1400px; perspective-origin:center 18%;
+  }
+  .stage{
+    display:grid; grid-template-columns:repeat(3,1fr);
+    gap:.6rem; width:min(1120px,86vw);
+    transform-style:preserve-3d;
+    transform:rotateX(70deg) scale(1.15);
+    will-change:transform;
+    margin-top:1rem;
+  }
+  .col{ display:flex; flex-direction:column; gap:.6rem; will-change:transform; }
+  .tile{
+    position:relative; overflow:hidden;
+    border-radius:var(--radius);
+    background:var(--sand);
+    box-shadow:0 18px 40px -24px rgba(43,38,32,.6);
+  }
+  .tile img{width:100%; height:100%; object-fit:cover; aspect-ratio:16/9; transition:transform .9s cubic-bezier(.16,1,.3,1)}
+  .tile:hover img{transform:scale(1.05)}
+
+  /* headline overlay (blur-stagger in) */
+  .intro{
+    position:absolute; top:9vh; left:0; right:0; z-index:60;
+    text-align:center; padding:0 1.5rem; pointer-events:none;
+  }
+  .intro .line{
+    opacity:0; filter:blur(12px); transform:translateY(8px);
+    transition:opacity .9s ease, filter .9s ease, transform .9s ease;
+  }
+  .scene.in .intro .line{opacity:1; filter:blur(0); transform:none}
+  .scene.in .intro .line:nth-child(2){transition-delay:.12s}
+  .scene.in .intro .line:nth-child(3){transition-delay:.24s}
+  .scene.in .intro .line:nth-child(4){transition-delay:.36s}
+  .intro h1{font-family:var(--serif); font-weight:400; font-size:clamp(2.1rem,5vw,3.6rem); line-height:1.04; letter-spacing:-.01em}
+  .intro h1 em{font-style:italic; color:var(--terracotta)}
+  .intro p{margin-top:.9rem; color:var(--muted); font-weight:300; font-size:clamp(.92rem,1.4vw,1.05rem); max-width:30rem; margin-inline:auto}
+  .intro .cta{
+    pointer-events:auto;
+    display:inline-flex; align-items:center; gap:.5rem; margin-top:1.4rem;
+    background:var(--terracotta); color:#fff; border:none; cursor:pointer;
+    font-family:var(--sans); font-size:.82rem; letter-spacing:.08em;
+    padding:.7rem 1.3rem; border-radius:999px;
+    transition:transform .25s, box-shadow .25s;
+  }
+  .intro .cta:hover{transform:translateY(-2px); box-shadow:0 12px 24px -12px rgba(184,98,74,.7)}
+
+  /* atmospheric glow behind grid (variant 1) */
+  .glow{
+    position:absolute; inset:auto 0 -10% 0; height:65vh; z-index:1;
+    pointer-events:none;
+    background:radial-gradient(60% 80% at 50% 100%, rgba(184,98,74,.32), transparent 70%);
+    filter:blur(40px);
+  }
+
+  /* ================= VARIANT 2 — SPOTLIGHT (dark) ================= */
+  .v-spotlight{background:var(--espresso); color:var(--cream)}
+  .v-spotlight .scene-tag{color:rgba(245,241,232,.55)}
+  .v-spotlight .stage{gap:1rem; width:min(1080px,84vw)}
+  .v-spotlight .tile{
+    border-radius:200px 200px var(--radius) var(--radius); /* arch */
+    background:#2e271f;
+    box-shadow:0 30px 60px -30px rgba(0,0,0,.8);
+  }
+  .v-spotlight .tile img{aspect-ratio:3/4; filter:saturate(.92) contrast(1.03)}
+  .v-spotlight .quote{
+    position:absolute; z-index:60; left:50%; top:50%;
+    transform:translate(-50%,-50%);
+    text-align:center; pointer-events:none; mix-blend-mode:screen;
+    font-family:var(--serif); font-style:italic;
+    font-size:clamp(1.8rem,4.4vw,3.2rem); line-height:1.18;
+    color:var(--cream); text-shadow:0 4px 40px rgba(0,0,0,.6);
+    opacity:0; transition:opacity 1s ease .2s; max-width:18ch;
+  }
+  .scene.in .quote{opacity:1}
+  .v-spotlight .quote small{
+    display:block; margin-top:1rem; font-family:var(--sans); font-style:normal;
+    font-size:.7rem; letter-spacing:.28em; text-transform:uppercase;
+    color:var(--terracotta);
+  }
+
+  /* ================= VARIANT 3 — CONTACT SHEET ================= */
+  .v-contact{background:var(--ink); color:var(--cream)}
+  .v-contact .scene-tag{color:rgba(245,241,232,.5)}
+  .v-contact .sticky{perspective-origin:center 50%}
+  .v-contact .stage{
+    grid-template-columns:1fr; width:min(1240px,92vw);
+    transform:rotateX(28deg) scale(1.05);
+  }
+  .v-contact .row{
+    display:flex; gap:.5rem; will-change:transform;
+  }
+  .v-contact .row .tile{flex:0 0 22%; border-radius:4px}
+  .v-contact .row .tile img{
+    aspect-ratio:4/3; filter:grayscale(1) contrast(1.05) brightness(.95);
+    transition:filter .6s ease, transform .9s cubic-bezier(.16,1,.3,1);
+  }
+  .v-contact .row .tile:hover img{filter:grayscale(0) contrast(1) brightness(1)}
+  .v-contact .caption{
+    position:absolute; top:10vh; left:0; right:0; z-index:60; text-align:center;
+    pointer-events:none;
+  }
+  .v-contact .caption .kicker{font-size:.7rem; letter-spacing:.32em; text-transform:uppercase; color:var(--terracotta)}
+  .v-contact .caption h2{font-family:var(--serif); font-weight:400; font-size:clamp(2rem,4.6vw,3.4rem); margin-top:.6rem; opacity:0; filter:blur(10px); transition:opacity .9s, filter .9s}
+  .scene.in .v-contact .caption h2,.v-contact.scene.in .caption h2{opacity:1; filter:blur(0)}
+
+  /* outro */
+  .outro{padding:18vh 1.5rem 22vh; text-align:center}
+  .outro p{font-family:var(--serif); font-style:italic; font-size:clamp(1.4rem,3vw,2rem); color:var(--muted)}
+
+  @media (prefers-reduced-motion:reduce){
+    .stage,.col,.row{transform:none !important}
+    .intro .line,.quote,.caption h2{opacity:1 !important; filter:none !important; transform:none !important}
+  }
+  @media (max-width:640px){
+    .stage{width:92vw}
+    .v-contact .row .tile{flex:0 0 30%}
+    .lab-nav{gap:1rem; font-size:.62rem; padding:.7rem 1rem}
+  }
+</style>
+</head>
+<body>
+
+<nav class="lab-nav">
+  <b><span class="dot"></span>SAÏA · Gallery lab</b>
+  <span class="spacer"></span>
+  <a href="#atelier">01 Atelier</a>
+  <a href="#spotlight">02 Spotlight</a>
+  <a href="#contact">03 Contact sheet</a>
+</nav>
+
+<!-- ============ VARIANT 1 — ATELIER (faithful port) ============ -->
+<section class="scene" id="atelier" data-rx="72" data-scale="1.15" style="height:340vh">
+  <div class="scene-tag"><span>01</span> &nbsp;Atelier — faithful port</div>
+  <div class="sticky">
+    <div class="glow"></div>
+    <div class="intro">
+      <h1 class="line">A studio that <em>comes to you</em></h1>
+      <h1 class="line">across North&nbsp;West&nbsp;London</h1>
+      <p class="line">Premium mats, hired by the ten — delivered, rolled out, collected. The room is yours.</p>
+      <div class="line"><button class="cta">Hire mats &nbsp;→</button></div>
+    </div>
+    <div class="stage" data-stage>
+      <div class="col" data-y="-10,2"></div>
+      <div class="col" data-y="14,4" style="margin-top:-48%"></div>
+      <div class="col" data-y="-10,2"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ VARIANT 2 — SPOTLIGHT (dark interrupt) ============ -->
+<section class="scene v-spotlight" id="spotlight" data-rx="80" data-scale="1.22" style="height:360vh">
+  <div class="scene-tag"><span>02</span> &nbsp;Spotlight — dark interrupt</div>
+  <div class="sticky">
+    <p class="quote">Stillness, delivered.<small>SAÏA London</small></p>
+    <div class="stage" data-stage>
+      <div class="col" data-y="-12,3"></div>
+      <div class="col" data-y="18,6" style="margin-top:-40%"></div>
+      <div class="col" data-y="-8,3"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ VARIANT 3 — CONTACT SHEET ============ -->
+<section class="scene v-contact" id="contact" data-rx="32" data-scale="1.05" style="height:300vh">
+  <div class="scene-tag"><span>03</span> &nbsp;Contact sheet — filmstrip flatten</div>
+  <div class="sticky">
+    <div class="caption">
+      <div class="kicker">Frame by frame</div>
+      <h2>The morning a room becomes a studio</h2>
+    </div>
+    <div class="stage" data-stage-rows>
+      <div class="row" data-x="-18,4"></div>
+      <div class="row" data-x="16,-4"></div>
+      <div class="row" data-x="-10,6"></div>
+    </div>
+  </div>
+</section>
+
+<div class="outro">
+  <p>Three takes, one scroll mechanic — pick a direction.</p>
+</div>
+
+<script>
+  /* ---- film frames as gallery tiles ---- */
+  const src = n => `../../assets/film/f${String(n).padStart(3,'0')}.jpg`;
+
+  // 12 evenly-spread frames for the column variants
+  const COLS = [
+    [6,36,66,96],
+    [16,46,76,106],
+    [26,56,86,116],
+  ];
+  // rows for the contact-sheet variant (more, smaller)
+  const ROWS = [
+    [4,14,24,34,44,54],
+    [60,68,76,84,92,100],
+    [10,30,50,70,90,110],
+  ];
+
+  function tile(n){
+    const d=document.createElement('div'); d.className='tile';
+    const img=document.createElement('img');
+    img.src=src(n); img.loading='lazy'; img.alt='SAÏA mat, studio film still';
+    d.appendChild(img); return d;
+  }
+
+  // populate column stages
+  document.querySelectorAll('[data-stage]').forEach(stage=>{
+    stage.querySelectorAll('.col').forEach((col,i)=>{
+      COLS[i % COLS.length].forEach(n=>col.appendChild(tile(n)));
+    });
+  });
+  // populate row stage (contact sheet)
+  document.querySelectorAll('[data-stage-rows]').forEach(stage=>{
+    stage.querySelectorAll('.row').forEach((row,i)=>{
+      ROWS[i % ROWS.length].forEach(n=>row.appendChild(tile(n)));
+    });
+  });
+
+  /* ---- the scroll engine: vanilla useScroll + useTransform ---- */
+  const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+  const map=(v,iMin,iMax,oMin,oMax)=>{
+    const t=clamp((v-iMin)/(iMax-iMin),0,1);
+    return oMin+(oMax-oMin)*t;
+  };
+
+  const scenes=[...document.querySelectorAll('.scene')];
+  let ticking=false;
+
+  function frame(){
+    ticking=false;
+    const vh=window.innerHeight;
+    for(const scene of scenes){
+      const total=scene.offsetHeight-vh;
+      const top=scene.getBoundingClientRect().top;
+      const p=total>0?clamp(-top/total,0,1):0;
+
+      const stage=scene.querySelector('.stage');
+      if(stage){
+        const rx=map(p,0,0.5,Number(scene.dataset.rx||70),0);
+        const sc=map(p,0.4,0.9,Number(scene.dataset.scale||1.15),1);
+        stage.style.transform=`rotateX(${rx}deg) scale(${sc})`;
+      }
+      // column parallax (Y)
+      scene.querySelectorAll('.col').forEach(col=>{
+        const [a,b]=(col.dataset.y||'0,0').split(',').map(Number);
+        col.style.transform=`translateY(${map(p,0.5,1,a,b)}%)`;
+      });
+      // row drift (X) for contact sheet
+      scene.querySelectorAll('.row').forEach(row=>{
+        const [a,b]=(row.dataset.x||'0,0').split(',').map(Number);
+        row.style.transform=`translateX(${map(p,0.3,1,a,b)}%)`;
+      });
+    }
+  }
+  function onScroll(){ if(!ticking){ ticking=true; requestAnimationFrame(frame); } }
+  addEventListener('scroll',onScroll,{passive:true});
+  addEventListener('resize',onScroll);
+  frame();
+
+  /* ---- headline reveal on enter ---- */
+  const io=new IntersectionObserver(es=>{
+    es.forEach(e=>{ if(e.isIntersecting) e.target.classList.add('in'); });
+  },{threshold:.15});
+  scenes.forEach(s=>io.observe(s));
+</script>
+</body>
+</html>
