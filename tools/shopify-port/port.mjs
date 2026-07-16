@@ -54,11 +54,37 @@ out = out.replace(/(src|href)="(?:\.\/)?((?:css|js|assets|vendor|photos)\/[^"?]+
 out = out.replace(/href="([a-z0-9-]+\.html)(#[^"]*)?"/gi,
   (m, page, hash) => LINKS[page] ? `href="${LINKS[page]}${hash || ''}"` : m);
 
+// 4b. asset references inside JS string literals (importmap, dynamic import(), etc.)
+// Uses a placeholder token (not real Liquid) so step 5's {{|{% detection isn't tricked
+// by asset refs we insert here — real {{ 'x' | asset_url }} liquid is spliced in after
+// the raw-wrap step (step 7 below).
+out = out.replace(/(['"])(?:\.\/)?((?:css|js|assets|vendor|photos)\/[^'"?]+\.(?:js|css|glb|png|jpe?g|webp|avif|mp4|svg))(\?[^'"]*)?\1/g,
+  (m, q, p) => {
+    assets.add(p);
+    const flat = path.basename(p).replace(/\s+/g, '-');
+    return `${q}@@ASSET:${flat}@@${q}`;
+  });
+
+// 4c. JS-string page navigations (window.location.href = 'foo.html', etc.)
+out = out.replace(/(['"])([a-z0-9-]+\.html)(#[^'"]*)?\1/gi,
+  (m, q, page, hash) => LINKS[page] ? `${q}${LINKS[page]}${hash || ''}${q}` : m);
+
 // 5. protect inline JS/CSS containing {{ or {% from Liquid
 out = out.replace(/<(script|style)(\s[^>]*)?>([\s\S]*?)<\/\1>/g, (m, tag, at, inner) =>
   /{{|{%/.test(inner) ? `<${tag}${at || ''}>{% raw %}${inner}{% endraw %}</${tag}>` : m);
 
-// 6. copy referenced assets (flattened); >10MB → warn (Shopify Files by hand)
+// 6. resolve @@ASSET:name@@ placeholders to real Liquid (after raw-wrap, so we don't
+// trick step 5's {{|{% detection into wrapping script bodies that don't need it)
+out = out.replace(/@@ASSET:([^@]+)@@/g, (m, flat) => `{{ '${flat}' | asset_url }}`);
+
+// 6b. safety check: an asset_url that ended up inside a {% raw %} span renders dead
+// on Shopify (raw disables Liquid parsing) — warn rather than silently ship it broken
+for (const raw of out.matchAll(/{% raw %}([\s\S]*?){% endraw %}/g)) {
+  const names = [...raw[1].matchAll(/'([^']+)'\s*\|\s*asset_url/g)].map(x => x[1]);
+  if (names.length) console.warn('ASSET INSIDE {% raw %} (will render dead on Shopify):', names.join(', '));
+}
+
+// 7. copy referenced assets (flattened); >10MB → warn (Shopify Files by hand)
 fs.mkdirSync(path.join(THEME, 'assets'), { recursive: true });
 fs.mkdirSync(path.join(THEME, 'templates'), { recursive: true });
 for (const p of assets) {
