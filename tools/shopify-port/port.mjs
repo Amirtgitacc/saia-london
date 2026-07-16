@@ -87,16 +87,24 @@ for (const raw of out.matchAll(/{% raw %}([\s\S]*?){% endraw %}/g)) {
 // 7. copy referenced assets (flattened); >10MB → warn (Shopify Files by hand)
 fs.mkdirSync(path.join(THEME, 'assets'), { recursive: true });
 fs.mkdirSync(path.join(THEME, 'templates'), { recursive: true });
+const copiedFrom = new Map(); // flat filename -> source path, for collision reporting
 for (const p of assets) {
   const from = path.join(ROOT, p);
   if (!fs.existsSync(from)) { console.warn('MISSING asset:', p); continue; }
   const flat = path.basename(p).replace(/\s+/g, '-');
   const to = path.join(THEME, 'assets', flat);
-  if (fs.existsSync(to) && fs.statSync(to).size !== fs.statSync(from).size)
-    throw new Error('asset name collision after flattening: ' + flat);
   const mb = fs.statSync(from).size / 1048576;
   if (mb > 10) { console.warn(`SKIPPED >10MB (upload to Shopify Files): ${p} (${mb.toFixed(1)}MB)`); continue; }
+  if (fs.existsSync(to)) {
+    // same-size checks can't tell two different files apart — compare content
+    // (assets here are all ≤10MB, so reading whole files is cheap and safe)
+    const identical = Buffer.compare(fs.readFileSync(from), fs.readFileSync(to)) === 0;
+    if (identical) continue; // already staged with the same bytes — nothing to do
+    const prevSrc = copiedFrom.get(flat) || '(existing file in theme/assets, source unknown — from a previous port run?)';
+    throw new Error(`asset name collision after flattening: ${flat}\n  source 1: ${prevSrc}\n  source 2: ${p}`);
+  }
   fs.copyFileSync(from, to);
+  copiedFrom.set(flat, p);
 }
 
 fs.writeFileSync(path.join(THEME, 'templates', `${tpl}.liquid`), out);
