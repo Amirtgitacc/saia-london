@@ -97,7 +97,10 @@ for (const raw of out.matchAll(/{% raw %}([\s\S]*?){% endraw %}/g)) {
 fs.mkdirSync(path.join(THEME, 'assets'), { recursive: true });
 fs.mkdirSync(path.join(THEME, 'templates'), { recursive: true });
 const copiedFrom = new Map(); // flat filename -> source path, for collision reporting
-const IMPORT_RE = /((?:^|[^.\w])(?:from|import)\s*\(?\s*)(['"])(\.\.?\/[^'"]+\.js)\2/g;
+// Anchored to statement boundaries (start of line, optional leading whitespace) so we
+// only rewrite real import/export-from/dynamic-import specifiers — not the words
+// "from"/"import" appearing incidentally inside a comment or string elsewhere on the line.
+const IMPORT_RE = /^[ \t]*(import\s*\(\s*|(?:import|export)\b[^'"\n]*?\bfrom\s*)(['"])(\.\.?\/[^'"]+\.js)\2/gm;
 
 for (const p of assets) {
   const from = path.join(ROOT, p);
