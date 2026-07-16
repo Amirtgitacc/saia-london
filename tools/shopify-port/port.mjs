@@ -112,13 +112,19 @@ for (const p of assets) {
 
   let buf = fs.readFileSync(from);
   if (/\.js$/i.test(flat)) {
-    const text = buf.toString('utf8').replace(IMPORT_RE, (m, pre, q, spec) => {
+    let text = buf.toString('utf8').replace(IMPORT_RE, (m, pre, q, spec) => {
       const resolved = path.join(path.dirname(p), spec).split(path.sep).join('/');
       if (!fs.existsSync(path.join(ROOT, resolved))) { console.warn('MISSING relative JS import:', resolved, 'from', p); return m; }
       assets.add(resolved); // queued — for..of over a Set visits members added mid-iteration
       const targetFlat = path.basename(resolved).replace(/\s+/g, '-');
       return `${pre}${q}./${targetFlat}${q}`;
     });
+    // page navigations inside the copied JS (window.location.href = 'foo.html', etc.) —
+    // same LINKS-map rewrite as pass 4c above, applied to the COPY only. The js/ source
+    // on disk keeps the .html form (local/Vercel serves flat .html files); this rewritten
+    // buffer is what gets compared against/written to theme/assets/ below.
+    text = text.replace(/(['"])([a-z0-9-]+\.html)(#[^'"]*)?\1/gi,
+      (m, q, page, hash) => LINKS[page] ? `${q}${LINKS[page]}${hash || ''}${q}` : m);
     buf = Buffer.from(text, 'utf8');
   }
 

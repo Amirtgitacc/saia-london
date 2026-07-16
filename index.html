@@ -1450,14 +1450,14 @@
 <script src="js/saia-knowledge.js?v=20260715a"></script>
 <script src="js/planner.js?v=20260715a"></script>
 <script src="js/shopify-cart.js?v=20260716t10b"></script>
-<script src="js/checkout-handoff.js?v=20260716t10b"></script>
+<script src="js/checkout-handoff.js?v=20260716t11"></script>
 <script src="js/home-concierge.js?v=20260715a"></script>
 <script src="js/home.js?v=20260629b"></script>
 <script src="js/home-journey.js?v=20260716t4"></script>
 <!-- mobile-only scroll journey: lazy-loads the vendored three.js ES modules on small screens -->
 <script type="module">
   if (window.matchMedia('(max-width: 767px)').matches) {
-    import('./js/home-mobile-journey.js?v=20260716t4')
+    import('./js/home-mobile-journey.js?v=20260716t5')
       .then(function (m) { m.initMobileJourney(); })
       .catch(function (e) { console.warn('mobile journey init failed', e); });
   }

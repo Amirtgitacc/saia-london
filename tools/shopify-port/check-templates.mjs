@@ -26,6 +26,15 @@ if (pattern) {
     .map(f => path.join(TPL_DIR, f));
 }
 
+// source names from port.mjs's LINKS map — kept in sync manually (small, stable list)
+const LINKS_SOURCE_NAMES = [
+  'index.html', 'events.html', 'story.html', 'pilates-with-cristina.html',
+  'contact-us.html', 'guest-list.html', 'terms-and-conditions.html',
+  'event-book-club-petersham.html', 'event-morena-self-love.html',
+  'event-mortimer-house.html', 'event-the-nest.html',
+  'event-watercolour-regents-park.html', 'checkout.html',
+];
+
 const FIVE_DIRS = '(?:css|js|assets|vendor|photos)';
 // (a) both attribute form (src="css/x") and quoted-string form ('js/x.js', "photos/x.png")
 const REL_ATTR_RE = new RegExp(`(?:src|href)=(["'])(?:\\./)?${FIVE_DIRS}/[^"']*\\1`, 'g');
@@ -83,6 +92,26 @@ for (const file of files) {
   results.push({ file: name, ok, issues });
 }
 
+// (d) copied JS assets — quoted *.html literals matching a LINKS source name mean a page
+// navigation (window.location.href = 'foo.html', etc.) never got rewritten to its Shopify
+// route by port.mjs; it'll be dead on Shopify. Scan every theme/assets/*.js file.
+const jsResults = [];
+let jsFailCount = 0;
+if (fs.existsSync(ASSETS_DIR)) {
+  const jsFiles = fs.readdirSync(ASSETS_DIR).filter(f => f.endsWith('.js'));
+  for (const f of jsFiles) {
+    const text = fs.readFileSync(path.join(ASSETS_DIR, f), 'utf8');
+    const hits = [];
+    for (const name of LINKS_SOURCE_NAMES) {
+      const re = new RegExp(`(['"])${name.replace(/\./g, '\\.')}(#[^'"]*)?\\1`, 'g');
+      if (re.test(text)) hits.push(name);
+    }
+    const ok = hits.length === 0;
+    if (!ok) jsFailCount++;
+    jsResults.push({ file: f, ok, issues: ok ? [] : [`unrewritten .html literal(s): ${hits.join(', ')}`] });
+  }
+}
+
 for (const r of results) {
   if (r.ok) {
     console.log(`OK   ${r.file}`);
@@ -91,6 +120,15 @@ for (const r of results) {
     for (const i of r.issues) console.log(`       - ${i}`);
   }
 }
+for (const r of jsResults) {
+  if (r.ok) {
+    console.log(`OK   assets/${r.file}`);
+  } else {
+    console.log(`FAIL assets/${r.file}`);
+    for (const i of r.issues) console.log(`       - ${i}`);
+  }
+}
 
-console.log(`\n${results.length - failCount}/${results.length} templates clean`);
+failCount += jsFailCount;
+console.log(`\n${results.length - (failCount - jsFailCount)}/${results.length} templates clean, ${jsResults.length - jsFailCount}/${jsResults.length} JS assets clean`);
 process.exit(failCount ? 1 : 0);

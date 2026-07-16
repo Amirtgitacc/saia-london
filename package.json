@@ -11,6 +11,7 @@
     "@anthropic-ai/sdk": "^0.69.0"
   },
   "devDependencies": {
+    "@shopify/cli": "^4.5.1",
     "playwright": "^1.61.0"
   }
 }

@@ -22,6 +22,7 @@
       if (!NS.cartPayload) { toPermalink(); return; }
       var payload = NS.cartPayload(hire, cfg);
       fetch('/cart/clear.js', { method: 'POST' })
+        .then(function (res) { if (!res.ok) throw new Error('clear failed'); return res; })
         .then(function () {
           return fetch('/cart/add.js', {
             method: 'POST',
