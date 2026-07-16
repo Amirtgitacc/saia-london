@@ -1,0 +1,8 @@
+{
+  "current": {
+    "concierge_endpoint": "https://saia-london.vercel.app/api/concierge",
+    "variant_mat_hire": "56338720489851",
+    "variant_extra_day": "56338724225403",
+    "variant_deposit": "56338725732731"
+  }
+}
