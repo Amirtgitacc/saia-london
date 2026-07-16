@@ -1,4 +1,5 @@
 
+<meta name="description" content="Yoga mat hire across London, with same-day delivery from £8.50 a mat. A female-led club: fitness, community & mindset.">
 <link rel="stylesheet" href="{{ 'base.css' | asset_url }}">
 <link rel="stylesheet" href="{{ 'buttons.css' | asset_url }}">
 <script type="importmap">{ "imports": { "three": "{{ 'three.module.min.js' | asset_url }}" } }</script>
@@ -725,12 +726,12 @@
           <div class="band-inner" style="max-width:480px;">
             <div style="font-size:12px; letter-spacing:.3em; text-transform:uppercase; color:#B8624A; margin-bottom:16px;">Mat hire</div>
             <h2 style="font-family:'Playfair Display',serif; font-weight:500; font-size:clamp(32px,4.4vw,52px); line-height:1.04; margin:0 0 14px; color:#2B2620;">Hiring is effortless.</h2>
-            <p style="font-size:15px; line-height:1.7; color:#6B6358; margin:0 0 28px; max-width:420px;">From a 10-mat morning class to a 50-person retreat, we handle delivery, set-up time and collection. £8.50 a mat, 2-day hire, minimum of ten.</p>
+            <p style="font-size:15px; line-height:1.7; color:#6B6358; margin:0 0 28px; max-width:420px;">From a 10-mat morning class to a 50-person retreat, we handle delivery and collection. £8.50 a mat, 2-day hire, minimum of ten.</p>
             <div style="display:flex; flex-direction:column; gap:18px;">
               <div style="display:flex; gap:16px; align-items:baseline;"><span style="font-family:'Playfair Display',serif; font-size:22px; color:#B8624A;">01</span><div><div style="font-family:'Playfair Display',serif; font-size:20px; color:#2B2620;">Tell us your event</div><div style="font-size:14px; line-height:1.6; color:#6B6358;">Date, location and how many mats. Minimum of ten.</div></div></div>
-              <div style="display:flex; gap:16px; align-items:baseline;"><span style="font-family:'Playfair Display',serif; font-size:22px; color:#B8624A;">02</span><div><div style="font-family:'Playfair Display',serif; font-size:20px; color:#2B2620;">We deliver early</div><div style="font-size:14px; line-height:1.6; color:#6B6358;">Mats arrive the day before by London courier, or collect from our NW3 studio.</div></div></div>
-              <div style="display:flex; gap:16px; align-items:baseline;"><span style="font-family:'Playfair Display',serif; font-size:22px; color:#B8624A;">03</span><div><div style="font-family:'Playfair Display',serif; font-size:20px; color:#2B2620;">You practise</div><div style="font-size:14px; line-height:1.6; color:#6B6358;">A clean, grippy mat under every guest. Nothing to set up, nothing to launder.</div></div></div>
-              <div style="display:flex; gap:16px; align-items:baseline;"><span style="font-family:'Playfair Display',serif; font-size:22px; color:#B8624A;">04</span><div><div style="font-family:'Playfair Display',serif; font-size:20px; color:#2B2620;">We collect after</div><div style="font-size:14px; line-height:1.6; color:#6B6358;">We pick everything up the day after. A 2-day hire from £8.50 a mat.</div></div></div>
+              <div style="display:flex; gap:16px; align-items:baseline;"><span style="font-family:'Playfair Display',serif; font-size:22px; color:#B8624A;">02</span><div><div style="font-family:'Playfair Display',serif; font-size:20px; color:#2B2620;">We deliver early</div><div style="font-size:14px; line-height:1.6; color:#6B6358;">Mats arrive the day before by London courier, or collect from our NW3 office.</div></div></div>
+              <div style="display:flex; gap:16px; align-items:baseline;"><span style="font-family:'Playfair Display',serif; font-size:22px; color:#B8624A;">03</span><div><div style="font-family:'Playfair Display',serif; font-size:20px; color:#2B2620;">You practise</div><div style="font-size:14px; line-height:1.6; color:#6B6358;">A clean, grippy mat under every guest. Nothing to buy, nothing to launder.</div></div></div>
+              <div style="display:flex; gap:16px; align-items:baseline;"><span style="font-family:'Playfair Display',serif; font-size:22px; color:#B8624A;">04</span><div><div style="font-family:'Playfair Display',serif; font-size:20px; color:#2B2620;">We collect after</div><div style="font-size:14px; line-height:1.6; color:#6B6358;">We collect the same day, once your event has finished. A 2-day hire from £8.50 a mat.</div></div></div>
             </div>
             <div class="hire-road" aria-hidden="true">
               <span class="hr-line"></span><span class="hr-prog"></span>
@@ -1376,7 +1377,8 @@
     io.observe(vb);
   } else { play(); }
 
-  // hand the current estimate straight to the booking page (checkout)
+  // hand the current estimate to the shared booking flow (Shopify AJAX cart /
+  // WhatsApp quote / local demo checkout — see js/checkout-handoff.js)
   var bookBtn=stage.querySelector('[data-est-book]');
   if(bookBtn) bookBtn.addEventListener('click',function(){
     var KB=window.SAIA&&window.SAIA.KB;
@@ -1391,6 +1393,7 @@
       postcode:method==='deliver'?(pc||null):null,
       zone:zoneObj?zoneObj.key:null
     };
+    if(window.SAIA&&window.SAIA.bookHire){ window.SAIA.bookHire(hire); return; }
     try{ sessionStorage.setItem('saia_hire', JSON.stringify(hire)); }catch(e){ /* ignore */ }
     window.location.href='/cart';
   });

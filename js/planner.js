@@ -1,5 +1,5 @@
 /* ============================================================
-   SAÏA — concierge "Noor" deterministic brain (Tier 1)
+   SAÏA — assistant deterministic brain (Tier 1)
    The dedicated core: knows the common situations cold —
    instant, free, always on-brand. Returns {say, actions, matched, awaiting}.
    When `matched` is false the UI escalates to the Tier-2 Claude

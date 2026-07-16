@@ -43,6 +43,40 @@
     return n;
   }
 
+  /* ---- conversation logging (fire-and-forget — must never block or break the chat) ----
+     Every turn is posted to /api/log (derived from the concierge endpoint) so real
+     conversations can be reviewed later. One random id groups a visit into a thread. */
+  let logSession = null;
+  function logSessionId() {
+    if (logSession) return logSession;
+    try {
+      logSession = sessionStorage.getItem('saia_chat_session');
+      if (!logSession) {
+        logSession = (window.crypto && crypto.randomUUID) ? crypto.randomUUID()
+          : 's-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10);
+        sessionStorage.setItem('saia_chat_session', logSession);
+      }
+    } catch (e) { logSession = logSession || 's-' + Math.random().toString(36).slice(2, 12); }
+    return logSession;
+  }
+  function logTurn(role, message, tier) {
+    if (!message || !String(message).trim()) return;
+    try {
+      const ep = ((window.SAIA_CONFIG && window.SAIA_CONFIG.conciergeEndpoint) || '/api/concierge')
+        .replace(/\/concierge(\?.*)?$/, '/log');
+      fetch(ep, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        keepalive: true,
+        body: JSON.stringify({
+          session: logSessionId(),
+          page: location.pathname,
+          turns: [{ role: role, tier: tier || null, message: String(message) }],
+        }),
+      }).catch(function () {});
+    } catch (e) { /* never let logging surface in the chat */ }
+  }
+
   /* ---- one shared state for every surface ---- */
   const state = {
     msgs: [],
@@ -88,7 +122,7 @@
   }
 
   /* ---- the brain pipeline (shared by both tiers) ---- */
-  function applyAndShow(plan) {
+  function applyAndShow(plan, tier) {
     state.typing = false;
     const exec = (NS.Planner && NS.Planner.applyActions)
       ? NS.Planner.applyActions(state.hire, plan.actions || [])
@@ -96,7 +130,8 @@
     state.hire = exec.hire;
     state.hire.awaiting = (plan && 'awaiting' in plan) ? plan.awaiting : state.hire.awaiting;
     state.msgs.push({ from: 'bot', text: plan.say });
-    (exec.acts || []).forEach((a) => state.msgs.push({ from: 'act', text: a }));
+    logTurn('bot', plan.say, tier || 'local');
+    (exec.acts || []).forEach((a) => { state.msgs.push({ from: 'act', text: a }); logTurn('act', a, tier || 'local'); });
     render();
   }
 
@@ -104,7 +139,7 @@
     const history = state.msgs.filter((m) => m.from === 'user' || m.from === 'bot')
       .map((m) => ({ role: m.from === 'user' ? 'user' : 'bot', text: m.text }));
     let done = false;
-    const finish = (say, actions) => { if (done) return; done = true; applyAndShow({ say: say || GENERIC, actions: actions || [] }); };
+    const finish = (say, actions) => { if (done) return; done = true; applyAndShow({ say: say || GENERIC, actions: actions || [] }, 'claude'); };
     // Offline safety net: Claude unreachable → re-plan the raw message through the Tier-1
     // regex planner; if even that is missing, a single graceful generic line.
     const fallback = () => {
@@ -128,6 +163,7 @@
     if (!text || !text.trim()) return;
     const clean = text.trim();
     state.msgs.push({ from: 'user', text: clean });
+    logTurn('user', clean);
     state.turns++;
     state.typing = true;
     render();
@@ -222,6 +258,7 @@
     if (days) parts.push('for ' + days + ' days');
     if (seed.postcode) parts.push('delivering to ' + seed.postcode);
     state.msgs.push({ from: 'user', text: 'From my estimate: ' + (parts.join(' ') || 'mat hire') + '.' });
+    logTurn('user', 'From my estimate: ' + (parts.join(' ') || 'mat hire') + '.');
     state.turns++;
     // ask the brain for the next missing slot, seeded with what we already know
     applyAndShow((NS.Planner && NS.Planner.localPlan)

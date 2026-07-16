@@ -4,6 +4,7 @@
    Claude API key server-side and exposes:
 
      POST /api/concierge  { messages, hire } -> { say, actions }
+     POST /api/log        { session, page, turns } -> 204 (chat review log)
      GET  /health         -> { ok, model, hasKey }
 
    The actual brain lives in js/concierge-core.js, shared with the
@@ -15,6 +16,7 @@
    ============================================================ */
 const http = require('http');
 const { MODEL, processConcierge } = require('./js/concierge-core.js');
+const { normalizeLogPayload, insertChatLogs } = require('./js/log-core.js');
 
 const PORT = process.env.PORT || 8787;
 
@@ -26,6 +28,25 @@ const server = http.createServer((req, res) => {
   if (req.method === 'GET' && req.url === '/health') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
     return res.end(JSON.stringify({ ok: true, model: MODEL, hasKey: !!process.env.ANTHROPIC_API_KEY }));
+  }
+  if (req.method === 'POST' && req.url === '/api/log') {
+    let logBody = '';
+    req.on('data', (c) => { logBody += c; if (logBody.length > 1e5) req.destroy(); });
+    req.on('end', async () => {
+      let payload = {};
+      try { payload = JSON.parse(logBody || '{}'); } catch (e) { /* ignore */ }
+      const rows = normalizeLogPayload(payload);
+      if (!rows) { res.writeHead(400, { 'Content-Type': 'application/json' }); return res.end(JSON.stringify({ error: 'bad_payload' })); }
+      try {
+        const out = await insertChatLogs(rows);
+        if (!out.stored) rows.forEach((r) => console.log('[chat-log]', r.session_id.slice(0, 8), r.role + (r.tier ? '/' + r.tier : ''), '·', r.message));
+        res.writeHead(204); res.end();
+      } catch (err) {
+        console.error('[chat-log]', err && err.message ? err.message : err);
+        res.writeHead(502, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ error: 'log_failed' }));
+      }
+    });
+    return;
   }
   if (req.method !== 'POST' || req.url !== '/api/concierge') { res.writeHead(404); return res.end(); }
 

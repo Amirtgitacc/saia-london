@@ -44,6 +44,15 @@ send(text)
 - **Tier 2 = the safety net.** Only fires on the long tail. Scoped hard to SAÏA, can answer
   *and* book, but never computes a price itself — it emits an action and the app does the math.
 
+## Conversation logging
+
+Every chat turn (user, bot + tier, action lines) is fired from `js/home-concierge.js` to
+`POST /api/log` (fire-and-forget; endpoint derived from `conciergeEndpoint`). `js/log-core.js`
+(shared by `api/log.js` + `server.js`) validates and inserts into the Supabase `chat_logs`
+table — needs `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` env vars; without them rows are
+printed to the local server console / dropped in prod. Review conversations in the Supabase
+dashboard, grouped by `session_id`.
+
 ## Single source of truth: `js/saia-knowledge.js`
 
 All SAÏA facts (hire terms, classes, events, founder, contact) live here. It feeds **both**
