@@ -12,6 +12,11 @@
       return;
     }
     try { sessionStorage.setItem('saia_hire', JSON.stringify(hire)); } catch (e) { /* ignore */ }
-    window.location.href = 'checkout.html';
+    var cfg = window.SAIA_CONFIG || {};
+    if (cfg.matHireVariant && cfg.depositVariant && NS.cartPermalink) {
+      window.location.href = NS.cartPermalink(hire, cfg);   // real Shopify cart
+      return;
+    }
+    window.location.href = 'checkout.html';                 // local/Vercel demo
   };
 })();

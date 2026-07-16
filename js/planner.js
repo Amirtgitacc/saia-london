@@ -64,7 +64,7 @@
       const args = a.args || {};
       switch (a.tool) {
         case 'add_mats':
-          hire.mats = Math.max(0, parseInt(args.n, 10) || 0); hire.total = total(hire);
+          hire.mats = Math.min(H.maxMats, Math.max(0, parseInt(args.n, 10) || 0)); hire.total = total(hire);
           acts.push('Added ' + hire.mats + ' mats to your hire'); break;
         case 'set_days':
           hire.days = Math.max(H.hireDays, parseInt(args.n, 10) || H.hireDays); hire.total = total(hire);
@@ -86,7 +86,7 @@
           acts.push('Logged your event' + (hire.guests ? ' · ' + hire.guests + ' guests' : '') + (args.date ? ' · ' + args.date : '')); break;
         case 'recommend': {
           const g = parseInt(args.guests, 10) || hire.guests || 0;
-          const rec = Math.max(H.minMats, Math.ceil(g * 1.1));
+          const rec = Math.min(H.maxMats, Math.max(H.minMats, Math.ceil(g * 1.1)));
           hire.guests = g || hire.guests; hire.mats = rec; hire.total = total(hire);
           acts.push('Recommended ' + rec + ' mats for ' + (g || '—') + ' guests'); break;
         }

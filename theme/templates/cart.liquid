@@ -1,2 +1,56 @@
-{% comment %} stub — SAÏA does not use this template {% endcomment %}
-<main style="background:#F5F1E8; min-height:40vh;"></main>
+<main style="background:#F5F1E8; color:#2B2620; min-height:100vh; font-family:'Inter',system-ui,sans-serif; padding:48px 20px;">
+  <div style="max-width:560px; margin:0 auto;">
+    <a class="saia-back" href="/" style="display:inline-flex; align-items:center; gap:8px; min-height:44px; padding:8px 16px 8px 12px; margin-bottom:14px; border:1px solid #E4DDCF; border-radius:999px; background:#FBF8F1; color:#2B2620; font-size:13px; text-decoration:none;">← Back to SAÏA</a>
+    <div style="font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:#B8624A; margin-bottom:18px;">Your hire</div>
+
+    {% if cart.item_count == 0 %}
+      <p>Your cart is empty. <a href="/" style="color:#B8624A;">Plan a hire with Noor</a>.</p>
+    {% else %}
+      <form action="/cart" method="post" novalidate
+            style="background:#FFFDF8; border:1px solid #E4DDCF; border-radius:8px; padding:24px;">
+        {% for item in cart.items %}
+          <div style="display:flex; justify-content:space-between; gap:12px; padding:10px 0; border-bottom:1px solid #F0EADC;">
+            <span>{{ item.product.title }} <span style="color:#6B6358;">× {{ item.quantity }}</span></span>
+            <span>{{ item.original_line_price | money }}</span>
+          </div>
+        {% endfor %}
+        <div style="display:flex; justify-content:space-between; gap:12px; padding:10px 0; color:#6B6358;">
+          <span>Delivery &amp; collection</span><span>confirmed by Cristina</span>
+        </div>
+        {% for attribute in cart.attributes %}
+          <div style="display:flex; justify-content:space-between; gap:12px; padding:4px 0; font-size:13px; color:#6B6358;">
+            <span>{{ attribute.first }}</span><span>{{ attribute.last }}</span>
+          </div>
+        {% endfor %}
+        <div style="display:flex; justify-content:space-between; border-top:1px solid #E4DDCF; margin-top:8px; padding-top:12px; font-family:'Playfair Display',serif; font-size:20px; color:#B8624A;">
+          <span>Total today</span><span>{{ cart.total_price | money }}</span>
+        </div>
+        <p style="font-size:12px; color:#6B6358;">Includes the refundable deposit — returned once the mats come back. Courier cost is confirmed by Cristina before your event.</p>
+        <button type="submit" name="checkout"
+          style="width:100%; margin-top:20px; background:#2B2620; color:#F5F1E8; border:none; border-radius:4px; padding:15px; font-size:12px; letter-spacing:.18em; text-transform:uppercase; cursor:pointer;">
+          Continue to payment
+        </button>
+      </form>
+    {% endif %}
+  </div>
+</main>
+
+<script>
+  // backstop: clamp a hand-edited mat quantity back to 10–50 (front end already enforces this)
+  (function () {
+    var MIN = 10, MAX = 50, MAT_HANDLE = 'mat-hire-2-day-hire';
+    var lines = [];
+    {% for item in cart.items %}
+      lines.push({ handle: {{ item.product.handle | json }}, line: {{ forloop.index }}, qty: {{ item.quantity }} });
+    {% endfor %}
+    lines.forEach(function (l) {
+      if (l.handle !== MAT_HANDLE) return;
+      var q = Math.min(MAX, Math.max(MIN, l.qty));
+      if (q === l.qty) return;
+      fetch('/cart/change.js', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ line: l.line, quantity: q })
+      }).then(function () { location.reload(); });
+    });
+  })();
+</script>

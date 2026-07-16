@@ -25,6 +25,21 @@ test('set_postcode classifies the zone and prices courier', () => {
   assert.strictEqual(h.total, 535);          // 425 + 35 + 75
 });
 
+test('add_mats clamps a request for 80 mats to the 50-mat cap, so the quote can never exceed it', () => {
+  let h = base();
+  h = Planner.applyActions(h, [{ tool: 'add_mats', args: { n: 80 } }]).hire;
+  assert.strictEqual(h.mats, 50);
+  h = Planner.applyActions(h, [{ tool: 'set_method', args: { method: 'pickup' } }]).hire;
+  h = Planner.applyActions(h, [{ tool: 'quote' }]).hire;
+  assert.strictEqual(h.total, 500);          // 50 mats × £8.50 + 0 courier + 75 deposit
+});
+
+test('recommend clamps a guest-count-driven recommendation to the 50-mat cap', () => {
+  let h = base();
+  h = Planner.applyActions(h, [{ tool: 'recommend', args: { guests: 100 } }]).hire;
+  assert.strictEqual(h.mats, 50);
+});
+
 test('mats given, asks for days next', () => {
   const r = Planner.localPlan('I need 50 mats for next saturday', { mats: 0, days: null, awaiting: null });
   assert.strictEqual(r.matched, true);
