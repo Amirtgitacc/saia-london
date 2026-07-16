@@ -85,9 +85,20 @@ for (const raw of out.matchAll(/{% raw %}([\s\S]*?){% endraw %}/g)) {
 }
 
 // 7. copy referenced assets (flattened); >10MB → warn (Shopify Files by hand)
+//
+// JS files can import each other with relative specifiers (e.g. a file in js/
+// doing `from '../vendor/GLTFLoader.js'`). Those specifiers are invisible to the
+// HTML-scanning regexes above (they're inside a *copied* file, not in index.html),
+// and once flattened into theme/assets/ every file is a sibling of every other —
+// so a '../vendor/x.js' specifier 404s on Shopify unless rewritten to './x.js'.
+// We resolve+queue such imports (recursively, since the target may itself import
+// relatively) and rewrite the specifier text in the copied file. Bare specifiers
+// (e.g. `from 'three'`) are left untouched — those resolve via the page importmap.
 fs.mkdirSync(path.join(THEME, 'assets'), { recursive: true });
 fs.mkdirSync(path.join(THEME, 'templates'), { recursive: true });
 const copiedFrom = new Map(); // flat filename -> source path, for collision reporting
+const IMPORT_RE = /((?:^|[^.\w])(?:from|import)\s*\(?\s*)(['"])(\.\.?\/[^'"]+\.js)\2/g;
+
 for (const p of assets) {
   const from = path.join(ROOT, p);
   if (!fs.existsSync(from)) { console.warn('MISSING asset:', p); continue; }
@@ -95,15 +106,28 @@ for (const p of assets) {
   const to = path.join(THEME, 'assets', flat);
   const mb = fs.statSync(from).size / 1048576;
   if (mb > 10) { console.warn(`SKIPPED >10MB (upload to Shopify Files): ${p} (${mb.toFixed(1)}MB)`); continue; }
+
+  let buf = fs.readFileSync(from);
+  if (/\.js$/i.test(flat)) {
+    const text = buf.toString('utf8').replace(IMPORT_RE, (m, pre, q, spec) => {
+      const resolved = path.join(path.dirname(p), spec).split(path.sep).join('/');
+      if (!fs.existsSync(path.join(ROOT, resolved))) { console.warn('MISSING relative JS import:', resolved, 'from', p); return m; }
+      assets.add(resolved); // queued — for..of over a Set visits members added mid-iteration
+      const targetFlat = path.basename(resolved).replace(/\s+/g, '-');
+      return `${pre}${q}./${targetFlat}${q}`;
+    });
+    buf = Buffer.from(text, 'utf8');
+  }
+
   if (fs.existsSync(to)) {
     // same-size checks can't tell two different files apart — compare content
     // (assets here are all ≤10MB, so reading whole files is cheap and safe)
-    const identical = Buffer.compare(fs.readFileSync(from), fs.readFileSync(to)) === 0;
+    const identical = Buffer.compare(buf, fs.readFileSync(to)) === 0;
     if (identical) continue; // already staged with the same bytes — nothing to do
     const prevSrc = copiedFrom.get(flat) || '(existing file in theme/assets, source unknown — from a previous port run?)';
     throw new Error(`asset name collision after flattening: ${flat}\n  source 1: ${prevSrc}\n  source 2: ${p}`);
   }
-  fs.copyFileSync(from, to);
+  fs.writeFileSync(to, buf);
   copiedFrom.set(flat, p);
 }
 

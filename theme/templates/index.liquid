@@ -1,3 +1,1445 @@
-<main style="font-family:'Playfair Display',serif; background:#F5F1E8; color:#2B2620; min-height:60vh; display:grid; place-items:center;">
-  <h1>SAÏA — draft theme scaffold OK</h1>
-</main>
+
+<meta name="description" content="Yoga mat hire across London, with same-day delivery from £8.50 a mat. A female-led club: fitness, community & mindset.">
+<link rel="stylesheet" href="{{ 'base.css' | asset_url }}">
+<link rel="stylesheet" href="{{ 'buttons.css' | asset_url }}">
+<script type="importmap">{ "imports": { "three": "{{ 'three.module.min.js' | asset_url }}" } }</script>
+<style>
+  body { background: #F5F1E8; color: #2B2620; font-family: 'Inter', system-ui, sans-serif; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+  .home-desktop-nav { display: block; }
+  .home-mobile-nav { display: none; }
+  @media (max-width: 767px) {
+    .home-desktop-nav { display: none; }
+    .home-mobile-nav { display: block; }
+  }
+</style>
+<style>
+  .band-inner { transform-origin: left center; will-change: transform, opacity, filter; }
+  /* Load-flash guard: the bands are stacked position:absolute inset:0. Until the journey JS
+     assigns each its opacity (it only runs after the GLB loads) or the static fallback reveals
+     them, they'd all paint opaque at once. Start hidden — both reveal paths override this. */
+  #stage [data-band] { opacity: 0; }
+  /* Same flash: the legacy #figureLayer (15 Cristina PNGs) is retired — the WebGL path swaps it
+     for #flowCanvas and the static path hides it, both via display:none set only after init.
+     Default it hidden so the old figure can't flash during the GLB load. */
+  #figureLayer { display: none; }
+  /* Click-gating: bands are stacked position:absolute inset:0. A faded-out (inactive) band
+     still carries interactive opt-ins (.s4card, the inline pointer-events:auto button rows)
+     that float over and steal clicks from the live band — e.g. an inactive band's content
+     sitting on top of the leftmost "Studios" card. Only the live band may receive clicks. */
+  [data-band]:not(.band-live) .band-inner,
+  [data-band]:not(.band-live) .s4card,
+  [data-band]:not(.band-live) [style*="pointer-events"] { pointer-events: none !important; }
+  /* Static fallback (mobile / reduced-motion / no-WebGL) shows every band at once and never
+     sets .band-live, so re-enable interaction there. */
+  .is-static [data-band] .band-inner,
+  .is-static [data-band] .s4card,
+  .is-static [data-band] [style*="pointer-events"] { pointer-events: auto !important; }
+  /* D layout — the 5 flow bands over Cristina: narrow margin rail, terracotta rule, no scrim */
+  .flow-rail .band-inner { max-width: 380px !important; padding-left: 22px; border-left: 2px solid #B8624A; }
+  .flow-rail .band-inner > div:first-child { color: #B8624A; }
+  .flow-rail[data-band="0.972,1"] .band-inner { max-width: 430px !important; } /* Join band needs room for the email form */
+  /* ===== Mobile / static fallback — "Editorial stack" (locked design) =====
+     Fires via .is-static (≤767px, prefers-reduced-motion, or WebGL failure; set in
+     home-journey.js). The pinned 2000vh journey unpins into a clean single-column
+     document. The scroll-scrubbed Cristina layers — #flowCanvas, #figureLayer and
+     #matStage — are hidden here (the WebGL path hides them in JS, but the static
+     path returns early before that, which used to leak the figures over the copy). */
+  .is-static #top { height: auto !important; }
+  .is-static .home-sticky { position: static !important; height: auto !important; overflow: visible !important; }
+  .is-static #homeCanvas,
+  .is-static #flowCanvas,
+  .is-static #figureLayer,
+  .is-static #matStage { display: none !important; }
+  .is-static #stage { position: static !important; inset: auto !important; pointer-events: auto !important; }
+  .is-static #homeBeacon { display: none !important; }
+
+  /* each band → a stacked editorial section, left-aligned, hairline divider between */
+  .is-static [data-band] { position: static !important; inset: auto !important; opacity: 1 !important;
+    display: block !important; padding: 52px 24px !important; background: none !important; }
+  .is-static [data-band] + [data-band] { border-top: 1px solid #DAD4C8; }
+  .is-static .band-inner { transform: none !important; filter: none !important; background: none !important;
+    padding: 0 !important; max-width: none !important; margin: 0 !important; }
+  .is-static .flow-rail .band-inner { padding-left: 0 !important; border-left: 0 !important; }
+  /* terracotta hairline on the left-aligned section headlines (not the centred ones) */
+  .is-static [data-band="0,0.14"] h1,
+  .is-static [data-band="0.14,0.30"] h2,
+  .is-static [data-band="0.30,0.44"] h2,
+  .is-static .flow-rail:not([data-band="0.972,1"]) h2 { padding-left: 16px; border-left: 2px solid #B8624A; }
+
+  /* signature-mat image — relocated into band 2; visible only in the static stack */
+  .is-static #homeMat { display: block !important; position: static !important; transform: none !important;
+    width: auto; height: auto; max-width: 78%; max-height: none; margin: 28px 0 4px;
+    filter: drop-shadow(0 24px 34px rgba(43,38,32,.18)); }
+
+  /* seam blends — dissolve the pinned scenes into the cream section below them,
+     so the journey→estimate and gallery→pilates handoffs read as one continuous field */
+  .home-sticky::after{ content:""; position:absolute; left:0; right:0; bottom:0; height:clamp(90px,15vh,170px);
+    background:linear-gradient(180deg, rgba(245,241,232,0) 0%, #F5F1E8 92%); z-index:2; pointer-events:none; }
+  .is-static .home-sticky::after{ display:none; }
+</style>
+<style>
+  /* ===== Gallery — animated 3D photo grid (Atelier) =====
+     scroll vars set by JS on #events: --gl-warm (glow) --gl-tint (theme wash 1→0)
+     --gl-g (glass strength 1→0) --gl-ht (heading shrink/recolour 0→1) */
+  #events{ position:relative; --gl-warm:0; --gl-g:1; --gl-ht:0; --gl-tint:1; --gl-exit:0; height:760vh;
+    background:linear-gradient(180deg, #F5F1E8 0%,
+      color-mix(in srgb, #EBE3D5 calc(40% + var(--gl-warm)*30%), #F5F1E8) 50%,
+      color-mix(in srgb, #EFE0D6 calc(var(--gl-warm)*70%), #EBE3D5) 82%,
+      #F5F1E8 100%); }
+  /* fade the warm glow + tint to cream at the section's bottom edge so it melts into Pilates */
+  #events .gl-sticky::after{ content:""; position:absolute; left:0; right:0; bottom:0; height:clamp(100px,18vh,190px);
+    background:linear-gradient(180deg, rgba(245,241,232,0) 0%, #F5F1E8 94%); z-index:6; pointer-events:none; }
+  #events .gl-sticky{ position:sticky; top:0; height:100vh; width:100%; overflow:hidden;
+    perspective:1500px; perspective-origin:center 18%;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; }
+  #events .gl-glow{ position:absolute; left:50%; bottom:-12%; transform:translateX(-50%);
+    width:120vw; height:80vh; z-index:0; pointer-events:none;
+    background:radial-gradient(45% 55% at 38% 70%, rgba(201,138,119,.45), transparent 70%),
+      radial-gradient(50% 60% at 66% 60%, rgba(184,98,74,.34), transparent 72%);
+    filter:blur(50px); opacity:calc(.15 + var(--gl-warm)*.85); transition:opacity .2s linear; }
+  #events .gl-grain{ position:absolute; inset:0; z-index:5; pointer-events:none; opacity:.04; mix-blend-mode:multiply;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+  /* text — frosted glass panel that dissolves on scroll */
+  #events .gl-intro{ position:absolute; left:50%; top:46%; transform:translate(-50%,-50%); z-index:40;
+    text-align:center; padding:0 1.2rem; pointer-events:none; width:min(640px,86vw); }
+  #events .gl-card{ display:block; padding:34px clamp(26px,4vw,48px) 30px; border-radius:22px;
+    background:rgba(245,241,232,calc(.46*var(--gl-g,1)));
+    -webkit-backdrop-filter:blur(calc(22px*var(--gl-g,1))) saturate(1.2);
+    backdrop-filter:blur(calc(22px*var(--gl-g,1))) saturate(1.2);
+    border:1px solid rgba(255,255,255,calc(.55*var(--gl-g,1)));
+    box-shadow:0 36px 80px -34px rgba(43,38,32,calc(.6*var(--gl-g,1))), inset 0 1px 0 rgba(255,255,255,calc(.5*var(--gl-g,1)));
+    opacity:0; filter:blur(14px); transform:translateY(12px) scale(.98);
+    transition:opacity 1.1s cubic-bezier(.16,1,.3,1), filter 1.1s ease, transform 1.1s cubic-bezier(.16,1,.3,1),
+      background-color .2s linear, border-color .2s linear, box-shadow .2s linear; }
+  #events.gl-in .gl-card{ opacity:1; filter:blur(0); transform:none; }
+  #events .gl-kicker{ font-size:12px; letter-spacing:.34em; text-transform:uppercase; color:#B8624A;
+    opacity:var(--gl-g,1); transition:opacity .2s linear; }
+  #events .gl-intro h2{ font-family:'Playfair Display',serif; font-weight:600; font-size:clamp(40px,5.6vw,66px);
+    line-height:1.04; letter-spacing:-.012em; margin:11px 0 0;
+    color:#2B2620; color:color-mix(in srgb, #FBF7EF calc(var(--gl-ht,0)*100%), #2B2620);
+    scale:calc(1 - .34*var(--gl-ht,0));
+    text-shadow:0 2px calc(var(--gl-ht,0)*24px) rgba(28,22,16,calc(var(--gl-ht,0)*.6));
+    transition:scale .2s linear, color .2s linear, text-shadow .2s linear; }
+  #events .gl-intro h2 em{ display:block; margin-top:2px; font-family:'Bodoni Moda',serif; font-style:italic;
+    font-weight:500; font-size:.82em; line-height:1.04; color:#fff; text-shadow:0 1px 2px rgba(43,38,32,.4); }
+  #events .gl-intro p{ margin:14px auto 0; max-width:30rem; color:#4A4339; font-weight:400; font-size:clamp(14px,1.4vw,16px);
+    opacity:var(--gl-g,1); transition:opacity .2s linear; }
+  #events .gl-rule{ width:46px; height:1px; background:#B8624A; margin:18px auto 0;
+    opacity:calc(.7*var(--gl-g,1)); transition:opacity .2s linear; }
+  /* end-of-gallery CTA → events page; revealed once the scroll nears the bottom (.gl-end) */
+  /* glassy pill with an animated "dual comet" gradient border that runs around the edge */
+  @property --gl-ang{ syntax:'<angle>'; inherits:false; initial-value:0deg; }
+  #events .gl-events-cta{ position:relative; isolation:isolate; display:inline-flex; align-items:center; gap:9px; margin-top:24px;
+    font-family:'Inter',sans-serif; font-size:12px; letter-spacing:.18em; text-transform:uppercase; font-weight:500;
+    color:#3a2a22; background:rgba(245,241,232,.28); padding:14px 28px; border-radius:34px; text-decoration:none;
+    -webkit-backdrop-filter:blur(8px) saturate(1.3); backdrop-filter:blur(8px) saturate(1.3);
+    pointer-events:none; opacity:0; transform:translateY(18px) scale(.94);
+    box-shadow:0 10px 26px -14px rgba(43,38,32,.6), inset 0 1px 0 rgba(255,255,255,.45), 0 0 22px -6px rgba(184,98,74,.5);
+    transition:opacity .7s cubic-bezier(.16,1,.3,1), transform .7s cubic-bezier(.16,1,.3,1), background-color .2s; }
+  #events .gl-events-cta::before{ content:""; position:absolute; inset:0; border-radius:inherit; padding:1.8px; z-index:-1;
+    background:conic-gradient(from var(--gl-ang),
+      transparent 0deg, #fff 20deg, #B8624A 50deg, transparent 90deg,
+      transparent 180deg, #fff 200deg, #E8A98C 230deg, transparent 270deg, transparent 360deg);
+    -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite:xor; mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    mask-composite:exclude; animation:glCometSpin 3.6s linear infinite; }
+  @keyframes glCometSpin{ to{ --gl-ang:360deg; } }
+  #events.gl-end .gl-events-cta{ opacity:1; transform:none; pointer-events:auto; }
+  #events .gl-events-cta:hover{ background:rgba(245,241,232,.42); }
+  #events .gl-events-cta:focus-visible{ outline:2px solid #fff; outline-offset:3px; }
+  @media (prefers-reduced-motion: reduce){
+    #events .gl-events-cta{ opacity:1; pointer-events:auto; transform:none; }
+    #events .gl-events-cta::before{ animation:none; } }
+  /* the 3D grid */
+  #events .gl-stage{ display:grid; grid-template-columns:repeat(3,1fr); gap:1rem; width:min(1080px,88vw);
+    transform-style:preserve-3d; transform:rotateX(62deg) scale(1.18); will-change:transform; margin:0 auto; z-index:10; }
+  #events .gl-col{ display:flex; flex-direction:column; gap:1rem; will-change:transform; }
+  #events .gl-tile{ position:relative; overflow:hidden; border-radius:14px; background:#EBE3D5;
+    box-shadow:0 26px 60px -28px rgba(43,38,32,calc(.55*(1 - .55*var(--gl-exit,0)))), 0 2px 8px rgba(43,38,32,.10);
+    outline:1px solid rgba(255,255,255,.35); outline-offset:-1px;
+    opacity:calc(1 - .42*var(--gl-exit,0));
+    transition:transform .6s cubic-bezier(.16,1,.3,1), box-shadow .6s ease, opacity .35s linear; }
+  /* on the way out, the room cools to black-and-white and softens */
+  #events .gl-tile img{ width:100%; aspect-ratio:4/5; object-fit:cover;
+    filter:grayscale(var(--gl-exit,0)) saturate(.94) contrast(calc(.98 - .06*var(--gl-exit,0))) brightness(calc(.99 + .05*var(--gl-exit,0)));
+    transition:transform 1.1s cubic-bezier(.16,1,.3,1), filter .35s linear; }
+  #events .gl-tile::before{ content:""; position:absolute; inset:0; z-index:2; pointer-events:none;
+    background:linear-gradient(160deg, rgba(255,255,255,.28), transparent 38%); mix-blend-mode:screen; }
+  #events .gl-tile::after{ content:""; position:absolute; inset:0; z-index:1; pointer-events:none;
+    background:linear-gradient(150deg, #C75B40 0%, #C98A77 46%, #8C6A8E 100%); mix-blend-mode:multiply;
+    opacity:var(--gl-tint,0); transition:opacity .2s linear; }
+  #events .gl-tile:hover{ transform:scale(1.4) translateY(-10px); z-index:30;
+    box-shadow:0 60px 110px -34px rgba(43,38,32,.72), 0 10px 26px rgba(43,38,32,.2); }
+  /* during active scroll the grid pans under the cursor — ignore hover so tiles don't flicker;
+     hover re-enables ~150ms after scrolling stops (set by the gallery script) */
+  #events.gl-scrolling .gl-tile{ pointer-events:none; }
+  #events .gl-tile:hover img{ transform:scale(1.07); filter:saturate(1.08) contrast(1.04) brightness(1.02); }
+  .hire-chip{ font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:#6B6358; border:1px solid #C9C2B4; border-radius:30px; padding:7px 15px; }
+  .input-focus:focus{ outline:2px solid #B8624A; outline-offset:1px; }
+  @media (max-width:680px){
+    #events .gl-stage{ grid-template-columns:repeat(2,1fr); width:92vw; gap:.7rem; }
+    #events .gl-stage .gl-col:nth-child(3){ display:none; }
+  }
+  @media (prefers-reduced-motion: reduce){
+    #events{ height:auto; }
+    #events .gl-sticky{ position:static; height:auto; display:block; padding:64px 0 72px; }
+    #events .gl-intro{ position:static; transform:none; margin:0 auto 36px; }
+    #events .gl-card{ opacity:1 !important; filter:none !important; transform:none !important; }
+    #events .gl-glow, #events .gl-grain{ display:none; }
+    #events .gl-stage{ transform:none !important; }
+    #events .gl-col{ transform:none !important; }
+    #events .gl-tile::after{ opacity:0 !important; }
+  }
+</style>
+<style>
+  /* ===== Section 4 — "Hire the range": featured tier (locked: B) ===== */
+  .s4grid{ display:grid; grid-template-columns:repeat(3,minmax(200px,1fr)); gap:20px; align-items:start; }
+  .s4card{ position:relative; display:flex; flex-direction:column; pointer-events:auto;
+    background:rgba(var(--scrim),.94); border:1px solid #E2DCCF; border-radius:12px; padding:24px;
+    transition:transform .25s, box-shadow .25s; }
+  .s4card:hover{ transform:translateY(-4px); box-shadow:0 20px 40px rgba(43,38,32,.12); }
+  .s4card .s4ic{ color:#B8624A; }
+  .s4card .s4ic svg{ width:28px; height:28px; display:block; margin-bottom:12px; }
+  .s4card .s4nm{ font-family:'Playfair Display',serif; font-weight:500; font-size:22px; color:#2B2620; }
+  .s4card .s4who{ font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:#6B6358; margin-top:3px; }
+  .s4card .s4ds{ font-size:14px; line-height:1.6; color:#6B6358; margin:12px 0 14px; }
+  .s4card .s4pr{ font-family:'Playfair Display',serif; font-size:18px; color:#2B2620; margin-top:auto; padding-top:12px; border-top:1px solid #E2DCCF; }
+  .s4card .s4pr small{ font-family:'Inter',sans-serif; font-size:11px; color:#6B6358; }
+  .s4card button{ margin-top:14px; width:100%; font-family:'Inter',sans-serif; font-size:11px; letter-spacing:.2em;
+    text-transform:uppercase; padding:13px; border-radius:2px; cursor:pointer; }
+  .s4card .btn-solid{ background:#2B2620; color:#F5F1E8; border:none; }
+  .s4card .btn-line{ background-color:transparent; color:#2B2620; }
+  .s4card.feat{ border-color:#B8624A; transform:translateY(-14px); box-shadow:0 22px 46px rgba(184,98,74,.2); padding-top:30px; }
+  .s4card.feat:hover{ transform:translateY(-18px); }
+  .s4card.feat .badge{ position:absolute; top:-11px; left:50%; transform:translateX(-50%); background:#B8624A; color:#fff;
+    font-size:9px; letter-spacing:.16em; text-transform:uppercase; padding:5px 13px; border-radius:30px; white-space:nowrap; }
+  .s4card.feat .btn-solid{ background:#B8624A; }
+  @media (max-width:767px){ .s4grid{ grid-template-columns:1fr; } .s4card.feat{ transform:none; } .s4card.feat:hover{ transform:translateY(-4px); } }
+
+  /* ===== Band 3 — "Hiring is effortless": van-on-a-road (scroll-scrubbed) ===== */
+  .hire-road{ position:relative; height:46px; margin-top:32px; max-width:430px; }
+  .hire-road .hr-line{ position:absolute; left:0; right:0; top:13px; height:2px;
+    background:repeating-linear-gradient(90deg,#DAD4C8 0 8px,transparent 8px 16px); }
+  .hire-road .hr-prog{ position:absolute; left:0; top:13px; height:2px; width:0; background:#B8624A; transition:width .12s linear; }
+  .hire-road .hr-pin{ position:absolute; top:13px; width:9px; height:9px; border-radius:50%; background:#F5F1E8;
+    border:2px solid #DAD4C8; transform:translate(-50%,-50%); transition:border-color .3s, background .3s; }
+  .hire-road .hr-pin.on{ border-color:#B8624A; background:#B8624A; }
+  .hire-road .hr-pin b{ position:absolute; left:50%; top:13px; transform:translateX(-50%); white-space:nowrap;
+    font-family:'Inter',sans-serif; font-size:9px; font-weight:400; letter-spacing:.1em; text-transform:uppercase; color:#6B6358; }
+  .hire-road .hr-pin.on b{ color:#B8624A; }
+  .hire-road .hr-van{ position:absolute; top:13px; left:0; transform:translate(-50%,-50%); color:#B8624A; z-index:2; transition:left .12s linear; }
+  .hire-road .hr-van svg{ width:28px; height:28px; display:block; filter:drop-shadow(0 4px 6px rgba(43,38,32,.2)); }
+
+  /* ===== Scroll cue (entry) ===== */
+  @keyframes homeCueBounce { 0%,100%{ transform:rotate(45deg) translate(0,0); opacity:.5; } 50%{ transform:rotate(45deg) translate(3px,3px); opacity:1; } }
+  .home-cue-arrow{ animation:homeCueBounce 1.4s ease-in-out infinite; }
+  @media (prefers-reduced-motion: reduce){ .home-cue-arrow{ animation:none; } }
+
+  /* ===== Hero entrance ===== */
+  @keyframes homeHeroIn { from{ opacity:0; transform:translateY(16px); } to{ opacity:1; transform:translateY(0); } }
+  .home-hero-in > *{ animation:homeHeroIn .7s cubic-bezier(.22,.61,.36,1) both; }
+  .home-hero-in > *:nth-child(1){ animation-delay:.05s; }
+  .home-hero-in > *:nth-child(2){ animation-delay:.15s; }
+  .home-hero-in > *:nth-child(3){ animation-delay:.27s; }
+  .home-hero-in > *:nth-child(4){ animation-delay:.39s; }
+  .home-hero-in > *:nth-child(5){ animation-delay:.5s; }
+  @media (prefers-reduced-motion: reduce){ .home-hero-in > *{ animation:none; } }
+
+  /* ===== Hero — warm drifting atmosphere (confined to BAND 1, masked off the figure) ===== */
+  .hero-atmos{ position:absolute; inset:0; z-index:0; pointer-events:none; overflow:hidden;
+    -webkit-mask-image:linear-gradient(90deg,#000 0%,#000 36%,transparent 64%);
+            mask-image:linear-gradient(90deg,#000 0%,#000 36%,transparent 64%); }
+  .hero-atmos .hb{ position:absolute; border-radius:50%; mix-blend-mode:multiply; filter:blur(10px); }
+  .hero-atmos .hb1{ width:48vw; height:48vw; left:-12vw; top:-16vh; background:radial-gradient(circle at 35% 35%, rgba(231,169,142,.55), transparent 66%); animation:heroDrift1 16s ease-in-out infinite; }
+  .hero-atmos .hb2{ width:42vw; height:42vw; left:4vw;   top:32vh;  background:radial-gradient(circle at 60% 40%, rgba(201,139,110,.42), transparent 66%); animation:heroDrift2 20s ease-in-out infinite; }
+  .hero-atmos .hb3{ width:32vw; height:32vw; left:-6vw;  bottom:-18vh; background:radial-gradient(circle at 50% 50%, rgba(217,199,160,.5), transparent 68%); animation:heroDrift3 24s ease-in-out infinite; }
+  .hero-atmos .hgrain{ position:absolute; inset:0; opacity:.35; mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.5'/%3E%3C/svg%3E"); }
+  @keyframes heroDrift1{ 0%,100%{ transform:translate(0,0) scale(1); } 50%{ transform:translate(6%,5%) scale(1.12); } }
+  @keyframes heroDrift2{ 0%,100%{ transform:translate(0,0) scale(1); } 50%{ transform:translate(-5%,7%) scale(1.1); } }
+  @keyframes heroDrift3{ 0%,100%{ transform:translate(0,0) scale(1); } 50%{ transform:translate(4%,-6%) scale(1.15); } }
+  .is-static .hero-atmos{ display:none; }
+  @media (prefers-reduced-motion: reduce){ .hero-atmos .hb{ animation:none; } }
+
+  /* ===== Hero tagline marquee ===== */
+  .hero-marquee{ overflow:hidden; max-width:460px; margin-top:26px;
+    -webkit-mask-image:linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent);
+            mask-image:linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent); }
+  .hero-marquee .track{ display:inline-flex; gap:10px; white-space:nowrap; animation:heroMarquee 22s linear infinite; }
+  .hero-marquee .chip{ font-size:10px; letter-spacing:.22em; text-transform:uppercase; color:#6B6358;
+    border:1px solid #C9C2B4; border-radius:30px; padding:7px 14px; background:rgba(245,241,232,.6); }
+  @keyframes heroMarquee{ from{ transform:translateX(0); } to{ transform:translateX(-50%); } }
+  .is-static .hero-marquee{ overflow:visible; }
+  .is-static .hero-marquee .track{ animation:none; flex-wrap:wrap; }
+  @media (prefers-reduced-motion: reduce){ .hero-marquee .track{ animation:none; } }
+
+  /* ===== Band 2 — softer warm atmosphere (breathing, not drifting) ===== */
+  .atmos-soft{ position:absolute; inset:0; z-index:0; pointer-events:none; overflow:hidden;
+    -webkit-mask-image:linear-gradient(90deg,#000 0%,#000 32%,transparent 58%);
+            mask-image:linear-gradient(90deg,#000 0%,#000 32%,transparent 58%); }
+  .atmos-soft .sb{ position:absolute; border-radius:50%; mix-blend-mode:multiply; filter:blur(14px); }
+  .atmos-soft .sb1{ width:42vw; height:42vw; left:-10vw; top:4vh;     background:radial-gradient(circle at 40% 40%, rgba(217,199,160,.42), transparent 68%); animation:atmosBreathe 15s ease-in-out infinite; }
+  .atmos-soft .sb2{ width:30vw; height:30vw; left:2vw;   bottom:-14vh; background:radial-gradient(circle at 50% 50%, rgba(201,139,110,.3), transparent 70%); animation:atmosBreathe 19s ease-in-out infinite reverse; }
+  @keyframes atmosBreathe{ 0%,100%{ transform:translate(0,0) scale(1); opacity:.85; } 50%{ transform:translate(3%,-3%) scale(1.1); opacity:1; } }
+  .is-static .atmos-soft{ display:none; }
+  @media (prefers-reduced-motion: reduce){ .atmos-soft .sb{ animation:none; } }
+
+  /* spec pills — a slow terracotta highlight travels left→right */
+  .spec-pills .spec-pill{ animation:pillGlow 9s ease-in-out infinite; }
+  .spec-pills .spec-pill:nth-child(2){ animation-delay:.55s; }
+  .spec-pills .spec-pill:nth-child(3){ animation-delay:1.1s; }
+  .spec-pills .spec-pill:nth-child(4){ animation-delay:1.65s; }
+  @keyframes pillGlow{ 0%,80%,100%{ border-color:#C9C2B4; color:#6B6358; } 86%{ border-color:#B8624A; color:#B8624A; } }
+  @media (prefers-reduced-motion: reduce){ .spec-pills .spec-pill{ animation:none; } }
+
+  /* ===== NW3 & Hampstead tube-map (Flow Level 3) ===== */
+  /* pulled left to hug the terracotta rule with a steady ~20px gap (the 7vw band padding
+     cancels out, so the gap holds across widths) — left, but never crossing the line */
+  .nw3-map{ width:100%; max-width:340px; margin:30px 0 0 -78px; pointer-events:none; }
+  .nw3-map svg{ width:100%; height:auto; display:block; overflow:visible; }
+  .nw3-line{ fill:none; stroke-linecap:round; stroke-linejoin:round; }
+  .nw3-line.northern{ stroke:#2B2620; stroke-width:5; }
+  .nw3-line.jubilee{ stroke:#9A938A; stroke-width:5; }
+  .nw3-stn{ font-family:'Inter',sans-serif; font-size:10px; font-weight:500; letter-spacing:.02em; fill:#2B2620; }
+  .nw3-sub{ font-family:'Inter',sans-serif; font-size:8.5px; letter-spacing:.18em; text-transform:uppercase; fill:#B8624A; }
+  .nw3-llabel{ font-family:'Inter',sans-serif; font-size:8px; letter-spacing:.16em; text-transform:uppercase; fill:#A39A8C; }
+  .nw3-tickname{ font-family:'Inter',sans-serif; font-size:8px; letter-spacing:.02em; fill:#8C8478; }
+  .nw3-ping{ fill:#B8624A; opacity:0; transform-box:fill-box; transform-origin:center; }
+  /* draw-in: drawn (visible) at rest; replays each time the band goes live */
+  .nw3-map .draw{ stroke-dasharray:1; stroke-dashoffset:0; }
+  .flow-rail.band-live .nw3-map .draw{ animation:nw3draw 1.2s cubic-bezier(.5,0,.2,1) both; }
+  .flow-rail.band-live .nw3-map .draw.d2{ animation-delay:.16s; }
+  .flow-rail.band-live .nw3-map .draw.d3{ animation-delay:.32s; }
+  @keyframes nw3draw{ from{ stroke-dashoffset:1; } to{ stroke-dashoffset:0; } }
+  .nw3-pop{ transform-box:fill-box; transform-origin:center; }
+  .flow-rail.band-live .nw3-map .nw3-pop{ animation:nw3pop .5s cubic-bezier(.2,.9,.3,1.3) both; animation-delay:.5s; }
+  @keyframes nw3pop{ from{ opacity:0; transform:scale(.1); } to{ opacity:1; transform:scale(1); } }
+  .flow-rail.band-live .nw3-map .nw3-ping{ animation:nw3ping 2.4s ease-out infinite; animation-delay:1.1s; }
+  @keyframes nw3ping{ 0%{ opacity:.4; transform:scale(.5); } 100%{ opacity:0; transform:scale(2.8); } }
+  @media (prefers-reduced-motion: reduce){
+    .flow-rail.band-live .nw3-map .draw,
+    .flow-rail.band-live .nw3-map .nw3-pop,
+    .flow-rail.band-live .nw3-map .nw3-ping{ animation:none; }
+    .nw3-map .nw3-pop{ opacity:1; transform:none; }
+  }
+
+  /* ===== Short-viewport fixes (13" laptops) — height-based, desktop-only so phones & tall
+     monitors are untouched. Stops big headings sliding under the fixed navbar. ===== */
+  @media (max-height:820px) and (min-width:768px){
+    #top [data-band="0,0.14"] h1{ font-size:clamp(2.9rem,6vw,4.6rem) !important; line-height:.95 !important; }
+    #top [data-band="0,0.14"] .band-inner p{ margin-top:20px !important; }
+    #top .flow-rail .band-inner h2{ font-size:clamp(30px,3.7vw,46px) !important; line-height:1.0 !important; margin-bottom:16px !important; }
+    /* tall editorial bands (mat detail + "Hiring is effortless") — shrink the heading and
+       start the block below the navbar instead of vertically centring it (centring hid the top) */
+    #top [data-band="0.14,0.30"] .band-inner h2,
+    #top [data-band="0.30,0.44"] .band-inner h2{ font-size:clamp(28px,3.4vw,42px) !important; line-height:1.06 !important; margin-bottom:12px !important; }
+    #top [data-band="0.14,0.30"],
+    #top [data-band="0.30,0.44"]{ align-items:flex-start !important; padding-top:clamp(150px,21vh,178px) !important; }
+    #top [data-band="0.30,0.44"] .band-inner p{ margin-bottom:18px !important; }
+    #top [data-band="0.30,0.44"] .band-inner > div[style*="gap:18px"]{ gap:13px !important; }
+    /* estimator spotlight — shrink to fit a ~700px-tall viewport */
+    .saia-est-stage .vb{ padding:clamp(34px,4vw,48px) 6vw; }
+    .saia-est-stage .stagewrap{ gap:34px; }
+    .saia-est-stage .pitch h2{ font-size:clamp(32px,4vw,46px); }
+    .saia-est-stage .pitch .bigroute{ height:104px; margin-top:16px; }
+    .saia-est-stage .est.b{ padding:20px; }
+    .saia-est-stage .est .field{ margin-bottom:10px; }
+    .saia-est-stage .est input{ padding:10px 12px; font-size:14px; }
+    .saia-est-stage .est .result.show{ max-height:470px; padding:24px 16px 6px; }
+  }
+  @media (max-height:680px) and (min-width:768px){
+    #top [data-band="0,0.14"] h1{ font-size:clamp(2.5rem,5vw,3.9rem) !important; }
+    #top .flow-rail .band-inner h2{ font-size:clamp(26px,3.1vw,40px) !important; }
+    .saia-est-stage .pitch h2{ font-size:clamp(28px,3.4vw,40px); }
+    .saia-est-stage .pitch .bigroute{ height:92px; }
+  }
+</style>
+
+<!-- ============ Estimate-your-hire spotlight stage (Phase 4) ============ -->
+<style>
+.saia-est-stage{ --cream:#F5F1E8; --paper:#FBF8F1; --ink:#2B2620; --muted:#6B6358; --terra:#B8624A;
+  --terra-dk:#A9573F; --line:#E2DBCC; --line-soft:#DAD4C8;
+  --sage:#7C8A6B;
+  --display:'Bricolage Grotesque',sans-serif; --body:'IBM Plex Mono',monospace; }
+.saia-est-stage *{ box-sizing:border-box; }
+
+/* shared engine */
+.saia-est-stage .est{ --van:var(--terra); font-family:var(--display); }
+.saia-est-stage .eyebrow{ font-family:var(--body); font-size:11px; letter-spacing:.2em; text-transform:uppercase; color:var(--terra); display:flex; align-items:center; gap:9px; margin:0; }
+.saia-est-stage .eyebrow::before{ content:""; width:18px; height:1px; background:currentColor; display:inline-block; }
+.saia-est-stage .est .lead{ font-size:13px; line-height:1.55; color:var(--muted); }
+.saia-est-stage .est label{ display:block; font-family:var(--body); font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:var(--muted); margin-bottom:7px; }
+.saia-est-stage .est input{ width:100%; font-family:var(--body); font-size:15px; color:var(--ink); background:#fff; border:1px solid var(--line);
+  border-radius:9px; padding:12px 13px; transition:border-color .2s,box-shadow .2s; }
+.saia-est-stage .est input::placeholder{ color:#c3bba9; }
+.saia-est-stage .est input:focus{ outline:none; border-color:var(--terra); box-shadow:0 0 0 3px rgba(184,98,74,.14); }
+.saia-est-stage .est .grid2{ display:flex; gap:12px; }
+.saia-est-stage .est .field{ flex:1; margin-bottom:13px; }
+.saia-est-stage .est .field.full{ flex-basis:100%; }
+.saia-est-stage .est .note{ font-size:11px; color:var(--terra); min-height:14px; margin:-4px 0 8px; }
+.saia-est-stage .est .seg{ display:flex; background:#fff; border:1px solid var(--line); border-radius:10px; padding:4px; position:relative; }
+.saia-est-stage .est .seg .thumb{ position:absolute; top:4px; bottom:4px; left:4px; width:calc(50% - 4px); background:var(--ink); border-radius:7px;
+  opacity:0; transition:transform .32s cubic-bezier(.4,0,.15,1),opacity .2s; }
+.saia-est-stage .est .seg[data-m="deliver"] .thumb{ opacity:1; transform:translateX(0); }
+.saia-est-stage .est .seg[data-m="pickup"] .thumb{ opacity:1; transform:translateX(100%); }
+.saia-est-stage .est .seg button{ flex:1; position:relative; z-index:1; background:none; border:none; cursor:pointer; font-family:var(--display);
+  font-size:12px; padding:11px 6px; color:var(--muted); transition:color .25s; }
+.saia-est-stage .est .seg button.on{ color:var(--cream); }
+.saia-est-stage .est .pcwrap{ overflow:hidden; max-height:0; opacity:0; transition:max-height .4s ease,opacity .35s,margin .4s; }
+.saia-est-stage .est .pcwrap.show{ max-height:110px; opacity:1; margin-top:2px; }
+
+/* route svg */
+.saia-est-stage .bigroute svg{ display:block; width:100%; height:100%; overflow:visible; }
+.saia-est-stage .track{ fill:none; stroke:var(--line-soft); stroke-width:2; stroke-dasharray:2 7; stroke-linecap:round; }
+.saia-est-stage .rfill{ fill:none; stroke:var(--terra); stroke-width:2.6; stroke-linecap:round; }
+.saia-est-stage .mile circle{ transition:fill .4s,stroke .4s; }
+.saia-est-stage .mile .ring{ fill:none; stroke:var(--terra); stroke-width:2; opacity:0; transform-box:fill-box; transform-origin:center; }
+.saia-est-stage .mile.live .ring{ animation:saiaPing 1.6s ease-out infinite; }
+@keyframes saiaPing{ 0%{opacity:.5;transform:scale(.5)} 100%{opacity:0;transform:scale(2.4)} }
+.saia-est-stage .mile text{ font-family:var(--body); font-size:9px; letter-spacing:.08em; fill:#a59c8d; text-transform:uppercase; transition:fill .4s; }
+.saia-est-stage .mile.done text,.saia-est-stage .mile.live text{ fill:var(--terra); }
+.saia-est-stage .mile .big{ font-family:var(--display); font-size:13px; letter-spacing:0; fill:var(--ink); text-transform:none; }
+.saia-est-stage .van{ fill:var(--van,var(--terra)); }
+.saia-est-stage .van .win{ fill:var(--paper); opacity:.9; }
+.saia-est-stage .van .wheel{ fill:var(--ink); }
+
+/* result */
+.saia-est-stage .est .result{ position:relative; overflow:hidden; max-height:0; opacity:0; transform:translateY(8px);
+  border:1px dashed var(--terra); border-radius:6px;
+  transition:max-height .55s ease,opacity .5s,transform .5s; }
+.saia-est-stage .est .result.show{ overflow:visible; max-height:560px; opacity:1; transform:none; padding:30px 18px 6px; margin-top:18px; }
+.saia-est-stage .est-flag{ position:absolute; top:-11px; left:18px; background:var(--terra); color:#F5F1E8;
+  font-family:var(--body); font-size:10px; letter-spacing:.2em; text-transform:uppercase; padding:4px 12px; border-radius:3px; }
+.saia-est-stage .est .zone{ display:inline-flex; align-items:center; gap:7px; font-family:var(--body); font-size:10px; letter-spacing:.1em; text-transform:uppercase;
+  color:var(--terra); background:rgba(184,98,74,.1); border-radius:30px; padding:4px 11px; margin-bottom:14px; }
+.saia-est-stage .est .zone .dot{ width:6px; height:6px; border-radius:50%; background:var(--terra); }
+.saia-est-stage .est .line{ display:flex; justify-content:space-between; align-items:baseline; gap:16px; margin-bottom:9px; padding-bottom:9px; border-bottom:1px dashed var(--line); }
+.saia-est-stage .est .line .kk{ font-family:var(--display); font-size:12.5px; color:var(--muted); }
+.saia-est-stage .est .line .kk small{ display:block; font-family:var(--body); font-size:10px; color:#a59c8d; margin-top:2px; }
+.saia-est-stage .est .line .vv{ font-family:var(--body); font-size:15px; font-weight:500; color:var(--ink); font-variant-numeric:tabular-nums; white-space:nowrap; }
+.saia-est-stage .est .total{ display:flex; justify-content:space-between; align-items:center; gap:16px; padding-top:13px; margin-top:4px; }
+.saia-est-stage .est .total .kk{ font-family:var(--body); font-size:11px; letter-spacing:.06em; text-transform:uppercase; }
+.saia-est-stage .est .total .vv{ font-family:var(--body); font-weight:500; line-height:1; color:var(--terra); font-size:21px; letter-spacing:-.01em; font-variant-numeric:tabular-nums; }
+.saia-est-stage .est .total .vv .pre{ font-size:11px; color:var(--muted); margin-right:6px; }
+.saia-est-stage .est .cta{ display:flex; align-items:center; justify-content:center; gap:10px; width:100%; background:var(--terra); color:#fff;
+  font-family:var(--body); font-size:11px; letter-spacing:.2em; text-transform:uppercase; padding:15px; border-radius:9px;
+  text-decoration:none; border:none; cursor:pointer; margin-top:16px; transition:transform .2s,box-shadow .2s,background .2s; }
+.saia-est-stage .est .cta:hover{ transform:translateY(-2px); background:var(--terra-dk); box-shadow:0 14px 28px -10px rgba(184,98,74,.7); }
+.saia-est-stage .est .cta svg{ width:15px; height:15px; }
+.saia-est-stage .est .disc{ font-size:10px; line-height:1.55; color:var(--muted); margin-top:11px; }
+.saia-est-stage .est .disc b{ color:var(--ink); }
+
+/* B — spotlight stage */
+.saia-est-stage .vb{ position:relative; background:linear-gradient(180deg,#F5F1E8 0%,rgba(245,241,232,0) 260px),linear-gradient(160deg,#F3F1E6 0%,#ECEDE0 100%); padding:clamp(54px,7vw,78px) 6vw; overflow:hidden; }
+.saia-est-stage .est-blob{ position:absolute; z-index:0; border-radius:50%; filter:blur(46px); pointer-events:none; }
+.saia-est-stage .est-blob.b1{ width:46vw; height:46vw; top:22%; right:-8%; background:rgba(184,98,74,.12); animation:saiaBlob1 18s ease-in-out infinite alternate; }
+.saia-est-stage .est-blob.b2{ width:38vw; height:38vw; bottom:-18%; left:-6%; background:rgba(124,138,107,.22); animation:saiaBlob2 22s ease-in-out infinite alternate; }
+@keyframes saiaBlob1{ 0%{transform:translate(0,0) scale(1)} 100%{transform:translate(6%,-8%) scale(1.18)} }
+@keyframes saiaBlob2{ 0%{transform:translate(6%,-8%) scale(1.18)} 100%{transform:translate(0,0) scale(1)} }
+.saia-est-stage .stagewrap{ position:relative; max-width:1080px; margin:0 auto; display:grid; grid-template-columns:1fr 1fr; gap:48px; align-items:center; }
+.saia-est-stage .pitch{ color:var(--ink); }
+.saia-est-stage .pitch h2{ font-family:var(--display); font-weight:600; font-size:clamp(40px,5.4vw,62px); line-height:.96; letter-spacing:-.02em; color:var(--ink); margin:.2em 0 .25em; }
+.saia-est-stage .pitch .word{ display:inline-block; opacity:0; transform:translateY(18px); }
+.saia-est-stage .vb.play .pitch .word{ animation:saiaWordUp .6s cubic-bezier(.2,.9,.3,1) both; }
+.saia-est-stage .vb.play .pitch .word:nth-child(2){ animation-delay:.08s; }
+.saia-est-stage .vb.play .pitch .word:nth-child(3){ animation-delay:.16s; }
+.saia-est-stage .vb.play .pitch .word:nth-child(4){ animation-delay:.24s; }
+@keyframes saiaWordUp{ to{ opacity:1; transform:none; } }
+.saia-est-stage .pitch .lead{ color:var(--muted); max-width:340px; font-size:14px; }
+.saia-est-stage .pitch .bigroute{ height:168px; margin-top:22px; }
+.saia-est-stage .pitch .bigroute .track{ stroke:rgba(43,38,32,.3); stroke-width:3; }
+.saia-est-stage .pitch .bigroute .rfill{ stroke-width:4; }
+.saia-est-stage .pitch .bigroute .mile text{ fill:var(--muted); font-size:13px; }
+.saia-est-stage .pitch .bigroute .mile .big{ fill:var(--ink); font-size:18px; }
+.saia-est-stage .pitch .bigroute .van{ --van:var(--terra); }
+.saia-est-stage .pitch .bigroute .van .win{ fill:var(--paper); }
+.saia-est-stage .pitch .bigroute .van .wheel{ fill:var(--ink); }
+.saia-est-stage .est.b{ background:#FFFFFF; border:1px solid #D9D2C0; border-radius:8px; padding:26px;
+  box-shadow:0 26px 64px -44px rgba(43,38,32,.5); }
+.saia-est-stage .est.b label{ color:var(--muted); }
+.saia-est-stage .est.b input{ background:#fff; border-color:var(--line); color:var(--ink); }
+.saia-est-stage .est.b input::placeholder{ color:#c3bba9; }
+.saia-est-stage .est.b .seg{ background:#fff; border-color:var(--line); }
+.saia-est-stage .est.b .seg .thumb{ background:var(--ink); }
+.saia-est-stage .est.b .seg button{ color:var(--muted); }
+.saia-est-stage .est.b .seg button.on{ color:var(--cream); }
+.saia-est-stage .est.b .line .kk{ color:var(--muted); }
+.saia-est-stage .est.b .line .vv{ color:var(--ink); }
+.saia-est-stage .est.b .total{ border-top-color:var(--line); }
+.saia-est-stage .est.b .total .kk{ color:var(--muted); }
+.saia-est-stage .est.b .disc{ color:var(--muted); }
+.saia-est-stage .est.b .disc b{ color:var(--ink); }
+.saia-est-stage .vb.play .est.b{ animation:saiaCardIn .7s cubic-bezier(.2,.9,.3,1) .15s both; }
+@keyframes saiaCardIn{ 0%{opacity:0;transform:translateY(24px) scale(.97)} 100%{opacity:1;transform:none} }
+@media(max-width:820px){ .saia-est-stage .stagewrap{ grid-template-columns:1fr; gap:30px; } }
+
+/* entrance: fade+rise + background boxes + car drive-by */
+.saia-est-stage .est-deco{ position:absolute; inset:0; overflow:hidden; pointer-events:none; z-index:0; color:var(--terra); }
+.saia-est-stage .stagewrap{ z-index:1; }
+/* content stays visible by default; the rise plays only once .in is set (no hidden-content risk if the trigger never fires) */
+.saia-est-stage.in .stagewrap{ animation:estRise .8s cubic-bezier(.22,.61,.36,1) both; }
+@keyframes estRise{ from{ opacity:0; transform:translateY(24px); } to{ opacity:1; transform:translateY(0); } }
+.saia-est-stage .est-box{ position:absolute; border:1px solid rgba(43,38,32,.10); border-radius:3px; }
+.saia-est-stage .est-box.b1{ width:120px; height:80px; top:12%; left:8%; }
+.saia-est-stage .est-box.b2{ width:90px; height:90px; bottom:14%; left:20%; }
+.saia-est-stage .est-box.b3{ width:140px; height:70px; top:22%; right:10%; }
+.saia-est-stage .est-car{ position:absolute; bottom:9%; left:-60px; width:48px; opacity:.5; }
+.saia-est-stage.in .est-car{ animation:estCar 6s linear .3s both; }
+@keyframes estCar{ from{ transform:translateX(0); } to{ transform:translateX(120vw); } }
+@media (prefers-reduced-motion: reduce){
+  .saia-est-stage.in .stagewrap{ animation:none; }
+  .saia-est-stage.in .est-car{ animation:none; }
+}
+@media (prefers-reduced-motion: reduce){ .saia-est-stage *{ animation:none!important; transition:none!important; } }
+</style>
+
+<!-- ============ Mobile scroll journey (≤767px) — mat unrolls → Cristina flows ============ -->
+<style>
+  #mobileJourney{ display:none; }
+  @media (max-width:767px){
+    #mobileJourney{ display:block; background:#F5F1E8; }
+    /* on mobile this journey tells the whole mat-hire story over the opening mat — hero,
+       signature mat & hiring are folded into its chapters — so it replaces #top's hero,
+       the signature-mat & hiring bands, and the Pilates-flow bands (the "Hire the range"
+       grid, estimator, gallery and guest-list form still follow as editorial sections) */
+    #top [data-band="0,0.14"],
+    #top [data-band="0.14,0.30"],
+    #top [data-band="0.30,0.44"],
+    #top [data-band="0.44,0.556"],   /* "For every gathering" range grid — desktop only */
+    #top .flow-rail{ display:none !important; }   /* Pilates flow + Train-with-Cristina form: the journey + its end-CTA replace these on mobile */
+  }
+  .mj-track{ position:relative; height:780vh; }
+  /* clear the sticky nav (≈59px): pad the pinned area down so chapter text never tucks under it */
+  .mj-pin{ position:sticky; top:0; height:100vh; padding-top:60px; box-sizing:border-box; display:flex; flex-direction:column; overflow:hidden; }
+  /* section-snap lock — while the journey owns the gesture, kill native scroll + momentum on the
+     pinned view so each swipe advances exactly ONE chapter (iOS ignores touchmove preventDefault
+     once it commits to scrolling; touch-action:none stops it starting). Toggled in home-mobile-journey.js. */
+  html.mj-snaplock .mj-pin{ touch-action:none; }
+  html.mj-snaplock, html.mj-snaplock body{ overscroll-behavior-y:none; }
+  .mj-txt{ position:relative; flex:0 0 33%; padding:0 24px; }
+  /* top-anchored so tall 2-line titles grow downward into the empty stage, never upward under the nav */
+  .mj-chap{ position:absolute; left:24px; right:24px; top:6px; opacity:0; transition:opacity .45s ease; pointer-events:none; }
+  .mj-chap.on{ opacity:1; }
+  .mj-eb{ font-size:11px; letter-spacing:.28em; text-transform:uppercase; color:#B8624A; margin:0 0 12px; }
+  .mj-h{ font-family:'Playfair Display',serif; font-weight:500; font-size:clamp(32px,9vw,40px); line-height:1.0; margin:0 0 12px; color:#2B2620; padding-left:14px; border-left:2px solid #B8624A; }
+  .mj-x{ font-size:15px; line-height:1.6; color:#6B6358; margin:0; padding-left:14px; }
+  .mj-anim{ position:relative; flex:1 1 auto; background:radial-gradient(120% 90% at 50% 14%, #F5F1E8 38%, #EFEADF 100%); }
+  .mj-matgl{ position:absolute; inset:0; width:100%; height:100%; z-index:1; }
+  .mj-flow{ position:absolute; inset:0; width:100%; height:100%; z-index:2; opacity:0; }
+  /* swipe cue + per-chapter ladder — pinned to the LEFT edge, clear of the centred mat/Cristina
+     and the concierge "S" (bottom-right). The ladder is a thin vertical rail; JS fades it out
+     toward the end so the closing CTA under Cristina sits clean. */
+  .mj-beacon{ position:absolute; left:16px; top:50%; transform:translateY(-50%); z-index:6; display:flex; flex-direction:column; align-items:center; gap:16px; pointer-events:none; }
+  .mj-bcue{ display:flex; flex-direction:column; align-items:center; gap:9px; transition:opacity .4s ease; will-change:opacity; }
+  .mj-swipe{ width:46px; height:54px; display:flex; align-items:center; justify-content:center; }
+  .mj-hand-img{ width:100%; height:auto; display:block; animation:mjFlick 1.7s ease-in-out infinite; will-change:transform; }
+  .mj-cue-lbl{ font-size:9px; letter-spacing:.24em; text-transform:uppercase; color:#2B2620; font-weight:600; }
+  .mj-ladder{ display:flex; flex-direction:column; align-items:center; gap:6px; transition:opacity .4s ease; will-change:opacity; }
+  .mj-ladder i{ width:6px; height:15px; border-radius:99px; background:rgba(43,38,32,.2); transition:background .25s ease, height .25s ease; }
+  .mj-ladder i.done{ background:#C98A2E; }
+  .mj-ladder i.on{ background:#C98A2E; height:26px; }
+  @keyframes mjFlick{ 0%,100%{ transform:translateY(5px) } 48%,64%{ transform:translateY(-4px) } }
+  @media (prefers-reduced-motion: reduce){ .mj-hand-img{ animation:none } }
+  /* closing CTA — fades in beneath Cristina on the last chapter, where the rail used to be.
+     Anchored bottom-LEFT so it never collides with the persistent concierge orb + "Chat here"
+     caption (bottom-right). */
+  .mj-endcta{ position:absolute; left:24px; right:24px; bottom:4%; z-index:7;
+    display:flex; flex-direction:column; align-items:flex-start; gap:8px; text-decoration:none; text-align:left;
+    transform:translateY(10px); opacity:0; pointer-events:none; transition:opacity .5s ease, transform .5s ease; }
+  .mj-endcta.show{ opacity:1; transform:translateY(0); pointer-events:auto; }
+  .mj-endcta .mj-endcta-eb{ font-size:10px; letter-spacing:.28em; text-transform:uppercase; color:#B8624A; font-weight:600; }
+  .mj-endcta .mj-endcta-row{ display:flex; align-items:stretch; gap:8px; width:100%; max-width:380px; }
+  .mj-endcta .mj-endcta-email{ flex:1 1 auto; min-width:0; font-family:'Inter',sans-serif; font-size:14px;
+    padding:13px 16px; border-radius:99px; border:1px solid #DAD4C8; background:rgba(255,255,255,.94);
+    color:#2B2620; box-shadow:0 14px 30px rgba(43,38,32,.12); }
+  .mj-endcta .mj-endcta-hire{ display:inline-flex; align-items:center; justify-content:center; gap:8px; width:100%; max-width:380px;
+    background:#2B2620; color:#F5F1E8; font-family:'Inter',sans-serif; font-size:15px; letter-spacing:.04em;
+    padding:15px 18px; border-radius:99px; border:0; cursor:pointer; box-shadow:0 14px 30px rgba(43,38,32,.22); }
+  .mj-endcta .mj-endcta-hire svg{ width:16px; height:16px; flex:0 0 auto; }
+  .mj-endcta .mj-endcta-or{ font-size:10px; letter-spacing:.18em; text-transform:uppercase; color:#9A938A; margin-top:2px; }
+  .mj-endcta .mj-endcta-btn{ display:inline-flex; align-items:center; gap:7px; background:rgba(255,255,255,.94); color:#2B2620;
+    font-family:'Inter',sans-serif; font-size:14px; letter-spacing:.04em; padding:13px 18px; border-radius:99px;
+    border:1px solid #DAD4C8; cursor:pointer; flex:0 0 auto; box-shadow:0 14px 30px rgba(43,38,32,.12); }
+  .mj-endcta .mj-endcta-btn svg{ width:15px; height:15px; flex:0 0 auto; }
+  .mj-endcta .mj-endcta-msg{ font-size:11px; line-height:1.3; color:#6B6358; min-height:1em; }
+</style>
+
+
+
+<!-- ============ LOADING OVERLAY ============
+     Painted before anything else so it masks the brief flash of the scroll-journey
+     layers (the figure PNGs + band cards sit fully visible in the HTML until
+     home-journey.js positions/hides them), then fades once the page is ready.
+     Inline styles → covers from first paint, even before css/base.css arrives. -->
+<div id="introOverlay" role="status" aria-label="Loading SAÏA London" style="position:fixed; inset:0; z-index:9999; background:#F5F1E8; display:flex; align-items:center; justify-content:center; overflow:hidden; opacity:1; transition:opacity .8s ease;"></div>
+<script>
+(function(){
+  var ov = document.getElementById('introOverlay');
+  if (!ov) return;
+  var dismissed = false;
+
+  function dismiss(){
+    if (dismissed) return; dismissed = true;
+    ov.style.opacity = '0';
+    setTimeout(function(){ if (ov.parentNode) ov.parentNode.removeChild(ov); }, 850);
+  }
+
+  if (document.readyState === 'complete') dismiss();
+  else window.addEventListener('load', dismiss);
+  setTimeout(dismiss, 12000);        // safety net — never trap the visitor
+})();
+</script>
+
+<div id="homeRoot" style="--scrim:245,241,232; background:#F5F1E8; color:#2B2620; font-family:'Inter',system-ui,sans-serif; overflow-x:clip; position:relative;">
+
+  <!-- true page-top anchor: the logo links here. #top now sits BELOW the mobile journey
+       (collapsed) so it can't be used as "home" on mobile — this span is always at scroll 0. -->
+  <span id="pagetop" aria-hidden="true" style="position:absolute; top:0; left:0;"></span>
+
+  <!-- announcement -->
+  <div style="background:#2B2620; color:#F5F1E8; text-align:center; font-size:11px; letter-spacing:.24em; text-transform:uppercase; padding:11px 16px;">Yoga mat hire across London. Same-day delivery from £8.50 a mat</div>
+
+  <header class="snav">
+    <div class="snav-desk">
+      <a class="snav-brand" href="#pagetop" aria-label="SAÏA London — home"><img src="{{ 'saia-logo.avif' | asset_url }}" alt="SAÏA London"></a>
+      <div class="snav-row">
+        <nav class="snav-links" aria-label="Primary">
+          <a href="/pages/pilates-with-cristina">Pilates with Cristina</a>
+          <a href="/pages/events">Events</a>
+          <a href="/pages/story">Our Story</a>
+        </nav>
+        <a class="snav-cta" href="#estimate">Hire mats</a>
+      </div>
+    </div>
+    <div class="snav-mob">
+      <button class="snav-burger" id="navToggle" aria-label="Open menu" aria-expanded="false"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><line x1="3" y1="7" x2="21" y2="7"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="17" x2="21" y2="17"/></svg></button>
+      <a class="snav-brand" href="#pagetop" aria-label="SAÏA London — home"><img src="{{ 'saia-logo.avif' | asset_url }}" alt="SAÏA London"></a>
+      <a class="snav-cta" href="#estimate">Hire</a>
+    </div>
+  </header>
+  <div class="snav-drawer" id="mobileDrawer">
+    <div class="snav-drawer-top">
+      <a class="snav-brand" href="#pagetop" aria-label="SAÏA London — home"><img src="{{ 'saia-logo.avif' | asset_url }}" alt="SAÏA London"></a>
+      <button class="snav-burger" id="navClose" aria-label="Close menu"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg></button>
+    </div>
+    <nav>
+      <a href="/pages/pilates-with-cristina" data-drawer-link>Pilates with Cristina</a>
+      <a href="/pages/events" data-drawer-link>Events</a>
+      <a href="/pages/story" data-drawer-link>Our Story</a>
+      <a href="#estimate" data-drawer-link>Hire mats</a>
+    </nav>
+  </div>
+
+  <!-- ============ MOBILE SCROLL JOURNEY (≤767px, JS-filled) ============ -->
+  <section id="mobileJourney" aria-label="SAÏA mat hire & Pilates"></section>
+
+  <!-- ============ THE PINNED 3D JOURNEY ============ -->
+  <div id="top" style="position:relative; height:2000vh; background:#F5F1E8;">
+    <div class="home-sticky" style="position:sticky; top:0; height:100vh; overflow:hidden; background:#F5F1E8;">
+      <canvas id="homeCanvas" aria-hidden="true" style="position:absolute; inset:0; width:100%; height:100%; z-index:1; opacity:0;"></canvas>
+
+      <!-- Watercolour stage mat — fades in under Cristina at the handoff (p≈0.50→0.56),
+           sits behind the figures, above the canvas. Driven by matStageFor() in home-journey.js -->
+      <img id="matStage" src="{{ 'mat-stage-baked.png' | asset_url }}" alt=""
+           style="position:absolute; left:55%; bottom:12vh; transform:translateX(-50%);
+                  width:46vw; height:auto; transform-origin:bottom center; z-index:2;
+                  opacity:0; pointer-events:none; will-change:opacity;
+                  filter:drop-shadow(0 30px 36px rgba(43,38,32,.18));">
+
+      <!-- Cristina watercolour flow — frame sequence scrubbed by scroll (replaces the
+           #figureLayer PNG crossfade). First frame = pose-1 on the gentle mat, so the 3D mesh
+           hands off into it invisibly. Mobile/.is-static hides it (static poster instead). -->
+      <canvas id="flowCanvas" aria-hidden="true"
+        style="position:absolute; left:57%; top:53%; transform:translate(-50%,-50%);
+               height:80vh; width:auto; aspect-ratio:1104/756; object-fit:contain;
+               z-index:2; opacity:0; pointer-events:none;"></canvas>
+
+      <!-- Cristina — watercolour figure sequence, composited on the mat (walks in, flows through poses) -->
+      <div id="figureLayer" aria-hidden="true" style="position:absolute; inset:0; z-index:2; pointer-events:none;">
+        <img class="saia-fig" data-fig="1" src="{{ 'figure-1.png' | asset_url }}" alt="">
+        <img class="saia-fig" data-fig="2" src="{{ 'figure-2.png' | asset_url }}" alt="">
+        <img class="saia-fig" data-fig="3" src="{{ 'figure-3.png' | asset_url }}" alt="">
+        <img class="saia-fig" data-fig="4" src="{{ 'figure-4.png' | asset_url }}" alt="">
+        <img class="saia-fig" data-fig="5" src="{{ 'figure-5.png' | asset_url }}" alt="">
+        <img class="saia-fig" data-fig="6" src="{{ 'figure-6.png' | asset_url }}" alt="">
+        <img class="saia-fig" data-fig="7" src="{{ 'figure-7.png' | asset_url }}" alt="">
+        <img class="saia-fig" data-fig="8" src="{{ 'figure-8.png' | asset_url }}" alt="">
+        <img class="saia-fig" data-fig="9" src="{{ 'figure-9.png' | asset_url }}" alt="">
+        <img class="saia-fig" data-fig="10" src="{{ 'figure-10.png' | asset_url }}" alt="">
+        <img class="saia-fig" data-fig="11" src="{{ 'figure-11.png' | asset_url }}" alt="">
+        <img class="saia-fig" data-fig="12" src="{{ 'figure-12.png' | asset_url }}" alt="">
+        <img class="saia-fig" data-fig="13" src="{{ 'figure-13.png' | asset_url }}" alt="">
+        <img class="saia-fig" data-fig="14" src="{{ 'figure-14.png' | asset_url }}" alt="">
+        <img class="saia-fig" data-fig="15" src="{{ 'figure-15.png' | asset_url }}" alt="">
+      </div>
+
+      <div id="stage" style="position:absolute; inset:0; z-index:3; pointer-events:none;">
+
+        <!-- BAND 1 — HERO -->
+        <div data-band="0,0.14" style="position:absolute; inset:0; display:flex; align-items:center; justify-content:flex-start; padding:0 7vw;">
+          <div class="band-inner home-hero-in" style="max-width:620px; position:relative; z-index:1;">
+            <div style="font-size:12px; letter-spacing:.3em; text-transform:uppercase; color:#2B2620; opacity:.7; margin-bottom:18px;">A women's club in London</div>
+            <h1 style="font-family:'Playfair Display',serif; font-weight:500; font-size:clamp(3.4rem,8.5vw,6.4rem); line-height:.96; letter-spacing:-.01em; margin:0; color:#2B2620;">Yoga mat hire,<br>across London.</h1>
+            <p style="font-size:clamp(15px,1.5vw,18px); line-height:1.6; color:#2B2620; max-width:460px; margin:30px 0 0;">If you're organising a wellness event, you've landed in the right place. Rent our mats for £8.50 each, with same-day delivery from our Central London warehouse.</p>
+            <div class="hero-marquee" aria-label="Fitness, community, mindset">
+              <div class="track">
+                <span class="chip">Fitness</span><span class="chip">Community</span><span class="chip">Mindset</span><span class="chip">£8.50 / mat</span><span class="chip">Same-day delivery</span><span class="chip">NW3 · Central London</span>
+                <span class="chip">Fitness</span><span class="chip">Community</span><span class="chip">Mindset</span><span class="chip">£8.50 / mat</span><span class="chip">Same-day delivery</span><span class="chip">NW3 · Central London</span>
+              </div>
+            </div>
+            <div style="display:flex; flex-wrap:wrap; gap:14px; margin-top:30px; pointer-events:auto;">
+              <button data-hire-cta class="saia-btn saia-btn--ink" style="font-family:'Inter',sans-serif;">Hire mats for your event</button>
+              <button data-hire-cta="studio" class="saia-btn saia-btn--ghost" style="font-family:'Inter',sans-serif;">Run a studio? Talk to us</button>
+            </div>
+          </div>
+          <div class="hero-atmos" aria-hidden="true">
+            <div class="hb hb1"></div><div class="hb hb2"></div><div class="hb hb3"></div>
+            <div class="hgrain"></div>
+          </div>
+        </div>
+
+        <!-- BAND 2 — THE OPEN MAT + SPECS -->
+        <div data-band="0.14,0.30" style="position:absolute; inset:0; display:flex; align-items:center; justify-content:flex-start; padding:0 7vw;">
+          <div class="band-inner" style="max-width:440px; position:relative; z-index:1;">
+            <div style="font-size:12px; letter-spacing:.3em; text-transform:uppercase; color:#6B6358; margin-bottom:18px;">The signature mat</div>
+            <h2 style="font-family:'Playfair Display',serif; font-weight:500; font-size:clamp(34px,4.4vw,54px); line-height:1.04; margin:0 0 22px; color:#2B2620;">Made for grip,<br>made to last.</h2>
+            <p style="font-size:16px; line-height:1.75; color:#6B6358; margin:0 0 26px; max-width:400px;">One mat, exceptionally made: an ethically sourced natural-rubber base with a non-slip, anti-odour PU surface. Weighted to fall open and lie flat the moment you unroll it.</p>
+            <div class="spec-pills" style="display:flex; flex-wrap:wrap; gap:8px;">
+              <span class="spec-pill" style="font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:#6B6358; border:1px solid #C9C2B4; border-radius:30px; padding:6px 13px;">68 × 185 cm</span>
+              <span class="spec-pill" style="font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:#6B6358; border:1px solid #C9C2B4; border-radius:30px; padding:6px 13px;">4 mm</span>
+              <span class="spec-pill" style="font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:#6B6358; border:1px solid #C9C2B4; border-radius:30px; padding:6px 13px;">Natural rubber</span>
+              <span class="spec-pill" style="font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:#6B6358; border:1px solid #C9C2B4; border-radius:30px; padding:6px 13px;">Non-slip</span>
+            </div>
+            <div style="font-size:13px; color:#6B6358; margin-top:18px;"><strong style="color:#2B2620;">For hire only.</strong></div>
+            <div style="margin-top:24px; pointer-events:auto;">
+              <button data-hire-cta class="saia-btn saia-btn--ink" style="font-family:'Inter',sans-serif;">Hire mats for your event</button>
+            </div>
+            <img id="homeMat" src="{{ 'mat-flat.png' | asset_url }}" alt="The SAÏA signature yoga mat, unrolled" style="display:none;">
+          </div>
+          <div class="atmos-soft" aria-hidden="true">
+            <div class="sb sb1"></div><div class="sb sb2"></div>
+          </div>
+        </div>
+
+        <!-- BAND 3 — HOW HIRE WORKS -->
+        <div data-band="0.30,0.44" style="position:absolute; inset:0; display:flex; align-items:center; justify-content:flex-start; padding:0 7vw;">
+          <div class="band-inner" style="max-width:480px;">
+            <div style="font-size:12px; letter-spacing:.3em; text-transform:uppercase; color:#B8624A; margin-bottom:16px;">Mat hire</div>
+            <h2 style="font-family:'Playfair Display',serif; font-weight:500; font-size:clamp(32px,4.4vw,52px); line-height:1.04; margin:0 0 14px; color:#2B2620;">Hiring is effortless.</h2>
+            <p style="font-size:15px; line-height:1.7; color:#6B6358; margin:0 0 28px; max-width:420px;">From a 10-mat morning class to a 50-person retreat, we handle delivery, set-up time and collection. £8.50 a mat, 2-day hire, minimum of ten.</p>
+            <div style="display:flex; flex-direction:column; gap:18px;">
+              <div style="display:flex; gap:16px; align-items:baseline;"><span style="font-family:'Playfair Display',serif; font-size:22px; color:#B8624A;">01</span><div><div style="font-family:'Playfair Display',serif; font-size:20px; color:#2B2620;">Tell us your event</div><div style="font-size:14px; line-height:1.6; color:#6B6358;">Date, location and how many mats. Minimum of ten.</div></div></div>
+              <div style="display:flex; gap:16px; align-items:baseline;"><span style="font-family:'Playfair Display',serif; font-size:22px; color:#B8624A;">02</span><div><div style="font-family:'Playfair Display',serif; font-size:20px; color:#2B2620;">We deliver early</div><div style="font-size:14px; line-height:1.6; color:#6B6358;">Mats arrive the day before by London courier, or collect from our NW3 studio.</div></div></div>
+              <div style="display:flex; gap:16px; align-items:baseline;"><span style="font-family:'Playfair Display',serif; font-size:22px; color:#B8624A;">03</span><div><div style="font-family:'Playfair Display',serif; font-size:20px; color:#2B2620;">You practise</div><div style="font-size:14px; line-height:1.6; color:#6B6358;">A clean, grippy mat under every guest. Nothing to set up, nothing to launder.</div></div></div>
+              <div style="display:flex; gap:16px; align-items:baseline;"><span style="font-family:'Playfair Display',serif; font-size:22px; color:#B8624A;">04</span><div><div style="font-family:'Playfair Display',serif; font-size:20px; color:#2B2620;">We collect after</div><div style="font-size:14px; line-height:1.6; color:#6B6358;">We pick everything up the day after. A 2-day hire from £8.50 a mat.</div></div></div>
+            </div>
+            <div class="hire-road" aria-hidden="true">
+              <span class="hr-line"></span><span class="hr-prog"></span>
+              <span class="hr-pin" style="left:4%"><b>Order</b></span>
+              <span class="hr-pin" style="left:36%"><b>Deliver</b></span>
+              <span class="hr-pin" style="left:68%"><b>Practise</b></span>
+              <span class="hr-pin" style="left:96%"><b>Collect</b></span>
+              <span class="hr-van"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7.5h11v7H2z"/><path d="M13 10h4l3 3v1.5h-7z"/><circle cx="7" cy="16.5" r="1.6"/><circle cx="17" cy="16.5" r="1.6"/></svg></span>
+            </div>
+            <div style="margin-top:28px; pointer-events:auto;">
+              <button data-hire-cta class="saia-btn saia-btn--ink" style="font-family:'Inter',sans-serif;">Hire mats for your event</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- BAND 4 — FOR EVERY GATHERING -->
+        <div data-band="0.44,0.556" style="position:absolute; inset:0; display:flex; align-items:flex-start; justify-content:center; padding:13vh 6vw 0;">
+          <div class="band-inner" style="width:100%; max-width:1000px;">
+            <div style="text-align:center; margin-bottom:36px;">
+              <div style="font-size:12px; letter-spacing:.3em; text-transform:uppercase; color:#6B6358; margin-bottom:14px;">Hire the range</div>
+              <h2 style="font-family:'Playfair Display',serif; font-weight:500; font-size:clamp(32px,4.4vw,52px); line-height:1.03; margin:0; color:#2B2620;">For every gathering.</h2>
+            </div>
+            <div class="s4grid">
+              <div class="s4card">
+                <span class="s4ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11a8 8 0 0 1 13.5-5.5L20 8"/><path d="M20 4v4h-4"/><path d="M20 13a8 8 0 0 1-13.5 5.5L4 16"/><path d="M4 20v-4h4"/></svg></span>
+                <div class="s4nm">Studios &amp; partners</div>
+                <div class="s4who">60+ mats</div>
+                <p class="s4ds">A reduced rate with recurring delivery to keep your studio stocked.</p>
+                <div class="s4pr">Reduced rate</div>
+                <button data-hire-cta class="btn-line saia-btn saia-btn--ghost">Hire mats for your studio</button>
+              </div>
+              <div class="s4card feat">
+                <span class="badge">Most booked</span>
+                <span class="s4ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="2"/><path d="M3 9.5h18M8 3v3.5M16 3v3.5"/></svg></span>
+                <div class="s4nm">Events &amp; retreats</div>
+                <div class="s4who">10 to 60 mats</div>
+                <p class="s4ds">Delivered and collected. Ideal for classes, brunch clubs &amp; weekenders.</p>
+                <div class="s4pr">From £8.50 <small>/ mat</small></div>
+                <button data-hire-cta class="btn-solid saia-btn saia-btn--ink">Hire mats for your event</button>
+              </div>
+              <div class="s4card">
+                <span class="s4ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.6L19.5 10l-5.6 1.4L12 17l-1.9-5.6L4.5 10l5.6-1.4z"/></svg></span>
+                <div class="s4nm">Brand partnerships</div>
+                <div class="s4who">Bespoke</div>
+                <p class="s4ds">Branded mats, press days &amp; activations, designed with your team.</p>
+                <div class="s4pr">Let's talk</div>
+                <button data-hire-cta class="btn-line saia-btn saia-btn--ghost">Work with us</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- FLOW LEVEL 1 — CRISTINA STANDS · THE PERSON BEHIND SAÏA -->
+        <div class="flow-rail" data-band="0.576,0.66" style="position:absolute; inset:0; display:flex; align-items:center; justify-content:flex-start; padding:0 7vw;">
+          <div class="band-inner" style="max-width:460px;">
+            <div style="font-size:12px; letter-spacing:.3em; text-transform:uppercase; color:#B8624A; margin-bottom:16px;">The person behind SAÏA</div>
+            <h2 style="font-family:'Playfair Display',serif; font-weight:500; font-size:clamp(34px,4.6vw,58px); line-height:1.0; margin:0 0 22px; color:#2B2620;">Run by<br>Cristina.</h2>
+            <p style="font-size:16px; line-height:1.75; color:#6B6358; margin:0; max-width:420px;">SAÏA Mats is run by Cristina, who looks after every hire herself, from your first enquiry to the moment the mats come home.</p>
+          </div>
+        </div>
+
+        <!-- FLOW LEVEL 2 — CRISTINA REACHES UP · PERSONAL SERVICE -->
+        <div class="flow-rail" data-band="0.675,0.755" style="position:absolute; inset:0; display:flex; align-items:center; justify-content:flex-start; padding:0 7vw;">
+          <div class="band-inner" style="max-width:460px;">
+            <div style="font-size:12px; letter-spacing:.3em; text-transform:uppercase; color:#B8624A; margin-bottom:16px;">Personal service</div>
+            <h2 style="font-family:'Playfair Display',serif; font-weight:500; font-size:clamp(34px,4.6vw,58px); line-height:1.02; margin:0 0 22px; color:#2B2620;">Every booking,<br>by hand.</h2>
+            <p style="font-size:17px; line-height:1.8; color:#6B6358; margin:0; max-width:460px;">No call centre and no queue. Cristina manages each order personally, so your event is planned with care and nothing slips.</p>
+          </div>
+        </div>
+
+        <!-- FLOW LEVEL 3 — CRISTINA FOLDS → DOWNWARD DOG · WHERE -->
+        <div class="flow-rail" data-band="0.778,0.86" style="position:absolute; inset:0; display:flex; align-items:center; justify-content:flex-start; padding:0 7vw;">
+          <div class="band-inner" style="max-width:460px;">
+            <div style="font-size:12px; letter-spacing:.3em; text-transform:uppercase; color:#6B6358; margin-bottom:16px;">Where we are</div>
+            <h2 style="font-family:'Playfair Display',serif; font-weight:500; font-size:clamp(34px,4.6vw,58px); line-height:1.0; margin:0 0 22px; color:#2B2620;">Based in<br>NW3.</h2>
+            <p style="font-size:16px; line-height:1.75; color:#6B6358; margin:0; max-width:400px;">We're a North London business, delivering across the city, with free pickup from our NW3 warehouse.</p>
+            <div class="nw3-map" aria-hidden="true">
+              <!-- Geographically projected (WGS84 → SVG): Northern line Golders Green–Hampstead–Belsize Park–Chalk Farm; Jubilee line Finchley Road–Swiss Cottage–St John's Wood -->
+              <svg viewBox="0 0 300 250" role="img">
+                <!-- lines (real order + relative geography) -->
+                <path class="nw3-line northern draw" pathLength="1" d="M87 30 L136 111 L179 141 L213 174"/>
+                <path class="nw3-line jubilee draw d2" pathLength="1" d="M131 160 L149 177 L149 220"/>
+                <!-- neighbouring stations (context, faded) -->
+                <circle class="nw3-pop" cx="87" cy="30" r="3.5" fill="#FBF8F1" stroke="#2B2620" stroke-width="2"/>
+                <text class="nw3-tickname" x="96" y="27">Golders Green</text>
+                <circle class="nw3-pop" cx="213" cy="174" r="3.5" fill="#FBF8F1" stroke="#2B2620" stroke-width="2"/>
+                <text class="nw3-tickname" x="221" y="178">Chalk Farm</text>
+                <circle class="nw3-pop" cx="131" cy="160" r="3.5" fill="#FBF8F1" stroke="#9A938A" stroke-width="2"/>
+                <text class="nw3-tickname" x="124" y="151" text-anchor="end">Finchley Road</text>
+                <circle class="nw3-pop" cx="149" cy="220" r="3.5" fill="#FBF8F1" stroke="#9A938A" stroke-width="2"/>
+                <text class="nw3-tickname" x="159" y="224">St John's Wood</text>
+                <!-- Belsize Park (Northern) -->
+                <circle class="nw3-pop" cx="179" cy="141" r="6.5" fill="#FBF8F1" stroke="#2B2620" stroke-width="2.5"/>
+                <text class="nw3-stn" x="190" y="139">Belsize Park</text>
+                <!-- Swiss Cottage (Jubilee) -->
+                <circle class="nw3-pop" cx="149" cy="177" r="6.5" fill="#FBF8F1" stroke="#9A938A" stroke-width="2.5"/>
+                <text class="nw3-stn" x="136" y="190" text-anchor="end">Swiss Cottage</text>
+                <!-- Hampstead (NW3) — the focus -->
+                <g transform="translate(136,111)">
+                  <circle class="nw3-ping" r="11"/>
+                  <circle class="nw3-pop" r="9.5" fill="#FBF8F1" stroke="#2B2620" stroke-width="3"/>
+                  <circle class="nw3-pop" r="4.5" fill="#B8624A"/>
+                </g>
+                <text class="nw3-stn" x="120" y="106" text-anchor="end">Hampstead</text>
+                <text class="nw3-sub" x="120" y="119" text-anchor="end">NW3</text>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- FLOW LEVEL 4 — CRISTINA LOW LUNGE · WHY IT MATTERS -->
+        <div class="flow-rail" data-band="0.882,0.955" style="position:absolute; inset:0; display:flex; align-items:center; justify-content:flex-start; padding:0 7vw;">
+          <div class="band-inner" style="max-width:460px;">
+            <div style="font-size:12px; letter-spacing:.3em; text-transform:uppercase; color:#B8624A; margin-bottom:16px;">Why it matters</div>
+            <h2 style="font-family:'Playfair Display',serif; font-weight:500; font-size:clamp(34px,4.6vw,58px); line-height:1.0; margin:0 0 22px; color:#2B2620;">Smooth and<br>reliable.</h2>
+            <p style="font-size:16px; line-height:1.75; color:#6B6358; margin:0; max-width:420px;">From enquiry to delivery to collection, one person sees it through, so it goes beautifully every time.</p>
+          </div>
+        </div>
+
+        <!-- FLOW LEVEL 5 — CRISTINA SEATED, HANDS TO HEART · START YOUR HIRE (hire CTA + guest list) -->
+        <div class="flow-rail" data-band="0.972,1" style="position:absolute; inset:0; display:flex; align-items:center; justify-content:flex-start; padding:0 7vw;">
+          <div class="band-inner" style="max-width:520px;">
+            <div style="pointer-events:auto; background:#FBF9F4; border:1px solid #DAD4C8; border-radius:6px; padding:clamp(28px,4vw,44px); box-shadow:0 18px 40px rgba(43,38,32,.10);">
+              <div style="font-size:12px; letter-spacing:.3em; text-transform:uppercase; color:#B8624A; margin-bottom:16px;">Start your hire</div>
+              <h2 style="font-family:'Playfair Display',serif; font-weight:500; font-size:clamp(32px,4.4vw,52px); line-height:1.04; margin:0 0 16px; color:#2B2620;">Let's plan your event.</h2>
+              <p style="font-size:15px; line-height:1.7; color:#6B6358; margin:0 0 24px;">Tell Cristina what you're planning and she'll take it from there.</p>
+              <button data-hire-cta type="button" class="saia-btn saia-btn--ink" style="font-family:'Inter',sans-serif; letter-spacing:.22em;">Plan my hire</button>
+              <div style="display:flex; align-items:center; gap:12px; margin:22px 0 16px;">
+                <span style="flex:1; height:1px; background:#DAD4C8;"></span>
+                <span style="font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:#9A938A;">or</span>
+                <span style="flex:1; height:1px; background:#DAD4C8;"></span>
+              </div>
+              <form data-guest-form novalidate style="display:flex; flex-wrap:wrap; gap:12px;">
+                <input type="email" name="email" required placeholder="Enter your email" aria-label="Email address" class="input-focus" style="flex:1 1 200px; font-family:'Inter',sans-serif; font-size:15px; padding:13px 16px; background:#fff; border-radius:2px; color:#2B2620;">
+                <button type="submit" class="saia-btn saia-btn--ghost" style="flex:0 0 auto; font-family:'Inter',sans-serif; letter-spacing:.22em;">Join the guest list</button>
+                <p data-guest-msg aria-live="polite" style="flex:1 1 100%; margin:2px 0 0; font-size:12px; color:#6B6358; min-height:1.1em;">Occasional news from SAÏA · no spam · leave anytime.</p>
+              </form>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- scroll beacon — mouse-wheel cue + per-chapter segment ladder (ladder built + driven in home-journey.js) -->
+      <style>
+        #homeBeacon{ position:absolute; right:14px; top:31%; transform:translateY(-50%); z-index:4;
+          display:flex; flex-direction:column; align-items:center; gap:18px; pointer-events:none; }
+        #homeBeacon .hb-cue{ display:flex; flex-direction:column; align-items:center; gap:9px;
+          transform:scale(1.27); transform-origin:center top; transition:opacity .4s ease; will-change:opacity; }
+        #homeBeacon .hb-mouse{ width:24px; height:38px; border:2px solid #2B2620; border-radius:14px; position:relative; }
+        #homeBeacon .hb-mouse::after{ content:""; position:absolute; left:50%; top:7px; width:3px; height:7px;
+          border-radius:2px; background:#C98A2E; transform:translateX(-50%); animation:hbWheel 1.4s ease-in-out infinite; }
+        @keyframes hbWheel{ 0%{ opacity:0; transform:translate(-50%,0) } 30%{ opacity:1 } 70%{ opacity:1 } 100%{ opacity:0; transform:translate(-50%,9px) } }
+        #homeBeacon .hb-word{ font-size:10px; letter-spacing:.28em; text-transform:uppercase; color:#2B2620; font-weight:600; }
+        #homeBeacon .hb-ladder{ display:flex; flex-direction:column; align-items:center; gap:5px; }
+        #homeBeacon .hb-ladder i{ width:6px; height:16px; border-radius:99px; background:rgba(43,38,32,.2);
+          transition:background .25s ease, height .25s ease; }
+        #homeBeacon .hb-ladder i.done{ background:#C98A2E; }
+        #homeBeacon .hb-ladder i.on{ background:#C98A2E; height:25px; }
+        @media (max-width:767px){ #homeBeacon{ display:none; } }
+        @media (prefers-reduced-motion: reduce){ #homeBeacon .hb-mouse::after{ animation:none; } }
+      </style>
+      <div id="homeBeacon" aria-hidden="true">
+        <div class="hb-cue">
+          <span class="hb-mouse"></span>
+          <span class="hb-word">Scroll</span>
+        </div>
+        <div class="hb-ladder"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ FLAT TAIL (pin released) ============ -->
+
+  <!-- ============ ESTIMATE YOUR HIRE — spotlight stage ============ -->
+  <section id="estimate" class="saia-est-stage" aria-label="Estimate your mat hire">
+    <div class="vb">
+      <div class="est-deco" aria-hidden="true">
+        <span class="est-blob b1"></span><span class="est-blob b2"></span>
+      </div>
+      <div class="stagewrap">
+        <div class="pitch">
+          <p class="eyebrow">Mat hire · instant estimate</p>
+          <h2><span class="word">Get</span> <span class="word">an</span> <span class="word">instant</span> <span class="word">Quotation.</span></h2>
+          <p class="lead">From our NW3 base to your event: mats, days and courier, totalled live.</p>
+          <div class="bigroute" data-route-wrap data-big></div>
+        </div>
+        <form class="est b" data-est onsubmit="return false">
+          <p class="eyebrow">Build your quote</p>
+          <div class="grid2" style="margin-top:14px;">
+            <div class="field"><label for="estMats">Mats</label><input id="estMats" data-mats type="number" min="10" step="1" placeholder="10+" inputmode="numeric"></div>
+            <div class="field"><label for="estDays">Days</label><input id="estDays" data-days type="number" min="2" step="1" placeholder="2" inputmode="numeric"></div>
+          </div>
+          <div class="note" data-note aria-live="polite"></div>
+          <div class="field full"><label>Getting the mats</label>
+            <div class="seg" data-method data-m="" role="group" aria-label="Delivery method">
+              <span class="thumb" aria-hidden="true"></span>
+              <button type="button" data-m="deliver">Deliver</button>
+              <button type="button" data-m="pickup">Collect NW3 (free)</button>
+            </div>
+          </div>
+          <div class="pcwrap" data-pcwrap><div class="field full"><label for="estPc">Event postcode</label><input id="estPc" data-pc type="text" placeholder="e.g. EC2Y 8DS" autocomplete="postal-code" maxlength="9"></div></div>
+          <div class="result" data-result>
+            <span class="est-flag" aria-hidden="true">Estimate</span>
+            <span class="zone" data-zone><span class="dot"></span><span data-zonetxt></span></span>
+            <div class="line"><span class="kk">Mat hire<small data-matsub></small></span><span class="vv" data-matcost>—</span></div>
+            <div class="line"><span class="kk" data-delk>Delivery &amp; collection</span><span class="vv" data-delcost>—</span></div>
+            <div class="line"><span class="kk">Refundable deposit<small data-depsub></small></span><span class="vv" data-depcost>—</span></div>
+            <div class="total"><span class="kk">Due today</span><span class="vv" data-total>—</span></div>
+            <p class="disc" data-depback style="margin-top:8px;"></p>
+            <button type="button" class="cta saia-btn saia-btn--terra" data-cta data-est-book><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 5h16v11H7l-3 3z"/></svg> Book now</button>
+            <p class="disc"><b>Estimate only.</b> Cristina confirms your exact courier price before you pay.</p>
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ INLINE CONCIERGE — designed-in conversion block ============ -->
+  <style>
+    /* ===== Concierge "assistant" section — ported from tools/lab/concierge-lab.html ===== */
+    #concierge-hire{
+      --c-card:#F5F1E8; --c-text:#2B2620; --c-accent:#B8624A; --c-border:#DAD4C8;
+      --c-aura-a:#B8624A; --c-aura-b:#E4C9A8;
+      --card-width:624px; --card-radius:12px; --card-padding:28px; --card-yoff:-18px;
+      --bg-blur:72px; --bg-opacity:.2; --bg-speed:19s; --orb-speed:12s; --breathe:5s;
+      position:relative; overflow:hidden; isolation:isolate; z-index:1;
+      /* cross-fade the top edge into the estimate section above (kills the seam line) */
+      margin-top:-72px;
+      padding-top:calc(clamp(64px,8vw,110px) + 72px) !important;
+      -webkit-mask-image:linear-gradient(180deg, transparent 0, #000 72px);
+              mask-image:linear-gradient(180deg, transparent 0, #000 72px);
+    }
+    /* animated orbs background */
+    #concierge-hire .ca-bg{ position:absolute; inset:0; z-index:0; pointer-events:none; overflow:hidden; filter:blur(var(--bg-blur)); opacity:var(--bg-opacity); }
+    #concierge-hire .ca-bg b{ position:absolute; border-radius:50%; display:block; }
+    #concierge-hire .ca-bg b:nth-child(1){ width:30%; aspect-ratio:1; background:var(--c-aura-a); left:12%; top:14%; animation:caFloatA calc(var(--bg-speed)*1.2) ease-in-out infinite; }
+    #concierge-hire .ca-bg b:nth-child(2){ width:26%; aspect-ratio:1; background:var(--c-aura-b); right:10%; top:42%; animation:caFloatB var(--bg-speed) ease-in-out infinite; }
+    #concierge-hire .ca-bg b:nth-child(3){ width:18%; aspect-ratio:1; background:#D89B8C; left:38%; bottom:6%; animation:caFloatA calc(var(--bg-speed)*.9) ease-in-out infinite reverse; }
+    @keyframes caFloatA{ 0%,100%{ translate:0 0; } 50%{ translate:6% -8%; } }
+    @keyframes caFloatB{ 0%,100%{ translate:0 0; } 50%{ translate:-7% 6%; } }
+    @keyframes caSpin{ to{ rotate:360deg; } }
+    @keyframes caBreathe{ 0%,100%{ transform:scale(1); filter:drop-shadow(0 0 0 transparent); } 50%{ transform:scale(1.06); filter:drop-shadow(0 0 13px rgba(184,98,74,.55)); } }
+    @keyframes caPulse{ 0%{ box-shadow:0 0 0 0 rgba(90,164,105,.5); } 70%{ box-shadow:0 0 0 8px rgba(90,164,105,0); } 100%{ box-shadow:0 0 0 0 rgba(90,164,105,0); } }
+    @keyframes caTwinkle{ 0%,100%{ opacity:.5; transform:scale(.9) rotate(0); } 50%{ opacity:1; transform:scale(1.15) rotate(90deg); } }
+
+    /* messenger card */
+    #concierge-hire .ca-card{
+      position:relative; z-index:2; max-width:var(--card-width); margin:0 auto;
+      transform:translateY(var(--card-yoff));
+      background:var(--c-card); border:1px solid var(--c-border); border-radius:var(--card-radius);
+      overflow:hidden; box-shadow:0 22px 60px rgba(43,38,32,.14);
+    }
+    #concierge-hire .ca-head{ display:flex; align-items:center; gap:11px; padding:15px var(--card-padding); border-bottom:1px solid color-mix(in srgb,var(--c-border) 75%, transparent); }
+    #concierge-hire .ca-orb{ width:34px; height:34px; border-radius:50%; position:relative; flex:0 0 auto; animation:caBreathe var(--breathe) ease-in-out infinite; }
+    #concierge-hire .ca-orb::before{ content:""; position:absolute; inset:0; border-radius:50%; background:conic-gradient(from 0deg, var(--c-aura-a), var(--c-aura-b), #D89B8C, var(--c-aura-a)); animation:caSpin var(--orb-speed) linear infinite; }
+    #concierge-hire .ca-orb::after{ content:""; position:absolute; inset:7px; border-radius:50%; background:radial-gradient(circle at 35% 30%, #fff, #F1ECE0); }
+    #concierge-hire .ca-id{ display:flex; flex-direction:column; line-height:1.25; min-width:0; }
+    #concierge-hire .ca-id b{ font-family:'Inter',sans-serif; font-size:14px; font-weight:600; color:var(--c-text); letter-spacing:.02em; }
+    #concierge-hire .ca-id span{ font-family:'Inter',sans-serif; font-size:12px; color:color-mix(in srgb,var(--c-text) 55%, transparent); }
+    #concierge-hire .ca-status{ margin-left:auto; display:flex; align-items:center; gap:8px; font-family:'Inter',sans-serif; font-size:12.5px; color:color-mix(in srgb,var(--c-text) 55%, transparent); white-space:nowrap; }
+    #concierge-hire .ca-status i{ width:8px; height:8px; border-radius:50%; background:#5aa469; animation:caPulse 2.4s infinite; flex:0 0 auto; }
+
+    #concierge-hire .ca-thread{ padding:var(--card-padding); min-height:196px; max-height:430px; overflow-y:auto; display:flex; flex-direction:column; gap:13px; }
+    #concierge-hire .ca-input{ display:flex; align-items:center; gap:10px; padding:13px var(--card-padding); border-top:1px solid color-mix(in srgb,var(--c-border) 75%, transparent); }
+    #concierge-hire .ca-spark{ flex:0 0 auto; color:var(--c-accent); animation:caTwinkle 2.6s ease-in-out infinite; }
+    #concierge-hire .ca-input input{ flex:1; border:none; background:transparent; font-family:'Inter',sans-serif; font-size:14.5px; color:var(--c-text); outline:none; min-width:0; }
+    #concierge-hire .ca-input input::placeholder{ color:color-mix(in srgb,var(--c-text) 45%, transparent); }
+
+    @media (max-width:560px){ #concierge-hire .ca-card{ transform:none; } #concierge-hire .ca-id span{ display:none; } }
+    @media (prefers-reduced-motion:reduce){
+      #concierge-hire .ca-bg b, #concierge-hire .ca-orb, #concierge-hire .ca-orb::before, #concierge-hire .ca-status i, #concierge-hire .ca-spark{ animation:none !important; }
+    }
+  </style>
+  <section id="concierge-hire" aria-label="Plan your hire with the SAÏA assistant" style="background:linear-gradient(180deg,#ECEDE0 0%,#EFEADF 20%,#EFEADF 82%,#F5F1E8 100%); padding:clamp(64px,8vw,110px) 6vw;">
+    <h2 class="sr-only" style="position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0;">Tell me about your event — plan mat hire with the SAÏA assistant</h2>
+    <div class="ca-bg" aria-hidden="true"><b></b><b></b><b></b></div>
+    <div class="ca-card">
+      <div class="ca-head">
+        <span class="ca-orb" aria-hidden="true"></span>
+        <span class="ca-id"><b>SAÏA assistant</b><span>Mat hire · classes · Pilates with Cristina</span></span>
+        <span class="ca-status"><i aria-hidden="true"></i>Online</span>
+      </div>
+      <div id="homeInlineConcierge" class="saia-thread ca-thread" role="log" aria-live="polite" aria-label="Conversation with the SAÏA assistant"></div>
+      <div class="ca-input">
+        <svg class="ca-spark" width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l1.6 5.4L19 9l-5.4 1.6L12 16l-1.6-5.4L5 9l5.4-1.6L12 2z"/></svg>
+        <input id="homeInlineInput" type="text" placeholder="e.g. 30 women, Saturday, NW3…" aria-label="Message the assistant">
+        <button id="homeInlineSend" type="button" class="saia-send">Send<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7Z"/></svg></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ GALLERY — animated 3D photo grid ============ -->
+  <section id="events" aria-label="SAÏA women gallery">
+    <div class="gl-sticky">
+      <div class="gl-glow"></div>
+      <div class="gl-grain"></div>
+      <div class="gl-intro">
+        <div class="gl-card">
+          <div class="gl-kicker">Our community</div>
+          <h2>SAÏA <em>Club &amp; Community</em></h2>
+          <p>Community classes, retreats and the mornings in between, across North West London.</p>
+          <div class="gl-rule"></div>
+          <a class="gl-events-cta" href="/pages/events">Recent events <svg width="16" height="10" viewBox="0 0 16 10" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M1 5h13M10 1l4 4-4 4"/></svg></a>
+        </div>
+      </div>
+      <div class="gl-stage" id="glStage">
+        <div class="gl-col" data-y="-9,3"></div>
+        <div class="gl-col" data-y="13,5" style="margin-top:-42%"></div>
+        <div class="gl-col" data-y="-9,3"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ IN THE PRESS ============ -->
+  <section style="background:#F5F1E8; padding:clamp(48px,6vw,80px) 6vw;">
+    <div style="max-width:1200px; margin:0 auto;">
+      <div style="text-align:center; font-size:11px; letter-spacing:.3em; text-transform:uppercase; color:#6B6358; margin-bottom:34px;">In the press</div>
+      <div style="display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:clamp(28px,6vw,72px); color:#6B6358;">
+        <span style="font-family:'Playfair Display',serif; font-size:26px; letter-spacing:.16em;">GRAZIA</span>
+        <span style="font-family:'Playfair Display',serif; font-size:26px; letter-spacing:.04em;">Forbes</span>
+        <span style="font-family:'Playfair Display',serif; font-size:22px; letter-spacing:.06em; line-height:1; text-align:center;">London Evening Standard</span>
+        <span style="font-family:'Playfair Display',serif; font-size:26px; letter-spacing:.14em;">SHAPE</span>
+        <span style="font-family:'Playfair Display',serif; font-size:24px; letter-spacing:.04em;">Daily Mail</span>
+        <span style="font-family:'Playfair Display',serif; font-size:24px; letter-spacing:.04em;">OM Yoga &amp; Lifestyle</span>
+        <span style="font-family:'Playfair Display',serif; font-size:24px; letter-spacing:.02em; font-style:italic;">The Telegraph</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ FOOTER ============ -->
+  <footer id="hire" style="background:#2B2620; color:#F5F1E8; padding:clamp(64px,8vw,100px) 6vw 40px;">
+    <div style="max-width:1320px; margin:0 auto;">
+      <div style="display:flex; flex-wrap:wrap; gap:48px; justify-content:space-between;">
+        <div style="flex:1 1 280px; max-width:360px;">
+          <div style="font-family:'Playfair Display',serif; font-size:34px; letter-spacing:.2em; line-height:1;">SAÏA</div>
+          <div style="font-size:10px; letter-spacing:.5em; text-transform:uppercase; color:rgba(245,241,232,.55); margin:6px 0 22px;">London</div>
+          <p style="font-size:14px; line-height:1.75; color:rgba(245,241,232,.65); margin:0 0 24px; max-width:300px;">A female-led club empowering women through fitness, community &amp; mindset. Premium yoga-mat hire across London.</p>
+          <button data-hire-cta class="saia-btn saia-btn--terra" style="font-family:'Inter',sans-serif;">Hire mats for your event</button>
+          <div style="display:flex; gap:18px; margin-top:24px;">
+            <a href="https://www.instagram.com/saialondon" aria-label="SAÏA on Instagram" style="color:rgba(245,241,232,.7); text-decoration:none;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="3" y="3" width="18" height="18" rx="5"></rect><circle cx="12" cy="12" r="4"></circle><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"></circle></svg></a>
+            <a href="https://www.facebook.com/saialondon" aria-label="SAÏA on Facebook" style="color:rgba(245,241,232,.7); text-decoration:none;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M15 8h-2a2 2 0 0 0-2 2v11"></path><path d="M8 13h6"></path><path d="M11 21V10a3 3 0 0 1 3-3h1"></path></svg></a>
+            <a href="https://www.pinterest.com/saialondon" aria-label="SAÏA on Pinterest" style="color:rgba(245,241,232,.7); text-decoration:none;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M9 19c-.5-2 .5-5 1-7"></path><circle cx="12" cy="10" r="7"></circle><path d="M9.5 13c.5 1 3 1.5 4.5-.5S15 8 13 8s-3 1.5-2.5 3"></path></svg></a>
+          </div>
+        </div>
+        <div style="flex:0 1 auto; display:flex; flex-wrap:wrap; gap:48px;">
+          <div>
+            <div style="font-size:11px; letter-spacing:.22em; text-transform:uppercase; color:rgba(245,241,232,.5); margin-bottom:18px;">Customer care</div>
+            <div style="display:flex; flex-direction:column; gap:12px; font-size:14px;"><a href="/pages/contact-us" style="color:rgba(245,241,232,.78); text-decoration:none;">Contact us</a><a href="/pages/terms-and-conditions" style="color:rgba(245,241,232,.78); text-decoration:none;">Terms &amp; conditions</a></div>
+          </div>
+          <div>
+            <div style="font-size:11px; letter-spacing:.22em; text-transform:uppercase; color:rgba(245,241,232,.5); margin-bottom:18px;">About us</div>
+            <div style="display:flex; flex-direction:column; gap:12px; font-size:14px;"><a href="/pages/story" style="color:rgba(245,241,232,.78); text-decoration:none;">Our story</a><a href="/pages/events" style="color:rgba(245,241,232,.78); text-decoration:none;">Events</a><a href="#concierge-hire" style="color:rgba(245,241,232,.78); text-decoration:none;">Yoga mat hire</a><a href="#events" style="color:rgba(245,241,232,.78); text-decoration:none;">Gallery</a></div>
+          </div>
+          <div style="max-width:240px;">
+            <div style="font-size:11px; letter-spacing:.22em; text-transform:uppercase; color:rgba(245,241,232,.5); margin-bottom:18px;">Subscribe</div>
+            <p style="font-size:13px; line-height:1.6; color:rgba(245,241,232,.6); margin:0 0 14px;">Get on the guest list of our upcoming events.</p>
+            <div style="display:flex; border-bottom:1px solid rgba(245,241,232,.35);"><input type="email" placeholder="Email" aria-label="Email address" style="flex:1; background:none; border:none; color:#F5F1E8; font-family:'Inter',sans-serif; font-size:14px; padding:8px 0; outline:none;"><span style="font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:#B8624A; padding:8px 0; cursor:pointer;">Join</span></div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex; flex-wrap:wrap; gap:14px; justify-content:space-between; align-items:center; margin-top:56px; padding-top:26px; border-top:1px solid rgba(245,241,232,.16); font-size:12px; color:rgba(245,241,232,.5);">
+        <span>© 2026 SAÏA London</span>
+        <span style="letter-spacing:.16em; text-transform:uppercase;">SAÏA community &amp; club</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ============ CONCIERGE CHATBOT (Option B) ============ -->
+  <!-- #homeChatDock is repositioned by JS (VisualViewport API) so the card rides above the
+       mobile keyboard instead of being left behind it. See js/home-concierge.js → syncViewport(). -->
+  <div id="homeChatDock" style="position:fixed; right:24px; bottom:24px; z-index:90; display:flex; flex-direction:column; align-items:flex-end; gap:14px;">
+    <div id="homeChatPanel" style="display:none; width:min(380px,calc(100vw - 32px)); height:min(560px,calc(100dvh - 110px)); background:#F5F1E8; border-radius:6px; box-shadow:0 24px 60px rgba(43,38,32,.32); overflow:hidden; flex-direction:column; animation:saiaSlideIn .32s ease both;">
+      <div style="background:#2B2620; color:#F5F1E8; padding:20px 22px; display:flex; justify-content:space-between; align-items:center; flex:none;">
+        <div style="display:flex; gap:12px; align-items:center;">
+          <span style="width:36px; height:36px; border-radius:50%; border:1px solid rgba(245,241,232,.4); display:flex; align-items:center; justify-content:center; font-family:'Playfair Display',serif; font-size:18px;">S</span>
+          <div><div style="font-size:12px; letter-spacing:.24em; text-transform:uppercase;">SAÏA Assistant</div><div style="font-size:11px; color:rgba(245,241,232,.6); margin-top:3px; display:flex; align-items:center; gap:6px;"><span style="width:6px; height:6px; border-radius:50%; background:#7FA67F;"></span>Online now</div></div>
+        </div>
+        <button id="homeChatClose" aria-label="Close assistant" style="background:none; border:none; cursor:pointer; padding:4px; display:flex;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(245,241,232,.75)" stroke-width="1.4"><line x1="5" y1="5" x2="19" y2="19"></line><line x1="19" y1="5" x2="5" y2="19"></line></svg></button>
+      </div>
+      <div id="homeThread" class="saia-thread" style="flex:1; overflow-y:auto; padding:22px; display:flex; flex-direction:column; gap:13px;"></div>
+      <div style="padding:13px 16px; border-top:1px solid #DAD4C8; display:flex; gap:10px; align-items:center; flex:none;">
+        <input id="homeChatInput" type="text" placeholder="Type a message…" aria-label="Message the assistant" style="flex:1; border:none; background:transparent; font-family:'Inter',sans-serif; font-size:14px; color:#2B2620; outline:none;">
+        <button id="homeChatSend" class="saia-send">Send<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7Z"/></svg></button>
+      </div>
+    </div>
+    <button id="homeChatLauncher" aria-label="Open the SAÏA assistant" class="saia-orb-fab">
+      <span class="saia-cap">Questions? Chat here</span>
+      <span class="saia-halo"></span>
+      <span class="saia-orb">
+        <svg class="saia-orb-ico" width="36" height="36" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M5 4 H19 A2.6 2.6 0 0 1 21.6 6.6 V13.6 A2.6 2.6 0 0 1 19 16.2 H8.8 L4.4 19.8 V16.2 H5 A2.6 2.6 0 0 1 2.4 13.6 V6.6 A2.6 2.6 0 0 1 5 4 Z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+          <circle cx="7.6" cy="10" r="1.05" fill="var(--saia-accent,#B8624A)"/>
+          <circle cx="12" cy="10" r="1.05" fill="var(--saia-accent,#B8624A)"/>
+          <circle cx="16.4" cy="10" r="1.05" fill="var(--saia-accent,#B8624A)"/>
+        </svg>
+        <span class="saia-orb-on"></span></span>
+    </button>
+  </div>
+
+</div>
+
+<script>
+/* SAÏA — Gallery: animated 3D photo grid (vanilla useScroll/useTransform port) */
+(function(){
+  var sec = document.getElementById('events');
+  var stage = document.getElementById('glStage');
+  if(!sec || !stage) return;
+
+  // portrait singles (full-frame) + halves split from the wide A1 diptychs/triptychs
+  // (see photos/A1/roll/). Interleaved single→half→single→half for column variety.
+  var SINGLES = [
+    "{{ 'SAIABRUNCHCLUB_28.png' | asset_url }}",
+    "{{ 'Snapinsta.app_242292911_1079452836196028_3808565095717851061_n_1080.jpg' | asset_url }}",
+    "{{ 'DSC04282.jpg' | asset_url }}",
+    "{{ '349534240_970086797521664_1584546997448504664_n.jpg' | asset_url }}",
+    "{{ 'SAIABRUNCHCLUB_31.png' | asset_url }}",
+    "{{ 'Snapinsta.app_317006758_6013053755392457_3370483635582872631_n_1080.jpg' | asset_url }}",
+    "{{ 'picnic1.png' | asset_url }}",
+    "{{ '85978036-3243-4BC3-9E98-AF5B59AEB391.jpg' | asset_url }}",
+    "{{ 'Snapinsta.app_274042141_476998050588663_3300805879876636614_n_1080.jpg' | asset_url }}",
+    "{{ 'picnic3.png' | asset_url }}",
+    "{{ 'Snapinsta.app_218150491_4681263711902509_5336339906255780718_n_1080.jpg' | asset_url }}",
+    "{{ 'SAIABRUNCHCLUB_38.png' | asset_url }}",
+    "{{ '42_ed67328a-6372-4de1-87ca-59cdd3d3e826.png' | asset_url }}",
+    "{{ '5_fae1344c-6ea3-4091-8923-41fb073f27a6.png' | asset_url }}",
+    "{{ '6_16fd2381-12dd-40ed-9636-b2140e96fe58.png' | asset_url }}",
+    "{{ 'Snapinsta.app_317036401_665597138385313_2713674032479943115_n_1080.jpg' | asset_url }}"
+  ];
+  var HALVES = [
+    "{{ '1_42bcb78a-6015-42a5-87c5-10d2fa723932__p0.jpg' | asset_url }}",
+    "{{ '2_c05a787c-d743-47cc-a033-cded5cb0db94__p1.jpg' | asset_url }}",
+    "{{ '2_c0e4c853-14f9-431c-bac5-db412e9fb59d__p0.jpg' | asset_url }}",
+    "{{ '2_c0e4c853-14f9-431c-bac5-db412e9fb59d__p1.jpg' | asset_url }}",
+    "{{ '3_30e4041d-9303-4c16-84b8-163897dc1aa1__p0.jpg' | asset_url }}",
+    "{{ '4_e8094bfb-7d00-4c0b-9e0b-07c654aa5a19__p0.jpg' | asset_url }}",
+    "{{ '5_1d261269-25f9-47e7-95a9-8f909c1c96ae__p1.jpg' | asset_url }}",
+    "{{ '5_690e4b50-df08-437a-b7ad-9d8f8370822e__p1.jpg' | asset_url }}",
+    "{{ '5_cf34c104-27ff-4a80-b7a0-86af88033c5a__p1.jpg' | asset_url }}",
+    "{{ 'charlotte__p0.jpg' | asset_url }}",
+    "{{ 'charlotte__p1.jpg' | asset_url }}",
+    "{{ 'morena_2__p0.jpg' | asset_url }}",
+    "{{ 'morena_2__p1.jpg' | asset_url }}",
+    "{{ 'morena_2_d0edef3d-ef19-4c6c-a391-2084b4f7e7e9__p0.jpg' | asset_url }}"
+  ];
+  var PHOTOS = [];
+  for(var pi=0; pi<Math.max(SINGLES.length,HALVES.length); pi++){
+    if(SINGLES[pi]) PHOTOS.push(SINGLES[pi]);
+    if(HALVES[pi]) PHOTOS.push(HALVES[pi]);
+  }
+
+  var cols = [].slice.call(stage.querySelectorAll('.gl-col'));
+  PHOTOS.forEach(function(src,i){
+    var fig = document.createElement('figure'); fig.className = 'gl-tile';
+    fig.innerHTML = '<img loading="lazy" src="'+src+'" alt="SAÏA London community photograph '+(i+1)+'">';
+    cols[i % cols.length].appendChild(fig);
+  });
+
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches) return; // CSS lays it out statically
+
+  var clamp = function(v,a,b){ return Math.max(a,Math.min(b,v)); };
+  var map = function(v,iMin,iMax,oMin,oMax){ var t=clamp((v-iMin)/(iMax-iMin),0,1); return oMin+(oMax-oMin)*t; };
+  var ticking = false;
+
+  function frame(){
+    ticking = false;
+    var vh = window.innerHeight, total = sec.offsetHeight - vh;
+    var p = total>0 ? clamp(-sec.getBoundingClientRect().top/total, 0, 1) : 0;
+    // stand up (62→0°) + scale in (1.18→.95), with a touch-smaller settle right at the end
+    var rx = map(p,0,0.32,62,0), scl = map(p,0.22,0.42,1.18,0.95) * map(p,0.9,1,1,0.88);
+    // vertical pan: centred while the grid stands up, then travel its full height top→bottom
+    // (translateY is the outermost transform → real viewport px, unaffected by scale) so every
+    // row of the now-tall 30-photo grid scrolls into view rather than sitting off-screen below.
+    var H = stage.scrollHeight * scl;            // approx visual height of the grid
+    var A = Math.max(0, H/2 - vh*0.42);          // travel amplitude (0 if grid fits the viewport)
+    var gy = (p < 0.42) ? map(p,0,0.42,0,A) : map(p,0.42,1,A,-A);
+    stage.style.transform = 'translateY('+gy+'px) rotateX('+rx+'deg) scale('+scl+')';
+    // column parallax (subtle, keeps the grid alive while panning)
+    cols.forEach(function(col){
+      var yr = (col.getAttribute('data-y')||'0,0').split(',');
+      col.style.transform = 'translateY('+map(p,0.42,1,+yr[0],+yr[1])+'%)';
+    });
+    // warm glow, theme-colour wash (1→0), glass strength (1→0), heading shrink/recolour (0→1)
+    sec.style.setProperty('--gl-warm', map(p,0.3,1,0,1).toFixed(3));
+    sec.style.setProperty('--gl-tint', (1 - map(p,0,0.4,0,1)).toFixed(3));
+    sec.style.setProperty('--gl-g',    (1 - map(p,0.42,0.66,0,1)).toFixed(3));
+    sec.style.setProperty('--gl-ht',   map(p,0.42,0.7,0,1).toFixed(3));
+    // leaving the gallery: drain colour to b&w + fade tiles only at the very end (keep them vivid while panning)
+    sec.style.setProperty('--gl-exit',  map(p,0.93,1,0,1).toFixed(3));
+    // reveal the "Recent events" CTA once the room has flattened, around the midpoint
+    sec.classList.toggle('gl-end', p > 0.5);
+  }
+  // while actively scrolling, the grid pans under the cursor every frame — combined with the
+  // hover zoom that lifts a tile out from under the pointer, that causes rapid hover/unhover
+  // flicker. Suppress tile hover during scroll and restore it ~150ms after scrolling settles.
+  var settleT;
+  function onScroll(){
+    if(!ticking){ ticking = true; requestAnimationFrame(frame); }
+    if(!sec.classList.contains('gl-scrolling')) sec.classList.add('gl-scrolling');
+    clearTimeout(settleT);
+    settleT = setTimeout(function(){ sec.classList.remove('gl-scrolling'); }, 150);
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  window.addEventListener('resize', onScroll);
+  frame();
+
+  // reveal the glass panel. The section's initial opacity:0 is already committed (this script runs
+  // at end of body), so adding the class now still animates the fade-in via the CSS transition.
+  sec.classList.add('gl-in');
+})();
+</script>
+<!-- Estimate-your-hire spotlight stage engine -->
+<script>
+(function init(){
+  var stage=document.querySelector('.saia-est-stage');
+  if(!stage) return;
+  // KB (js/saia-knowledge.js) loads further down the page; wait for it before wiring.
+  if(!(window.SAIA&&window.SAIA.KB&&window.SAIA.KB.classify)){ document.addEventListener('DOMContentLoaded',init); return; }
+  var MIN_MATS=10, BASE_DAYS=2;
+  var STOPS=[{t:0,label:'NW3'},{t:0.36,label:'Details'},{t:0.68,label:'Delivery'},{t:1,label:'Your event'}];
+  var VAN='<g class="van"><rect x="-12" y="-8" width="15" height="11" rx="2"></rect><path d="M3 -5 h4.5 l3.5 3.2 v4.8 h-8 z"></path><rect class="win" x="-9" y="-5.5" width="5.5" height="4" rx="1"></rect><circle class="wheel" cx="-6.5" cy="4.5" r="2.4"></circle><circle class="wheel" cx="6.5" cy="4.5" r="2.4"></circle></g>';
+  var reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var SVGNS='http://www.w3.org/2000/svg';
+  function gbp(n){return '£'+n.toFixed(2);}
+
+  function buildRoute(wrap, big){
+    var vb = big ? '0 0 600 130' : '0 0 600 60';
+    var d  = big ? 'M60 96 C 200 14, 400 14, 540 90' : 'M40 44 C 180 6, 420 6, 560 40';
+    wrap.innerHTML='<svg viewBox="'+vb+'" preserveAspectRatio="xMidYMid meet" aria-hidden="true">'
+      +'<path class="track" d="'+d+'"></path><path class="rfill" d="'+d+'"></path>'
+      +'<g class="miles"></g>'+VAN+'</svg>';
+    var route=wrap.querySelector('.track'), fill=wrap.querySelector('.rfill'),
+        miles=wrap.querySelector('.miles'), van=wrap.querySelector('.van');
+    var len=route.getTotalLength();
+    fill.style.strokeDasharray=len; fill.style.strokeDashoffset=len;
+    var mileEls=[];
+    STOPS.forEach(function(s,i){
+      var p=route.getPointAtLength(len*s.t);
+      var g=document.createElementNS(SVGNS,'g'); g.setAttribute('class','mile');
+      var ring=document.createElementNS(SVGNS,'circle');ring.setAttribute('class','ring');ring.setAttribute('cx',p.x);ring.setAttribute('cy',p.y);ring.setAttribute('r',6);
+      var c=document.createElementNS(SVGNS,'circle');c.setAttribute('cx',p.x);c.setAttribute('cy',p.y);c.setAttribute('r',5);c.setAttribute('fill','#DAD4C8');
+      var below=(i===0||i===STOPS.length-1);
+      var t=document.createElementNS(SVGNS,'text');t.setAttribute('x',p.x);t.setAttribute('y',p.y+(below?18:-11));t.setAttribute('text-anchor','middle');t.setAttribute('class',i===STOPS.length-1?'big':'');t.textContent=s.label;
+      g.appendChild(ring);g.appendChild(c);g.appendChild(t);miles.appendChild(g);
+      mileEls.push({g:g,c:c,t:t});
+    });
+    function placeVan(p){var L=len*p,a=route.getPointAtLength(L),b=route.getPointAtLength(Math.min(len,L+1));
+      var ang=Math.atan2(b.y-a.y,b.x-a.x)*180/Math.PI;van.setAttribute('transform','translate('+a.x+','+a.y+') rotate('+ang+')'+(big?' scale(1.9)':''));
+      fill.style.strokeDashoffset=len*(1-p);}
+    placeVan(0);
+    return {placeVan:placeVan, mileEls:mileEls, len:len};
+  }
+
+  function wire(root){
+    var q=function(s){return root.querySelector(s);};
+    var els={mats:q('[data-mats]'),days:q('[data-days]'),note:q('[data-note]'),pc:q('[data-pc]'),pcwrap:q('[data-pcwrap]'),
+      method:q('[data-method]'),result:q('[data-result]'),zone:q('[data-zone]'),zoneTxt:q('[data-zonetxt]'),
+      matCost:q('[data-matcost]'),matSub:q('[data-matsub]'),delK:q('[data-delk]'),delCost:q('[data-delcost]'),
+      depCost:q('[data-depcost]'),depSub:q('[data-depsub]'),depBack:q('[data-depback]'),
+      total:q('[data-total]'),cta:q('[data-cta]')};
+    var method=null, curT=0, raf=null;
+
+    var wraps=[].slice.call(stage.querySelectorAll('[data-route-wrap]'));
+    var routes=wraps.map(function(w){return buildRoute(w, w.hasAttribute('data-big'));});
+
+    function placeAll(p){routes.forEach(function(r){r.placeVan(p);});}
+    function lightMiles(reached){routes.forEach(function(r){r.mileEls.forEach(function(m,i){
+      m.g.classList.toggle('done',i<=reached);
+      m.g.classList.toggle('live',(i===reached&&reached<3)||(reached===3&&i===3));
+      m.c.setAttribute('fill',i<=reached?(i===3?'#B8624A':'#2B2620'):'#DAD4C8');
+    });});}
+    function lastLabel(txt){routes.forEach(function(r){r.mileEls[3].t.textContent=txt;});}
+
+    function driveVan(to){if(reduce){curT=to;placeAll(to);return;}
+      if(raf)cancelAnimationFrame(raf);var from=curT,start=null,dur=320+Math.abs(to-from)*1100;
+      function step(ts){if(start===null)start=ts;var k=Math.min(1,(ts-start)/dur),e=1-Math.pow(1-k,3),p=from+(to-from)*e;
+        placeAll(p);if(k<1)raf=requestAnimationFrame(step);else curT=to;}raf=requestAnimationFrame(step);}
+
+    var totalNodes=[].slice.call(stage.querySelectorAll('[data-total]'));
+    function setTotal(html){totalNodes.forEach(function(n){n.innerHTML=html;});}
+    function tweenTotal(to,prefix){var from=parseFloat(totalNodes[0].dataset.val||'0')||0;
+      if(to===null){totalNodes.forEach(function(n){n.dataset.val='0';});setTotal(prefix||'—');return;}
+      if(reduce){totalNodes.forEach(function(n){n.dataset.val=to;});setTotal((prefix||'')+gbp(to));return;}
+      var start=null;function f(ts){if(start===null)start=ts;var k=Math.min(1,(ts-start)/680),e=1-Math.pow(1-k,3),v=from+(to-from)*e;
+        setTotal((prefix||'')+gbp(v));if(k<1)requestAnimationFrame(f);else totalNodes.forEach(function(n){n.dataset.val=to;});}requestAnimationFrame(f);}
+
+    function render(){
+      var mats=parseInt(els.mats.value,10)||0, days=parseInt(els.days.value,10)||0;
+      if(els.note) els.note.textContent=(els.mats.value&&mats<MIN_MATS)?'Minimum hire is 10 mats.':((els.days.value&&days<BASE_DAYS)?'Minimum hire is 2 days.':'');
+      var s1=mats>=MIN_MATS&&days>=BASE_DAYS, s2=s1&&method!==null;
+      var z=method==='deliver'?window.SAIA.KB.classify(els.pc.value):null;
+      var s3=s2&&(method==='pickup'||(method==='deliver'&&z!==null));
+      var done=s1?(s2?(s3?3:2):1):0;
+      els.pcwrap.classList.toggle('show',method==='deliver');
+      var reached=method==='pickup'&&done>=2?3:done;
+      driveVan([0,0.36,0.68,1][reached]); lightMiles(reached);
+      lastLabel(method==='pickup'?'NW3 · collect':(z&&z.label!=='outside'?z.label.split(' · ')[1]:(z&&z.label==='outside'?'Outside London':'Your event')));
+      var arrived=(done===3)||(method==='pickup'&&done>=2);
+      els.result.classList.toggle('show',arrived);
+      if(!arrived){ if(!els.mats.value&&!els.days.value) setTotal('—'); return; }
+      var zoneKey=method==='pickup'?null:(z?z.key:null);
+      var q=window.SAIA.KB.priceHire({mats:mats,days:days,method:method,zone:zoneKey});
+      var matCost=q.matCost;
+      els.matCost.textContent=gbp(matCost); if(els.matSub) els.matSub.textContent=mats+' mats · '+days+' days';
+      if(els.depCost) els.depCost.textContent=gbp(q.deposit); if(els.depSub) els.depSub.textContent=mats+' × '+gbp(window.SAIA.KB.hire.depositPerMat)+', returned after';
+      if(els.depBack) els.depBack.innerHTML='<b>'+gbp(q.deposit)+'</b> of this is a refundable deposit — back to you once the mats are returned.';
+      var totalNum=q.total,prefix=(q.total!=null&&method!=='pickup')?'<span class="pre">from</span>':'',delText='—',zoneShow=false,wa;
+      if(method==='pickup'){els.delK.innerHTML='Collection<small>Pick up from NW3, free</small>';delText='Free';wa='collect from NW3';}
+      else if(z.label==='outside'){els.delK.innerHTML='Delivery &amp; collection<small>Addison Lee, by quote</small>';delText='By quote';els.zoneTxt.textContent='Outside London';zoneShow=true;wa='delivery to '+els.pc.value.toUpperCase()+' (outside London)';}
+      else {els.delK.innerHTML='Delivery &amp; collection<small>Addison Lee, low estimate</small>';delText='from '+gbp(z.round);els.zoneTxt.textContent=z.label;zoneShow=true;wa='delivery to '+els.pc.value.toUpperCase()+' ('+z.label+')';}
+      els.delCost.textContent=delText; els.zone.style.display=zoneShow?'':'none';
+      if(totalNum===null){setTotal(gbp(matCost+q.deposit)+' <span class="pre">+ quote</span>');totalNodes.forEach(function(n){n.dataset.val='0';});}
+      else tweenTotal(totalNum,prefix);
+      var label=totalNum===null?('£'+(matCost+q.deposit).toFixed(2)+' + delivery quote'):((prefix?'from ':'')+gbp(totalNum));
+      var msg='Hi Cristina! I\'d like to book '+mats+' mats for '+days+' days, '+wa+'. Due today '+label+' (incl. '+gbp(q.deposit)+' refundable deposit). Please confirm availability.';
+      if(els.cta && els.cta.tagName==='A') els.cta.href='https://wa.me/447444611914?text='+encodeURIComponent(msg);
+    }
+
+    els.method.addEventListener('click',function(e){var b=e.target.closest('button[data-m]');if(!b)return;
+      method=b.getAttribute('data-m');els.method.setAttribute('data-m',method);
+      els.method.querySelectorAll('button').forEach(function(x){x.classList.toggle('on',x===b);});render();});
+    ['input','change'].forEach(function(ev){els.mats.addEventListener(ev,render);els.days.addEventListener(ev,render);els.pc.addEventListener(ev,render);});
+
+    function setMethod(m){method=m;els.method.setAttribute('data-m',m);els.method.querySelectorAll('button').forEach(function(x){x.classList.toggle('on',x.getAttribute('data-m')===m);});}
+    function prefill(){els.mats.value=20;els.days.value=2;setMethod('deliver');els.pc.value='EC2Y 8DS';}
+
+    return {render:render, prefill:prefill, reset:function(){curT=0;placeAll(0);totalNodes.forEach(function(n){n.dataset.val='0';});}};
+  }
+
+  var root=stage.querySelector('[data-est]');
+  var ctrl=wire(root);
+  ctrl.prefill();
+  ctrl.render();
+
+  // entrance: fire the word-up + card-in + drive-in once the stage scrolls into view
+  var vb=stage.querySelector('.vb'), played=false;
+  function play(){ if(played) return; played=true;
+    vb.classList.add('play'); stage.classList.add('in'); ctrl.reset();
+    setTimeout(function(){ ctrl.render(); }, reduce?0:520);
+  }
+  if('IntersectionObserver' in window){
+    var io=new IntersectionObserver(function(es){ es.forEach(function(e){ if(e.isIntersecting){ play(); io.disconnect(); } }); },{threshold:.3});
+    io.observe(vb);
+  } else { play(); }
+
+  // hand the current estimate straight to the booking page (checkout)
+  var bookBtn=stage.querySelector('[data-est-book]');
+  if(bookBtn) bookBtn.addEventListener('click',function(){
+    var KB=window.SAIA&&window.SAIA.KB;
+    var methodEl=stage.querySelector('[data-method]');
+    var method=methodEl?methodEl.getAttribute('data-m'):null;
+    var pc=((stage.querySelector('[data-pc]')||{}).value||'').toUpperCase();
+    var zoneObj=(KB&&method==='deliver'&&pc)?KB.classify(pc):null;
+    var hire={
+      mats:parseInt((stage.querySelector('[data-mats]')||{}).value,10)||null,
+      days:parseInt((stage.querySelector('[data-days]')||{}).value,10)||null,
+      method:method||null,
+      postcode:method==='deliver'?(pc||null):null,
+      zone:zoneObj?zoneObj.key:null
+    };
+    try{ sessionStorage.setItem('saia_hire', JSON.stringify(hire)); }catch(e){ /* ignore */ }
+    window.location.href='/cart';
+  });
+})();
+</script>
+<script>
+  /* Pilates guest list — front-end only (no backend yet). Valid email → mockup confirmation page. */
+  (function () {
+    var form = document.querySelector('[data-guest-form]');
+    if (!form) return;
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var field = form.querySelector('input[type=email]');
+      var msg = form.querySelector('[data-guest-msg]');
+      var email = (field && field.value || '').trim();
+      var valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+      if (!valid) { if (msg) { msg.textContent = 'Please enter a valid email address.'; msg.style.color = '#B8624A'; } if (field) field.focus(); return; }
+      window.location.href = '/pages/guest-list';
+    });
+  })();
+</script>
+<script src="{{ 'three.min.js' | asset_url }}"></script>
+<script src="{{ 'mat-core.js' | asset_url }}"></script>
+<script src="{{ 'saia-knowledge.js' | asset_url }}"></script>
+<script src="{{ 'planner.js' | asset_url }}"></script>
+<script src="{{ 'checkout-handoff.js' | asset_url }}"></script>
+<script src="{{ 'home-concierge.js' | asset_url }}"></script>
+<script src="{{ 'home.js' | asset_url }}"></script>
+<script src="{{ 'home-journey.js' | asset_url }}"></script>
+<!-- mobile-only scroll journey: lazy-loads the vendored three.js ES modules on small screens -->
+<script type="module">
+  if (window.matchMedia('(max-width: 767px)').matches) {
+    import('{{ 'home-mobile-journey.js' | asset_url }}')
+      .then(function (m) { m.initMobileJourney(); })
+      .catch(function (e) { console.warn('mobile journey init failed', e); });
+  }
+</script>
+<script>
+/* shared click ripple for playful ink + terracotta buttons */
+(function(){
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  document.querySelectorAll('.saia-btn--ink,.saia-btn--terra').forEach(function(b){
+    b.addEventListener('click', function(e){
+      var r = b.getBoundingClientRect(), s = document.createElement('span'), d = Math.max(r.width, r.height);
+      s.style.cssText = 'position:absolute;border-radius:50%;background:rgba(255,255,255,.5);transform:translate(-50%,-50%) scale(0);pointer-events:none;animation:saiaRipple .6s ease-out;width:'+d+'px;height:'+d+'px;left:'+(e.clientX-r.left)+'px;top:'+(e.clientY-r.top)+'px';
+      b.appendChild(s);
+      setTimeout(function(){ s.remove(); }, 600);
+    });
+  });
+})();
+</script>
