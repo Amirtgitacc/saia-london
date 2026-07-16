@@ -12,8 +12,8 @@
   const THREE = window.THREE;
   const mat = NS.mat;
   const ASSETS = window.SAIA_ASSETS || {};
-  const GLB_URL = ASSETS.matGlb || 'assets/saia-mat.glb';
-  const TEX_URL = ASSETS.matTexture || 'assets/saia-mat-texture.png';
+  const GLB_URL = NS.assetUrl(ASSETS.matGlb || 'assets/saia-mat.glb');
+  const TEX_URL = NS.assetUrl(ASSETS.matTexture || 'assets/saia-mat-texture.png');
 
   const root = document.getElementById('homeRoot');
   const wrap = document.getElementById('top');
@@ -422,7 +422,7 @@
     ctx.thickness = Math.max(ctx.length * 0.012, 0.04); ctx.R0 = ctx.thickness * 1.15;
 
     const normalTex = mat.makeNormalMap();
-    const WC_URL = ASSETS.matWatercolour || 'assets/saia-mat-watercolour.png';
+    const WC_URL = NS.assetUrl(ASSETS.matWatercolour || 'assets/saia-mat-watercolour.png');
     meshMaterial = glb
       ? mat.makeMatMaterial(TEX_URL, WC_URL, normalTex)
       : new THREE.MeshPhysicalMaterial({ map: normalTex, color: new THREE.Color('#ffffff'),

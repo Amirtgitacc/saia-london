@@ -17,7 +17,7 @@ export function initMobileJourney() {
 
   var FLOW_COUNT = 303, STEP = 1;
   var loaded = {};
-  function frameURL(i) { return 'assets/flow-frames/f' + String(i).padStart(3, '0') + '.webp'; }
+  function frameURL(i) { return window.SAIA.assetUrl('assets/flow-frames/f' + String(i).padStart(3, '0') + '.webp'); }
   function preload(i) { if (loaded[i]) return; var im = new Image(); im.onload = function () { if (rafId === null) draw(curP); }; im.src = frameURL(i); loaded[i] = im; }
 
   /* chapters keyed to journey progress (0..1)
@@ -49,7 +49,7 @@ export function initMobileJourney() {
           '<canvas class="mj-flow"></canvas>' +
           '<div class="mj-beacon">' +
             '<div class="mj-bcue">' +
-            '<div class="mj-swipe"><img class="mj-hand-img" src="assets/swipe-hand.png?v=1" alt=""></div>' +
+            '<div class="mj-swipe"><img class="mj-hand-img" src="' + window.SAIA.assetUrl('assets/swipe-hand.png?v=1') + '" alt=""></div>' +
             '<span class="mj-cue-lbl">Swipe up</span>' +
           '</div>' +
             '<div class="mj-ladder"></div>' +
@@ -145,7 +145,7 @@ export function initMobileJourney() {
     matPivot.scale.setScalar(0.82);                          // sized to match Cristina's watercolour mat at the handoff
     scene.add(matPivot);
 
-    new GLTFLoader().load('assets/mat yoga.glb', function (gltf) {
+    new GLTFLoader().load(window.SAIA.assetUrl('assets/mat yoga.glb'), function (gltf) {
       matRoot = gltf.scene;
       var box = new THREE.Box3().setFromObject(matRoot);            // recentre on the mat's own centre so it pivots cleanly
       matRoot.position.sub(box.getCenter(new THREE.Vector3()));
