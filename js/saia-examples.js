@@ -50,7 +50,7 @@
       say: "Our rate stays a friendly £8.50 a mat, and the deposit comes back to you in full after your event. For anything bespoke it's always worth a word with Cristina by email. How many mats were you thinking?",
       actions: [] },
     { u: 'seems a bit pricey',
-      say: 'I hear you — it covers quality mats, same-day courier both ways and the cleaning, and the deposit comes back to you in full. For bigger groups the rate drops too; shall I show you an itemised quote so you can see exactly what it is?',
+      say: "I hear you — it covers quality mats, same-day courier both ways and the cleaning, and the deposit comes back to you in full. It's the same fair £8.50 rate whatever the size of your booking; shall I show you an itemised quote so you can see exactly what it is?",
       actions: [] },
     { u: 'how much would 30 mats cost?',
       say: "For 30 it's £8.50 a mat on our 2-day hire, plus a refundable £1.50-a-mat deposit and a flat London courier — give me your days and postcode and I'll show you the exact total.",
@@ -131,7 +131,7 @@
       say: 'Every mat is properly cleaned and sanitised after each hire, so they always arrive fresh — you never lift a finger. How many do you need?',
       actions: [] },
     { u: "what's included in the price?",
-      say: 'Your hire covers the mats, same-day courier both ways across London and the cleaning afterwards, plus a deposit that comes back to you. The only extras are additional days or large bulk orders. Shall I show you a quote?',
+      say: "Your hire covers the mats, same-day courier both ways across London and the cleaning afterwards, plus a deposit that comes back to you. The only extra is additional days beyond the standard two — it's the same flat rate whatever the size of your order, up to our 50-mat maximum. Shall I show you a quote?",
       actions: [] },
 
     // ── Product / suitability concerns ────────────────────────────
