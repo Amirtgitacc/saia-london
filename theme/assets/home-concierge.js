@@ -87,7 +87,29 @@
     hire: { mats: 0, guests: null, date: null, days: null, total: null, status: null },
   };
   const mounts = [];        // { node, kind:'panel'|'inline' }
-  let panelEl = null, panelInput = null;
+  let panelEl = null, panelInput = null, panelSendBtn = null, inlineInputEl = null, inlineSendBtn = null;
+
+  /* ---- one turn at a time ----
+     A reply in flight rebases onto the LIVE state.hire when it lands, so two concurrent
+     fetches land out of order and corrupt `awaiting` (the race that once flipped a live
+     delivery to pickup). While a reply is pending the inputs are disabled and any message
+     that still arrives (chips, programmatic send) waits in a 1-slot queue — only the LAST
+     one is kept — and is dispatched the moment the pending reply lands. */
+  let pending = false;      // a plan/fetch is in flight
+  let queuedText = null;    // last message received while pending
+  let refocusEl = null;     // the input the user was typing in, to restore focus
+
+  function setInputsDisabled(dis) {
+    [panelInput, panelSendBtn, inlineInputEl, inlineSendBtn].forEach(function (n) {
+      if (!n) return;
+      n.disabled = !!dis;                                        // real disabled = keyboard-safe too
+      if (dis) n.setAttribute('aria-disabled', 'true'); else n.removeAttribute('aria-disabled');
+    });
+    if (!dis && refocusEl) {
+      const back = refocusEl; refocusEl = null;
+      try { back.focus({ preventScroll: true }); } catch (e) { try { back.focus(); } catch (e2) {} }
+    }
+  }
 
   const GENERIC = 'Happy to help. Is it mat hire for an event, an upcoming SAÏA experience, or Pilates with Cristina?';
   const INTENT_CHIPS = [
@@ -124,6 +146,10 @@
   /* ---- the brain pipeline (shared by both tiers) ---- */
   function applyAndShow(plan, tier) {
     state.typing = false;
+    // EVERY terminal path (fetch resolve, fetch reject, 12s timeout fallback) funnels through
+    // here exactly once — unlock first so no failure below can ever leave the chat frozen.
+    pending = false;
+    setInputsDisabled(false);
     const exec = (NS.Planner && NS.Planner.applyActions)
       ? NS.Planner.applyActions(state.hire, plan.actions || [])
       : { hire: state.hire, acts: [] };
@@ -133,6 +159,8 @@
     logTurn('bot', plan.say, tier || 'local');
     (exec.acts || []).forEach((a) => { state.msgs.push({ from: 'act', text: a }); logTurn('act', a, tier || 'local'); });
     render();
+    // a message arrived while this reply was in flight → send it now, in order
+    if (queuedText != null) { const q = queuedText; queuedText = null; dispatch(q); }
   }
 
   function askAssist(text) {
@@ -159,15 +187,24 @@
       .catch(() => { clearTimeout(guard); fallback(); });
   }
 
-  function send(text) {
-    if (!text || !text.trim()) return;
-    const clean = text.trim();
+  function dispatch(clean) {
+    const active = document.activeElement;
+    refocusEl = (active === panelInput || active === inlineInputEl) ? active : null;
+    pending = true;
+    setInputsDisabled(true);
     state.msgs.push({ from: 'user', text: clean });
     logTurn('user', clean);
     state.turns++;
     state.typing = true;
     render();
     askAssist(clean);   // Claude reads EVERY message; localPlan is the offline fallback
+  }
+
+  function send(text) {
+    if (!text || !text.trim()) return;
+    const clean = text.trim();
+    if (pending) { queuedText = clean; return; }   // one turn at a time — keep only the LAST extra
+    dispatch(clean);
   }
 
   /* ---- live hire basket ---- */
@@ -340,12 +377,12 @@
     panelEl = document.getElementById('homeChatPanel');
     panelInput = document.getElementById('homeChatInput');
     const thread = document.getElementById('homeThread');
-    const panelSend = document.getElementById('homeChatSend');
+    const panelSend = panelSendBtn = document.getElementById('homeChatSend');
     const launcher = document.getElementById('homeChatLauncher');
     const closeBtn = document.getElementById('homeChatClose');
     const inlineThread = document.getElementById('homeInlineConcierge');
-    const inlineInput = document.getElementById('homeInlineInput');
-    const inlineSend = document.getElementById('homeInlineSend');
+    const inlineInput = inlineInputEl = document.getElementById('homeInlineInput');
+    const inlineSend = inlineSendBtn = document.getElementById('homeInlineSend');
 
     if (!state.greeted) greet('default');   // inline block shows intent chips at rest
     if (thread) mount(thread, 'panel');

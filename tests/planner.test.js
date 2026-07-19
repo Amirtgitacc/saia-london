@@ -261,3 +261,40 @@ test('"the 5th" while awaiting date escalates to Tier 2', () => {
   const r = Planner.localPlan('the 5th', { mats: 28, days: 3, method: 'pickup', date: null, awaiting: 'date' });
   assert.strictEqual(r.matched, false, 'date the regex misses hands off to Claude');
 });
+
+// === Race fix (2026-07-19): mid-delivery "collect them after" is the courier's return journey,
+// === never a switch to NW3 pickup — even when a stale `awaiting` skips the collection block ===
+test('awaiting collection: "collect them after" → two-way collection, never pickup', () => {
+  const r = Planner.localPlan('collect them after', { mats: 30, days: 2, method: 'deliver', zone: 'central', collection: null, date: null, awaiting: 'collection' });
+  assert.ok(r.actions.some(a => a.tool === 'set_collection' && a.args.collection === 'two-way'), 'must set two-way collection');
+  assert.ok(!r.actions.some(a => a.tool === 'set_method'), 'must not touch the method');
+});
+
+test('stale awaiting=date mid-delivery: "collect them after" must NOT flip to pickup', () => {
+  const r = Planner.localPlan('collect them after', { mats: 30, days: 2, method: 'deliver', zone: 'central', collection: null, date: null, awaiting: 'date' });
+  assert.ok(!r.actions.some(a => a.tool === 'set_method' && a.args.method === 'pickup'), 'must not switch a live delivery to pickup');
+  assert.ok(r.actions.some(a => a.tool === 'set_collection' && a.args.collection === 'two-way'), 'reads it as the courier return journey');
+});
+
+test('stale awaiting=postcode mid-delivery: "you collect after the event" stays a delivery', () => {
+  const r = Planner.localPlan('you collect after the event please', { mats: 30, days: 2, method: 'deliver', zone: 'central', collection: null, date: null, awaiting: 'postcode' });
+  assert.ok(!r.actions.some(a => a.tool === 'set_method' && a.args.method === 'pickup'), 'must not switch a live delivery to pickup');
+  assert.ok(r.actions.some(a => a.tool === 'set_collection' && a.args.collection === 'two-way'), 'reads it as the courier return journey');
+});
+
+// === Race fix sanity: a GENUINE pickup switch must still work ===
+test('genuine pickup at the method step still works ("we\'ll pick up from NW3")', () => {
+  const r = Planner.localPlan("we'll pick up from NW3", { mats: 30, days: 2, method: null, awaiting: 'method' });
+  assert.ok(r.actions.some(a => a.tool === 'set_method' && a.args.method === 'pickup'));
+});
+
+test('explicit pickup phrasing mid-delivery still switches to pickup', () => {
+  const r = Planner.localPlan("actually we'll collect from the warehouse instead", { mats: 30, days: 2, method: 'deliver', zone: 'central', collection: null, date: null, awaiting: 'postcode' });
+  assert.ok(r.actions.some(a => a.tool === 'set_method' && a.args.method === 'pickup'), 'explicit "collect from the warehouse" is a real pickup switch');
+});
+
+test('"collect the mats from our venue" mid-delivery is the return journey, not pickup', () => {
+  const r = Planner.localPlan('can you collect the mats from our venue?', { mats: 30, days: 2, method: 'deliver', zone: 'central', collection: null, date: null, awaiting: 'date' });
+  assert.ok(!r.actions.some(a => a.tool === 'set_method' && a.args.method === 'pickup'), '"from our venue" is where the courier collects, not a warehouse pickup');
+  assert.ok(r.actions.some(a => a.tool === 'set_collection' && a.args.collection === 'two-way'), 'reads it as two-way collection');
+});

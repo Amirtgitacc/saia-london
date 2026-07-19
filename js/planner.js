@@ -135,7 +135,16 @@
     // be read as a positive choice. When present we suppress keyword matching and let Tier 2 read it.
     const neg = has(/\b(can'?t|cannot|can ?not|won'?t|wont|unable|do ?n'?t want)\b/);
     const wantsDeliver = !neg && has(/deliver|drop ?off|courier|bring them|ship|send (it|them|me|to|over)|post (it|them)|to my (address|place|home|venue)/);
-    const wantsPickup = !neg && has(/pick.?up|collect|warehouse|\bnw3\b/);
+    // The courier's return journey, in the customer's words. Shared by the awaiting-collection
+    // block below AND the generic flow, so a stale `awaiting` can never re-read "collect them
+    // after" as NW3 pickup mid-delivery (the race that once flipped a live delivery to £0).
+    const RETURN_ONE = /one.?way|delivery only|\bmyself\b|\bourselves\b|return (them|the mats)|bring (them|the mats) back|drop (them|it|the mats)|take them back|we'?ll (return|bring)|i'?ll (return|bring|drop)/;
+    const RETURN_TWO = /\bboth\b|two.?way|you (collect|come|pick)|collect (them|it|after)|collecting (them|it)|same.?day collection/;
+    // Explicit pickup phrasing — "collect FROM you/NW3/the warehouse", "come and collect" —
+    // is a genuine switch to pickup and always wins over the return-journey reading.
+    const explicitPickup = has(/\bwarehouse\b|\bnw3\b|come (and|to) collect|(pick.?up|pick (it|them) up|collect\w*).{0,12}\bfrom (you\b|yours\b|the warehouse|belsize)/);
+    const collectReturn = !neg && hire.method === 'deliver' && !explicitPickup && has(RETURN_TWO);
+    const wantsPickup = !neg && !collectReturn && has(/pick.?up|collect|warehouse|\bnw3\b/);
     const pcMatch = (text || '').match(/\b([A-Za-z]{1,2}\d[A-Za-z\d]?(?:\s*\d[A-Za-z]{2})?)\b/);
     const fullPc = !!(pcMatch && /\d[A-Za-z]{2}\s*$/.test(pcMatch[1].trim()));
     const pcZone = pcMatch && KB.classify && KB.classify(pcMatch[1]);
@@ -143,7 +152,7 @@
     const looksPostcode = (pcZone && (hire.awaiting === 'postcode' || fullPc)) ? pcZone : null;
 
     // does THIS message carry an actionable hire slot? (used to apply changes at the review step)
-    const hasSlotSignal = (matsN != null) || (guests != null) || (daysN != null) || !!dateVal || wantsPickup || !!looksPostcode || wantsDeliver;
+    const hasSlotSignal = (matsN != null) || (guests != null) || (daysN != null) || !!dateVal || wantsPickup || !!looksPostcode || wantsDeliver || collectReturn;
 
     const aw = hire.awaiting;
     const inHireFlow = !!(aw && /^(mats|days|method|postcode|collection|date|confirm)$/.test(aw));
@@ -152,8 +161,8 @@
     // ("collect" here means the courier's return journey, not NW3 pickup — so the
     // generic wantsPickup matcher must not see these answers.)
     if (aw === 'collection') {
-      const oneW = has(/one.?way|delivery only|\bmyself\b|\bourselves\b|return (them|the mats)|bring (them|the mats) back|drop (them|it|the mats)|take them back|we'?ll (return|bring)|i'?ll (return|bring|drop)/);
-      const twoW = has(/\bboth\b|two.?way|you (collect|come|pick)|collect (them|after)|same.?day collection|^(yes|yep|yeah|sure|please|ok|okay|default|recommended|first|collection)\b/);
+      const oneW = has(RETURN_ONE);
+      const twoW = has(RETURN_TWO) || has(/^(yes|yep|yeah|sure|please|ok|okay|default|recommended|first|collection)\b/);
       if (oneW || twoW) {
         const mode = oneW ? 'one' : 'two';
         const acts = [{ tool: 'set_collection', args: { collection: mode === 'one' ? 'one-way' : 'two-way' } }];
@@ -246,19 +255,21 @@
       // date — explicit day+month or a weekday; vague dates fall to the handoff below
       if (dateVal) { h.date = dateVal; actions.push({ tool: 'set_date', args: { date: dateVal } }); }
 
+      // one-way / two-way said outright, in any phrasing, mid-flow — includes the return-journey
+      // reading of "collect them after" on a live delivery (collectReturn), so it lands here even
+      // when a stale `awaiting` means the dedicated collection block above never ran.
+      if (has(/\bone.?way\b|(return|bring|drop) (them|the mats).{0,14}(myself|ourselves|nw3)/)) {
+        h.collection = 'one'; actions.push({ tool: 'set_collection', args: { collection: 'one-way' } });
+      } else if (collectReturn || has(/both ways|two.?way|delivery and collection|deliver and collect/)) {
+        h.collection = 'two'; actions.push({ tool: 'set_collection', args: { collection: 'two-way' } });
+      }
+
       // HANDOFF: mid-flow, but this message gave us nothing to act on (an unrecognised phrasing
       // like "send to my address", "cant collect", "5 july", or an off-topic question). Rather than
       // re-ask the same slot and loop, escalate to Tier-2 Claude — it reads the intent in context,
       // emits the right action, and applyActions still does the math. This is the safety net firing.
       if (inHireFlow && actions.length === 0)
         return { say: '', actions: [], matched: false, awaiting: aw };
-
-      // one-way / two-way said outright, in any phrasing, mid-flow
-      if (has(/\bone.?way\b|(return|bring|drop) (them|the mats).{0,14}(myself|ourselves|nw3)/)) {
-        h.collection = 'one'; actions.push({ tool: 'set_collection', args: { collection: 'one-way' } });
-      } else if (has(/both ways|two.?way|delivery and collection|deliver and collect/)) {
-        h.collection = 'two'; actions.push({ tool: 'set_collection', args: { collection: 'two-way' } });
-      }
 
       // decide the next missing slot
       const need = (function (x) {
