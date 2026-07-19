@@ -15,7 +15,8 @@
       { "type": "text", "id": "variant_extra_day", "label": "Variant ID — Extra hire day" },
       { "type": "text", "id": "variant_deposit", "label": "Variant ID — Refundable deposit" },
       { "type": "text", "id": "variant_courier_two_way", "label": "Variant ID — Courier delivery + same-day collection" },
-      { "type": "text", "id": "variant_courier_one_way", "label": "Variant ID — Courier delivery only (customer returns mats)" }
+      { "type": "text", "id": "variant_courier_one_way", "label": "Variant ID — Courier delivery only (customer returns mats)" },
+      { "type": "text", "id": "variant_pickup", "label": "Variant ID — NW3 pickup (free, weight-gates checkout)" }
     ]
   }
 ]

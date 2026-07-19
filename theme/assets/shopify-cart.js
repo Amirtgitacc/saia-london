@@ -34,6 +34,10 @@
     var inLondon = hire.zone === 'central' || hire.zone === 'greater';
     var courierVariant = oneWay ? cfg.courierOneWayVariant : cfg.courierTwoWayVariant;
     if (hire.method !== 'pickup' && inLondon && courierVariant) lines.push({ variant: courierVariant, qty: 1 });
+    // pickup hires weigh 0g without a plumbing line, which wrongly shows the paid
+    // £90/£45 fallback shipping rates (weight-gated checkout) — this hidden £0 variant
+    // gives pickup carts the same 1kg signal the courier lines give delivery carts.
+    if (hire.method === 'pickup' && cfg.pickupVariant) lines.push({ variant: cfg.pickupVariant, qty: 1 });
     var pairs = [];
     function attr(k, v) {
       if (v) pairs.push([k, v]);

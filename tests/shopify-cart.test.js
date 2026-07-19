@@ -3,7 +3,7 @@ const assert = require('node:assert');
 const { cartPermalink, cartPayload } = require('../js/shopify-cart.js');
 
 const CFG = { matHireVariant: '111', extraDayVariant: '222', depositVariant: '333',
-  courierTwoWayVariant: '444', courierOneWayVariant: '555' };
+  courierTwoWayVariant: '444', courierOneWayVariant: '555', pickupVariant: '666' };
 
 test('London delivery adds the two-way courier line by default', () => {
   const url = cartPermalink({ mats: 20, days: 2, method: 'deliver', zone: 'central', postcode: 'EC2Y 8DS' }, CFG);
@@ -23,6 +23,28 @@ test('pickup and outside-London carts get NO courier line', () => {
   assert.ok(!pk.items.some(i => i.id === 444 || i.id === 555));
   const out = cartPayload({ mats: 20, days: 2, method: 'deliver', zone: 'outside' }, CFG);
   assert.ok(!out.items.some(i => i.id === 444 || i.id === 555));
+});
+
+test('pickup hire adds the qty-1 pickup line', () => {
+  const pk = cartPayload({ mats: 20, days: 2, method: 'pickup' }, CFG);
+  assert.ok(pk.items.some(i => i.id === 666 && i.quantity === 1));
+});
+
+test('pickup hire adds the pickup line even when zone is null (pickup needs no postcode)', () => {
+  const pk = cartPayload({ mats: 20, days: 2, method: 'pickup', zone: null }, CFG);
+  assert.ok(pk.items.some(i => i.id === 666 && i.quantity === 1));
+});
+
+test('delivery hires do NOT include the pickup line', () => {
+  const del = cartPayload({ mats: 20, days: 2, method: 'deliver', zone: 'central', postcode: 'EC2Y 8DS' }, CFG);
+  assert.ok(!del.items.some(i => i.id === 666));
+  const oneWay = cartPayload({ mats: 20, days: 2, method: 'deliver', zone: 'greater', collection: 'one', postcode: 'TW5 9QA' }, CFG);
+  assert.ok(!oneWay.items.some(i => i.id === 666));
+});
+
+test('outside-London quote-only hires do NOT include the pickup line', () => {
+  const out = cartPayload({ mats: 20, days: 2, method: 'deliver', zone: 'outside' }, CFG);
+  assert.ok(!out.items.some(i => i.id === 666));
 });
 
 test('base 2-day hire: mats + deposit lines only', () => {
