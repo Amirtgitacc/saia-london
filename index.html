@@ -390,6 +390,8 @@
   opacity:0; transition:transform .32s cubic-bezier(.4,0,.15,1),opacity .2s; }
 .saia-est-stage .est .seg[data-m="deliver"] .thumb{ opacity:1; transform:translateX(0); }
 .saia-est-stage .est .seg[data-m="pickup"] .thumb{ opacity:1; transform:translateX(100%); }
+.saia-est-stage .est .seg[data-c="two"] .thumb{ opacity:1; transform:translateX(0); }
+.saia-est-stage .est .seg[data-c="one"] .thumb{ opacity:1; transform:translateX(100%); }
 .saia-est-stage .est .seg button{ flex:1; position:relative; z-index:1; background:none; border:none; cursor:pointer; font-family:var(--display);
   font-size:12px; padding:11px 6px; color:var(--muted); transition:color .25s; }
 .saia-est-stage .est .seg button.on{ color:var(--cream); }
@@ -966,6 +968,13 @@
             </div>
           </div>
           <div class="pcwrap" data-pcwrap><div class="field full"><label for="estPc">Event postcode</label><input id="estPc" data-pc type="text" placeholder="e.g. EC2Y 8DS" autocomplete="postal-code" maxlength="9"></div></div>
+          <div class="pcwrap" data-colwrap><div class="field full"><label>After your event</label>
+            <div class="seg" data-collection data-c="two" role="group" aria-label="Return journey">
+              <span class="thumb" aria-hidden="true"></span>
+              <button type="button" data-c="two" class="on">We collect · £90 all-in</button>
+              <button type="button" data-c="one">You return · £45</button>
+            </div>
+          </div></div>
           <div class="result" data-result>
             <span class="est-flag" aria-hidden="true">Estimate</span>
             <span class="zone" data-zone><span class="dot"></span><span data-zonetxt></span></span>
@@ -975,7 +984,7 @@
             <div class="total"><span class="kk">Due today</span><span class="vv" data-total>—</span></div>
             <p class="disc" data-depback style="margin-top:8px;"></p>
             <button type="button" class="cta saia-btn saia-btn--terra" data-cta data-est-book><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 5h16v11H7l-3 3z"/></svg> Book now</button>
-            <p class="disc"><b>Estimate only.</b> Cristina confirms your exact courier price before you pay.</p>
+            <p class="disc"><b>Flat London courier rate</b> — charged exactly as shown. Cristina confirms timings with you before your event.</p>
           </div>
         </form>
       </div>
@@ -1320,11 +1329,12 @@
   function wire(root){
     var q=function(s){return root.querySelector(s);};
     var els={mats:q('[data-mats]'),days:q('[data-days]'),note:q('[data-note]'),pc:q('[data-pc]'),pcwrap:q('[data-pcwrap]'),
-      method:q('[data-method]'),result:q('[data-result]'),zone:q('[data-zone]'),zoneTxt:q('[data-zonetxt]'),
+      method:q('[data-method]'),colwrap:q('[data-colwrap]'),collectionSeg:q('[data-collection]'),
+      result:q('[data-result]'),zone:q('[data-zone]'),zoneTxt:q('[data-zonetxt]'),
       matCost:q('[data-matcost]'),matSub:q('[data-matsub]'),delK:q('[data-delk]'),delCost:q('[data-delcost]'),
       depCost:q('[data-depcost]'),depSub:q('[data-depsub]'),depBack:q('[data-depback]'),
       total:q('[data-total]'),cta:q('[data-cta]')};
-    var method=null, curT=0, raf=null;
+    var method=null, collection='two', curT=0, raf=null;
 
     var wraps=[].slice.call(stage.querySelectorAll('[data-route-wrap]'));
     var routes=wraps.map(function(w){return buildRoute(w, w.hasAttribute('data-big'));});
@@ -1358,6 +1368,7 @@
       var s3=s2&&(method==='pickup'||(method==='deliver'&&z!==null));
       var done=s1?(s2?(s3?3:2):1):0;
       els.pcwrap.classList.toggle('show',method==='deliver');
+      if(els.colwrap) els.colwrap.classList.toggle('show',method==='deliver');
       var reached=method==='pickup'&&done>=2?3:done;
       driveVan([0,0.36,0.68,1][reached]); lightMiles(reached);
       lastLabel(method==='pickup'?'NW3 · collect':(z&&z.label!=='outside'?z.label.split(' · ')[1]:(z&&z.label==='outside'?'Outside London':'Your event')));
@@ -1365,19 +1376,20 @@
       els.result.classList.toggle('show',arrived);
       if(!arrived){ if(!els.mats.value&&!els.days.value) setTotal('—'); return; }
       var zoneKey=method==='pickup'?null:(z?z.key:null);
-      var q=window.SAIA.KB.priceHire({mats:mats,days:days,method:method,zone:zoneKey});
+      var q=window.SAIA.KB.priceHire({mats:mats,days:days,method:method,zone:zoneKey,collection:collection});
       var matCost=q.matCost;
       els.matCost.textContent=gbp(matCost); if(els.matSub) els.matSub.textContent=mats+' mats · '+days+' days';
       if(els.depCost) els.depCost.textContent=gbp(q.deposit); if(els.depSub) els.depSub.textContent=mats+' × '+gbp(window.SAIA.KB.hire.depositPerMat)+', returned after';
       if(els.depBack) els.depBack.innerHTML='<b>'+gbp(q.deposit)+'</b> of this is a refundable deposit — back to you once the mats are returned.';
-      var totalNum=q.total,prefix=(q.total!=null&&method!=='pickup')?'<span class="pre">from</span>':'',delText='—',zoneShow=false,wa;
+      var totalNum=q.total,delText='—',zoneShow=false,wa;
       if(method==='pickup'){els.delK.innerHTML='Collection<small>Pick up from NW3, free</small>';delText='Free';wa='collect from NW3';}
       else if(z.label==='outside'){els.delK.innerHTML='Delivery &amp; collection<small>Addison Lee, by quote</small>';delText='By quote';els.zoneTxt.textContent='Outside London';zoneShow=true;wa='delivery to '+els.pc.value.toUpperCase()+' (outside London)';}
-      else {els.delK.innerHTML='Delivery &amp; collection<small>Addison Lee, low estimate</small>';delText='from '+gbp(z.round);els.zoneTxt.textContent=z.label;zoneShow=true;wa='delivery to '+els.pc.value.toUpperCase()+' ('+z.label+')';}
+      else if(collection==='one'){els.delK.innerHTML='Delivery only<small>Addison Lee — you return the mats to NW3</small>';delText=gbp(q.deliveryCost);els.zoneTxt.textContent=z.label;zoneShow=true;wa='delivery to '+els.pc.value.toUpperCase()+' ('+z.label+', returning the mats myself)';}
+      else {els.delK.innerHTML='Delivery &amp; collection<small>Addison Lee, same-day collection</small>';delText=gbp(q.deliveryCost);els.zoneTxt.textContent=z.label;zoneShow=true;wa='delivery to '+els.pc.value.toUpperCase()+' ('+z.label+', with same-day collection)';}
       els.delCost.textContent=delText; els.zone.style.display=zoneShow?'':'none';
       if(totalNum===null){setTotal(gbp(matCost+q.deposit)+' <span class="pre">+ quote</span>');totalNodes.forEach(function(n){n.dataset.val='0';});}
-      else tweenTotal(totalNum,prefix);
-      var label=totalNum===null?('£'+(matCost+q.deposit).toFixed(2)+' + delivery quote'):((prefix?'from ':'')+gbp(totalNum));
+      else tweenTotal(totalNum,'');
+      var label=totalNum===null?('£'+(matCost+q.deposit).toFixed(2)+' + delivery quote'):gbp(totalNum);
       var msg='Hi Cristina! I\'d like to book '+mats+' mats for '+days+' days, '+wa+'. Due today '+label+' (incl. '+gbp(q.deposit)+' refundable deposit). Please confirm availability.';
       if(els.cta && els.cta.tagName==='A') els.cta.href='https://wa.me/447444611914?text='+encodeURIComponent(msg);
     }
@@ -1385,6 +1397,9 @@
     els.method.addEventListener('click',function(e){var b=e.target.closest('button[data-m]');if(!b)return;
       method=b.getAttribute('data-m');els.method.setAttribute('data-m',method);
       els.method.querySelectorAll('button').forEach(function(x){x.classList.toggle('on',x===b);});render();});
+    if(els.collectionSeg) els.collectionSeg.addEventListener('click',function(e){var b=e.target.closest('button[data-c]');if(!b)return;
+      collection=b.getAttribute('data-c');els.collectionSeg.setAttribute('data-c',collection);
+      els.collectionSeg.querySelectorAll('button').forEach(function(x){x.classList.toggle('on',x===b);});render();});
     ['input','change'].forEach(function(ev){els.mats.addEventListener(ev,render);els.days.addEventListener(ev,render);els.pc.addEventListener(ev,render);});
 
     function setMethod(m){method=m;els.method.setAttribute('data-m',m);els.method.querySelectorAll('button').forEach(function(x){x.classList.toggle('on',x.getAttribute('data-m')===m);});}
@@ -1416,12 +1431,15 @@
     var KB=window.SAIA&&window.SAIA.KB;
     var methodEl=stage.querySelector('[data-method]');
     var method=methodEl?methodEl.getAttribute('data-m'):null;
+    var colEl=stage.querySelector('[data-collection]');
+    var collection=colEl?(colEl.getAttribute('data-c')||'two'):'two';
     var pc=((stage.querySelector('[data-pc]')||{}).value||'').toUpperCase();
     var zoneObj=(KB&&method==='deliver'&&pc)?KB.classify(pc):null;
     var hire={
       mats:parseInt((stage.querySelector('[data-mats]')||{}).value,10)||null,
       days:parseInt((stage.querySelector('[data-days]')||{}).value,10)||null,
       method:method||null,
+      collection:method==='deliver'?collection:null,
       postcode:method==='deliver'?(pc||null):null,
       zone:zoneObj?zoneObj.key:null
     };
@@ -1449,11 +1467,11 @@
 </script>
 <script src="vendor/three.min.js"></script>
 <script src="js/mat-core.js?v=20260629b"></script>
-<script src="js/saia-knowledge.js?v=20260715a"></script>
-<script src="js/planner.js?v=20260716t12"></script>
-<script src="js/shopify-cart.js?v=20260716t10b"></script>
+<script src="js/saia-knowledge.js?v=20260717a"></script>
+<script src="js/planner.js?v=20260717a"></script>
+<script src="js/shopify-cart.js?v=20260717a"></script>
 <script src="js/checkout-handoff.js?v=20260716t11"></script>
-<script src="js/home-concierge.js?v=20260716t12"></script>
+<script src="js/home-concierge.js?v=20260717a"></script>
 <script src="js/home.js?v=20260629b"></script>
 <script src="js/home-journey.js?v=20260716t4"></script>
 <!-- mobile-only scroll journey: lazy-loads the vendored three.js ES modules on small screens -->

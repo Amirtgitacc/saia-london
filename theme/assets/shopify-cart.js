@@ -27,12 +27,20 @@
     var lines = [{ variant: cfg.matHireVariant, qty: mats }];
     if (extraDays > 0) lines.push({ variant: cfg.extraDayVariant, qty: mats * extraDays });
     lines.push({ variant: cfg.depositVariant, qty: mats });
+    // courier as a REAL cart line (priced by its Shopify variant), so the delivery the
+    // guest chose in the estimator/assistant is in the total before checkout — the
+    // checkout shipping rate is then the free "already included" one (weight-gated).
+    var oneWay = hire.collection === 'one';
+    var inLondon = hire.zone === 'central' || hire.zone === 'greater';
+    var courierVariant = oneWay ? cfg.courierOneWayVariant : cfg.courierTwoWayVariant;
+    if (hire.method !== 'pickup' && inLondon && courierVariant) lines.push({ variant: courierVariant, qty: 1 });
     var pairs = [];
     function attr(k, v) {
       if (v) pairs.push([k, v]);
     }
     attr('Event date', hire.date);
     attr('Method', hire.method === 'pickup' ? 'Pickup from NW3' : 'Delivery');
+    if (hire.method !== 'pickup') attr('Return journey', oneWay ? 'You return the mats to NW3' : 'Same-day collection by courier');
     attr('Postcode', String(hire.postcode || '').toUpperCase() || null);
     var q = kb.quoteLines(hire);
     attr('Delivery estimate', q.deliveryLabel);

@@ -9,8 +9,8 @@
      - Keep `say` to 1–3 warm, British, unpretentious sentences.
      - NEVER put a computed price in `say` — emit an action; the app prices it.
      - Use only these tools: add_mats, recommend, set_days, set_method,
-       set_postcode, set_date, set_event, quote, book_delivery, checkout,
-       confirm, rsvp_event, request_pilates, join_pilates_list, join_newsletter.
+       set_collection, set_postcode, set_date, set_event, quote, book_delivery,
+       checkout, confirm, rsvp_event, request_pilates, join_pilates_list, join_newsletter.
    Dual-mode: window.SAIA.Examples in the browser, require() in Node.
    ============================================================ */
 (function (root, factory) {
@@ -21,8 +21,14 @@
   var examples = [
     // ── Delivery & collection (the #1 confusion) ──────────────────
     { u: 'how does delivery and collection usually work?',
-      say: 'We work to a 6-hour delivery window, so early or morning events are usually delivered the day before, from £35 for delivery and collection across London. Collection is on the day of your event once it has finished, with no cleaning needed as we take care of that, or you can collect from our NW3 warehouse for free.',
+      say: 'We work to a 6-hour delivery window, so early or morning events are usually delivered the day before — £90 flat across London for delivery plus same-day collection, or £45 delivery-only if you return the mats to us in NW3. Collection is on the day of your event once it has finished, with no cleaning needed as we take care of that, or you can pick up from our NW3 warehouse for free.',
       actions: [] },
+    { u: 'yes collect them after please',
+      say: "Perfect — we'll deliver, then collect the same day once your event has finished. And what date is your event?",
+      actions: [{ tool: 'set_collection', args: { collection: 'two-way' } }] },
+    { u: "we'd rather bring them back ourselves to save a bit",
+      say: "That works nicely — £45 for the delivery, and you drop the mats back to our NW3 warehouse in working hours. What date is your event?",
+      actions: [{ tool: 'set_collection', args: { collection: 'one-way' } }] },
     { u: 'if my mats are delivered and collected on the same day, do I still pay for a two-day hire?',
       say: "You do, yes. Even when the mats arrive and leave on the same day, it's charged as our 2-day hire, because we reserve the mats for you and hold a 6-hour delivery window, which is why morning events usually get theirs the day before. Collection is then on the day itself, once you've finished.",
       actions: [] },
@@ -47,7 +53,7 @@
       say: 'I hear you — it covers quality mats, same-day courier both ways and the cleaning, and the deposit comes back to you in full. For bigger groups the rate drops too; shall I show you an itemised quote so you can see exactly what it is?',
       actions: [] },
     { u: 'how much would 30 mats cost?',
-      say: "For 30 it's £8.50 a mat on our 2-day hire, plus a refundable £1.50-a-mat deposit and courier from £35 — give me your days and postcode and I'll show you the exact total.",
+      say: "For 30 it's £8.50 a mat on our 2-day hire, plus a refundable £1.50-a-mat deposit and a flat London courier — give me your days and postcode and I'll show you the exact total.",
       actions: [{ tool: 'add_mats', args: { n: 30 } }] },
     { u: 'is the deposit refundable?',
       say: "Yes — the £1.50-per-mat deposit is fully refundable, returned once the mats come back to us. It's a hold, not a hire cost.",
@@ -176,8 +182,8 @@
       say: "Of course — each extra day is just £1.50 a mat. How many days in total would you like them for?",
       actions: [] },
     { u: "could you deliver but I'll drop them back myself?",
-      say: "That works nicely — we'll courier them to you, and you're welcome to return them to our NW3 warehouse in working hours. What's the event postcode?",
-      actions: [{ tool: 'set_method', args: { method: 'deliver' } }] },
+      say: "That works nicely — £45 delivery-only, and you return the mats to our NW3 warehouse in working hours. What's the event postcode?",
+      actions: [{ tool: 'set_method', args: { method: 'deliver' } }, { tool: 'set_collection', args: { collection: 'one-way' } }] },
     { u: "there's no parking at the venue, is that a problem?",
       say: 'Not usually — just share any access details with Cristina when you book and the courier plans around it. Shall I get your hire set up?',
       actions: [] },

@@ -10,13 +10,10 @@
             style="background:#FFFDF8; border:1px solid #E4DDCF; border-radius:8px; padding:24px;">
         {% for item in cart.items %}
           <div style="display:flex; justify-content:space-between; gap:12px; padding:10px 0; border-bottom:1px solid #F0EADC;">
-            <span>{{ item.product.title }} <span style="color:#6B6358;">× {{ item.quantity }}</span></span>
+            <span>{{ item.product.title }}{% unless item.variant.title == 'Default Title' %} <span style="display:block; font-size:12px; color:#6B6358;">{{ item.variant.title }}</span>{% endunless %}{% if item.quantity > 1 %} <span style="color:#6B6358;">× {{ item.quantity }}</span>{% endif %}</span>
             <span>{{ item.original_line_price | money }}</span>
           </div>
         {% endfor %}
-        <div style="display:flex; justify-content:space-between; gap:12px; padding:10px 0; color:#6B6358;">
-          <span>Delivery &amp; collection</span><span>confirmed by Cristina</span>
-        </div>
         {% for attribute in cart.attributes %}
           <div style="display:flex; justify-content:space-between; gap:12px; padding:4px 0; font-size:13px; color:#6B6358;">
             <span>{{ attribute.first }}</span><span>{{ attribute.last }}</span>
@@ -25,7 +22,7 @@
         <div style="display:flex; justify-content:space-between; border-top:1px solid #E4DDCF; margin-top:8px; padding-top:12px; font-family:'Playfair Display',serif; font-size:20px; color:#B8624A;">
           <span>Total today</span><span>{{ cart.total_price | money }}</span>
         </div>
-        <p style="font-size:12px; color:#6B6358;">Includes the refundable deposit — returned once the mats come back. Courier cost is confirmed by Cristina before your event.</p>
+        <p style="font-size:12px; color:#6B6358;">Includes the refundable deposit — returned once the mats come back. Your courier is in the total above; Cristina confirms timings with you before your event.</p>
         <button type="submit" name="checkout"
           style="width:100%; margin-top:20px; background:#2B2620; color:#F5F1E8; border:none; border-radius:4px; padding:15px; font-size:12px; letter-spacing:.18em; text-transform:uppercase; cursor:pointer;">
           Continue to payment

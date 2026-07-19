@@ -15,14 +15,23 @@ test('set_days then quote prices extra days + deposit', () => {
   assert.strictEqual(h.total, 230);          // 200 mats + 0 courier + 30 deposit
 });
 
-test('set_postcode classifies the zone and prices courier', () => {
+test('set_postcode classifies the zone and prices courier (two-way default)', () => {
   let h = base();
   h = Planner.applyActions(h, [{ tool: 'add_mats', args: { n: 50 } }]).hire;
   h = Planner.applyActions(h, [{ tool: 'set_postcode', args: { pc: 'EC2Y 8DS' } }]).hire;
   h = Planner.applyActions(h, [{ tool: 'quote' }]).hire;
   assert.strictEqual(h.zone, 'central');
   assert.strictEqual(h.method, 'deliver');
-  assert.strictEqual(h.total, 535);          // 425 + 35 + 75
+  assert.strictEqual(h.total, 590);          // 425 + 90 two-way courier + 75
+});
+
+test('set_collection one-way reprices the courier to £45', () => {
+  let h = base();
+  h = Planner.applyActions(h, [{ tool: 'add_mats', args: { n: 50 } }]).hire;
+  h = Planner.applyActions(h, [{ tool: 'set_postcode', args: { pc: 'EC2Y 8DS' } }]).hire;
+  h = Planner.applyActions(h, [{ tool: 'set_collection', args: { collection: 'one-way' } }]).hire;
+  assert.strictEqual(h.collection, 'one');
+  assert.strictEqual(h.total, 545);          // 425 + 45 one-way courier + 75
 });
 
 test('add_mats clamps a request for 80 mats to the 50-mat cap, so the quote can never exceed it', () => {
@@ -60,11 +69,29 @@ test('after method=deliver, asks for postcode', () => {
   assert.ok(r.actions.some(a => a.tool === 'set_method' && a.args.method === 'deliver'));
 });
 
-test('postcode given but no date → asks date, no quote yet', () => {
+test('postcode given → asks the return-journey question next, no quote yet', () => {
   const r = Planner.localPlan('EC2Y 8DS', { mats: 50, days: 2, method: 'deliver', zone: null, date: null, awaiting: 'postcode' });
-  assert.strictEqual(r.awaiting, 'date');
+  assert.strictEqual(r.awaiting, 'collection');
+  assert.ok(/collect|return/i.test(r.say));
   assert.ok(r.actions.some(a => a.tool === 'set_postcode'));
-  assert.ok(!r.actions.some(a => a.tool === 'quote'));      // no quote until the date is in
+  assert.ok(!r.actions.some(a => a.tool === 'quote'));      // no quote until everything is in
+});
+
+test('collection answered "yes collect them" → two-way, asks date', () => {
+  const r = Planner.localPlan('yes collect them please', { mats: 50, days: 2, method: 'deliver', zone: 'central', collection: null, date: null, awaiting: 'collection' });
+  assert.strictEqual(r.awaiting, 'date');
+  assert.ok(r.actions.some(a => a.tool === 'set_collection' && a.args.collection === 'two-way'));
+});
+
+test('collection answered "we\'ll bring them back ourselves" → one-way, asks date', () => {
+  const r = Planner.localPlan("we'll bring them back ourselves", { mats: 50, days: 2, method: 'deliver', zone: 'central', collection: null, date: null, awaiting: 'collection' });
+  assert.strictEqual(r.awaiting, 'date');
+  assert.ok(r.actions.some(a => a.tool === 'set_collection' && a.args.collection === 'one-way'));
+});
+
+test('unclear collection answer hands off to Tier 2', () => {
+  const r = Planner.localPlan('hmm whatever is easiest for the venue really', { mats: 50, days: 2, method: 'deliver', zone: 'central', collection: null, date: null, awaiting: 'collection' });
+  assert.strictEqual(r.matched, false);
 });
 
 test('pickup but no date → asks date, no quote yet', () => {
@@ -75,7 +102,7 @@ test('pickup but no date → asks date, no quote yet', () => {
 });
 
 test('all slots in (date answers the last question) → asks before quoting, no quote yet', () => {
-  const r = Planner.localPlan('saturday', { mats: 15, days: 2, method: 'deliver', zone: 'central', date: null, awaiting: 'date' });
+  const r = Planner.localPlan('saturday', { mats: 15, days: 2, method: 'deliver', zone: 'central', collection: 'two', date: null, awaiting: 'date' });
   assert.strictEqual(r.awaiting, 'review');                 // gate: confirm before revealing
   assert.ok(r.actions.some(a => a.tool === 'set_date'));
   assert.ok(!r.actions.some(a => a.tool === 'quote'), 'must NOT quote until the guest opts in');
@@ -229,8 +256,8 @@ test('unparsed answer mid-flow escalates to Tier 2 (no loop)', () => {
   assert.strictEqual(r2.actions.length, 0);
 });
 
-// === Loop fix: a bare date the keyword parser misses ("5 july") escalates, not loops ===
-test('"5 july" while awaiting date escalates to Tier 2', () => {
-  const r = Planner.localPlan('5 july', { mats: 28, days: 3, method: 'pickup', date: null, awaiting: 'date' });
-  assert.strictEqual(r.matched, false, 'numeric date the regex misses hands off to Claude');
+// === Loop fix: a bare date the keyword parser misses ("the 5th" — no month) escalates, not loops ===
+test('"the 5th" while awaiting date escalates to Tier 2', () => {
+  const r = Planner.localPlan('the 5th', { mats: 28, days: 3, method: 'pickup', date: null, awaiting: 'date' });
+  assert.strictEqual(r.matched, false, 'date the regex misses hands off to Claude');
 });

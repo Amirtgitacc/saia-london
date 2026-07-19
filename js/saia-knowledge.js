@@ -35,7 +35,7 @@
       depositPerMat: 1.5,                   // £ per mat, REFUNDABLE — returned after mats come back
       depositRefundable: true,
       maxMats: 50,                          // hard ceiling: our current stock
-      delivery: 'Same-day courier from our Central London warehouse, from £35 for delivery and collection across London (free if you pick up from NW3). We work to a 6-hour delivery window, so early or morning events are usually delivered the day before.',
+      delivery: 'Same-day Addison Lee courier from our NW3 base — £90 flat across London for delivery plus same-day collection after your event (the usual choice), or £45 delivery-only if you bring the mats back to NW3 yourself. Free if you pick up and return from NW3. We work to a 6-hour delivery window, so early or morning events are usually delivered the day before.',
       deliveryWindow: 6,                    // hours
       collection: 'We collect on the day of your event, once it has finished and the mats are rolled up, bagged and stacked ready for the courier. Leave a little time to pack up afterwards, as a small charge can apply if the courier is kept waiting. No cleaning needed, we take care of that. You can also drop them back at our NW3 warehouse in working hours.',
       twoDayBasis: 'The hire is charged as a 2-day hire even when the mats are delivered and collected on the same day, because we reserve the mats for you and hold a 6-hour delivery window.',
@@ -89,11 +89,17 @@
     affiliate: "We do have an affiliate programme. Email Cristina at Cristina@saialondon.com and she'll talk you through the details and set you up personally.",
   };
 
-  /* ---- delivery zones + pricing (single source, lifted from the home estimator) ---- */
+  /* ---- delivery zones + pricing (single source, lifted from the home estimator) ----
+     Flat London courier pricing, matched 1:1 to the Shopify "Courier delivery" product:
+       twoWay £90 = delivery + same-day collection (the DEFAULT — always ask, default to this)
+       oneWay £45 = delivery only, customer returns the mats to NW3 themselves
+     Zones only decide the label and the outside-London → quote-by-WhatsApp case now. */
   KB.delivery = {
+    twoWay: 90,
+    oneWay: 45,
     zones: {
-      central: { key: 'central', label: 'Zone 1 · Central London', round: 35 },
-      greater: { key: 'greater', label: 'Zone 2 · Greater London', round: 45 },
+      central: { key: 'central', label: 'Zone 1 · Central London' },
+      greater: { key: 'greater', label: 'Zone 2 · Greater London' },
     },
     central: ['EC1', 'EC2', 'EC3', 'EC4', 'WC1', 'WC2', 'W1', 'SW1', 'SE1', 'N1', 'NW1', 'E1', 'W2'],
     london: ['E', 'EC', 'N', 'NW', 'SE', 'SW', 'W', 'WC'],
@@ -111,7 +117,7 @@
     var area = m[1], key = area + (m[2] ? m[2] : '');
     if (D.central.indexOf(key) !== -1) return D.zones.central;
     if (D.london.indexOf(area) !== -1 || D.outer.indexOf(area) !== -1) return D.zones.greater;
-    return { key: 'outside', label: 'outside', round: null };
+    return { key: 'outside', label: 'outside' };
   };
 
   // full hire price — the ONE place totals are computed
@@ -123,15 +129,17 @@
     var matCost = mats * H.pricePerMat + mats * H.extraDayPerMat * Math.max(0, days - H.hireDays);
     var deposit = mats * H.depositPerMat;
 
+    // collection: 'two' = courier both ways (DEFAULT), 'one' = delivery only, they return the mats
+    var oneWay = hire.collection === 'one';
     var deliveryCost = null, deliveryLabel = null, quoteOnly = false;
     if (hire.method === 'pickup') {
       deliveryCost = 0; deliveryLabel = 'Pickup from NW3 · free';
     } else if (hire.zone === 'outside') {
       deliveryCost = null; deliveryLabel = 'Courier · by quote'; quoteOnly = true;
     } else if (hire.zone === 'central' || hire.zone === 'greater') {
-      var z = KB.delivery.zones[hire.zone];
-      deliveryCost = z.round;
-      deliveryLabel = 'Courier · ' + (hire.zone === 'central' ? 'Central London' : 'Greater London');
+      deliveryCost = oneWay ? KB.delivery.oneWay : KB.delivery.twoWay;
+      deliveryLabel = (oneWay ? 'Courier · delivery only, you return the mats' : 'Courier · delivery + same-day collection')
+        + ' · ' + (hire.zone === 'central' ? 'Central London' : 'Greater London');
     }
 
     var total = (deliveryCost == null) ? null : matCost + deliveryCost + deposit;
@@ -167,7 +175,11 @@
       lines.push({ label: 'Extra days', detail: mats + ' × ' + money(H.extraDayPerMat) + ' × ' + (days - H.hireDays), value: money(mats * H.extraDayPerMat * (days - H.hireDays)) });
     }
     if (q.deliveryLabel) {
-      lines.push({ label: 'Delivery & collection', detail: q.deliveryLabel, value: q.deliveryCost == null ? 'confirmed by Cristina' : (q.deliveryCost === 0 ? 'free' : money(q.deliveryCost)) });
+      lines.push({
+        label: hire.collection === 'one' ? 'Delivery only' : 'Delivery & collection',
+        detail: q.deliveryLabel,
+        value: q.deliveryCost == null ? 'confirmed by Cristina' : (q.deliveryCost === 0 ? 'free' : money(q.deliveryCost)),
+      });
     }
     lines.push({ label: 'Refundable deposit', detail: mats + ' × ' + money(H.depositPerMat), value: money(q.deposit) });
     return { lines: lines, total: q.total, subtotal: q.matCost + q.deposit, deposit: q.deposit, quoteOnly: q.quoteOnly, deliveryLabel: q.deliveryLabel };
@@ -201,6 +213,7 @@
     '- If someone needs more than ' + KB.hire.maxMats + ' mats, ask whether their classes run in staggered sessions (the same ' + KB.hire.maxMats + ' can be reused between groups). If everyone needs a mat at the same time, we cannot go beyond ' + KB.hire.maxMats + '. Never book past ' + KB.hire.maxMats + '.',
     '- A ' + KB.hire.currency + KB.hire.depositPerMat.toFixed(2) + ' per mat REFUNDABLE deposit is taken upfront and returned once the mats come back. It is not a hire cost.',
     '- Delivery: ' + KB.hire.delivery,
+    '- Delivery choices (always ask which they want before quoting a delivery): courier BOTH ways at ' + KB.hire.currency + KB.delivery.twoWay + ' (delivery + same-day collection — the default, and what most people want), or delivery-only at ' + KB.hire.currency + KB.delivery.oneWay + ' if they will return the mats to NW3 themselves. NW3 pickup is free. Outside London is quoted by Cristina.',
     '- Collection: ' + KB.hire.collection,
     '- Two-day basis: ' + KB.hire.twoDayBasis,
     '- Overnight storage: ' + KB.hire.overnightStorage,

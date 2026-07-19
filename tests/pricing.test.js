@@ -27,13 +27,20 @@ test('classify returns null for junk', () => {
   assert.strictEqual(KB.classify(''), null);
 });
 
-test('priceHire — 50 mats, 2 days, central delivery', () => {
+test('priceHire — 50 mats, 2 days, central delivery (two-way default)', () => {
   const q = KB.priceHire({ mats: 50, days: 2, method: 'deliver', zone: 'central' });
   assert.strictEqual(q.matCost, 425);
   assert.strictEqual(q.deposit, 75);
-  assert.strictEqual(q.deliveryCost, 35);
-  assert.strictEqual(q.total, 535);          // 425 + 35 + 75
+  assert.strictEqual(q.deliveryCost, 90);    // flat London, delivery + same-day collection
+  assert.strictEqual(q.total, 590);          // 425 + 90 + 75
   assert.strictEqual(q.quoteOnly, false);
+});
+
+test('priceHire — one-way delivery (guest returns the mats) is £45', () => {
+  const q = KB.priceHire({ mats: 50, days: 2, method: 'deliver', zone: 'greater', collection: 'one' });
+  assert.strictEqual(q.deliveryCost, 45);
+  assert.strictEqual(q.total, 545);          // 425 + 45 + 75
+  assert.ok(/delivery only/i.test(q.deliveryLabel));
 });
 
 test('priceHire — extra days add £1.50/mat/day', () => {

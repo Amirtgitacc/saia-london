@@ -71,9 +71,14 @@
           acts.push('Set hire length to ' + hire.days + ' days'); break;
         case 'set_method':
           hire.method = (args.method === 'pickup') ? 'pickup' : 'deliver';
-          if (hire.method === 'pickup') { hire.postcode = null; hire.zone = null; }
+          if (hire.method === 'pickup') { hire.postcode = null; hire.zone = null; hire.collection = null; }
           hire.total = total(hire);
           acts.push(hire.method === 'pickup' ? 'Collection from NW3 selected' : 'Courier delivery selected'); break;
+        case 'set_collection':
+          // 'two' = courier both ways (delivery + same-day collection, default), 'one' = they return the mats
+          hire.collection = (args.collection === 'one-way' || args.collection === 'one') ? 'one' : 'two';
+          hire.total = total(hire);
+          acts.push(hire.collection === 'one' ? 'Delivery only · you return the mats to NW3' : 'Delivery + same-day collection selected'); break;
         case 'set_postcode': {
           hire.postcode = args.pc || hire.postcode; hire.method = 'deliver';
           const z = KB.classify ? KB.classify(hire.postcode) : null;
@@ -141,7 +146,25 @@
     const hasSlotSignal = (matsN != null) || (guests != null) || (daysN != null) || !!dateVal || wantsPickup || !!looksPostcode || wantsDeliver;
 
     const aw = hire.awaiting;
-    const inHireFlow = !!(aw && /^(mats|days|method|postcode|date|confirm)$/.test(aw));
+    const inHireFlow = !!(aw && /^(mats|days|method|postcode|collection|date|confirm)$/.test(aw));
+
+    // ===== collection step: answered in its own words, BEFORE the generic parse =====
+    // ("collect" here means the courier's return journey, not NW3 pickup — so the
+    // generic wantsPickup matcher must not see these answers.)
+    if (aw === 'collection') {
+      const oneW = has(/one.?way|delivery only|\bmyself\b|\bourselves\b|return (them|the mats)|bring (them|the mats) back|drop (them|it|the mats)|take them back|we'?ll (return|bring)|i'?ll (return|bring|drop)/);
+      const twoW = has(/\bboth\b|two.?way|you (collect|come|pick)|collect (them|after)|same.?day collection|^(yes|yep|yeah|sure|please|ok|okay|default|recommended|first|collection)\b/);
+      if (oneW || twoW) {
+        const mode = oneW ? 'one' : 'two';
+        const acts = [{ tool: 'set_collection', args: { collection: mode === 'one' ? 'one-way' : 'two-way' } }];
+        const sayBit = mode === 'one'
+          ? "Perfect — delivery only, and you'll drop the mats back to us in NW3 after your event. "
+          : "Lovely — we'll deliver, then collect the same day once your event has finished. ";
+        if (!hire.date) return mk(sayBit + 'And what date is your event?', acts, 'date');
+        return mk(sayBit + 'Shall I put your quote together?', acts, 'review');
+      }
+      return { say: '', actions: [], matched: false, awaiting: aw };   // unclear → Tier 2 reads it
+    }
 
     // --- bare answers interpreted in the context of what we just asked ---
     const bareNum = (t.match(/^(?:just\s+)?(?:the\s+)?(\d+)\b/) || [])[1];
@@ -230,12 +253,20 @@
       if (inHireFlow && actions.length === 0)
         return { say: '', actions: [], matched: false, awaiting: aw };
 
+      // one-way / two-way said outright, in any phrasing, mid-flow
+      if (has(/\bone.?way\b|(return|bring|drop) (them|the mats).{0,14}(myself|ourselves|nw3)/)) {
+        h.collection = 'one'; actions.push({ tool: 'set_collection', args: { collection: 'one-way' } });
+      } else if (has(/both ways|two.?way|delivery and collection|deliver and collect/)) {
+        h.collection = 'two'; actions.push({ tool: 'set_collection', args: { collection: 'two-way' } });
+      }
+
       // decide the next missing slot
       const need = (function (x) {
         if (!x.mats || x.mats < H.minMats) return 'mats';
         if (!x.days) return 'days';
         if (!x.method) return 'method';
         if (x.method === 'deliver' && !x.zone) return 'postcode';
+        if (x.method === 'deliver' && !x.collection) return 'collection';
         if (!x.date) return 'date';
         return 'confirm';
       })(h);
@@ -248,6 +279,10 @@
       if (need === 'days') return mk((h.mats ? h.mats + ' mats — perfect. ' : '') + 'How many days do you need them? Our standard hire is ' + H.hireDays + ' days.', actions, 'days');
       if (need === 'method') return mk('Shall we deliver by courier, or will you collect from our NW3 warehouse?', actions, 'method');
       if (need === 'postcode') return mk("What's the event postcode? I'll work out the courier from there.", actions, 'postcode');
+      if (need === 'collection') {
+        const D = KB.delivery || { twoWay: 90, oneWay: 45 };
+        return mk('And the return journey — shall our courier collect the mats once your event has finished (' + money(D.twoWay) + ' for delivery and same-day collection), or will you bring them back to NW3 yourself (' + money(D.oneWay) + ' delivery only)? Most people go with collection.', actions, 'collection');
+      }
 
       // need the date before we quote anything
       if (need === 'date') return mk('And what date is your event? We deliver the day before and collect once it has finished.', actions, 'date');

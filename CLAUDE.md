@@ -25,6 +25,8 @@ python3 -m http.server 8000     # open http://localhost:8000/
 Without a running endpoint (or key) the site still works — the concierge just uses its
 deterministic brain and skips the Claude assist. `curl localhost:8787/health` shows status.
 
+Tests: `node --test tests/*.test.js` (pricing, quotes, planner, cart, logging — keep green).
+
 ## The concierge: a two-tier brain
 
 The concierge is **dedicated to SAÏA**, not a generic chatbot. Two tiers, same output shape
@@ -71,11 +73,13 @@ they can never disagree. **Change a fact once, here, and both brains update.** D
   examples beats hundreds of hardcoded scripts. Keep `say` to 1–3 warm British sentences and
   never put a computed price in it (emit an action instead).
 - **Change a fact/price/number:** edit `js/saia-knowledge.js` only.
-- **Booking math** lives in `applyActions()` in `planner.js` — shared by both tiers; the 12
-  tools are: `add_mats, set_event, recommend, set_date, quote, book_delivery, checkout,
-  confirm, rsvp_event, request_pilates, join_pilates_list, join_newsletter`. Pilates is **not**
-  instant-booked: 1-2-1 → `request_pilates` (request to Cristina); group classes are occasional
-  events → `join_pilates_list` (email waitlist, updates when a session opens).
+- **Booking math** lives in `applyActions()` in `planner.js` — shared by both tiers; the 13
+  tools are: `add_mats, set_event, recommend, set_date, set_collection, quote, book_delivery,
+  checkout, confirm, rsvp_event, request_pilates, join_pilates_list, join_newsletter`. Pilates is
+  **not** instant-booked: 1-2-1 → `request_pilates` (request to Cristina); group classes are
+  occasional events → `join_pilates_list` (email waitlist, updates when a session opens).
+  For delivery, the return journey (`set_collection`, two-way vs one-way) is a **required slot**
+  asked before quoting — slot order: mats → days → method → postcode → collection → date.
 
 ## The concierge front end
 
@@ -107,23 +111,40 @@ they can never disagree. **Change a fact once, here, and both brains update.** D
 Tier-2 assist uses `claude-haiku-4-5` (fast, fires only on the long tail). Override with
 `SAIA_MODEL` in `.env`. Key stays server-side; it never reaches the browser.
 
-## Delivery (Addison Lee) — placeholder now, live API later
+## Delivery — flat London courier, chosen BEFORE checkout
 
-Delivery is by **Addison Lee** courier (NW3 warehouse → event; pickup from NW3 is free). Verified
-hire facts from saialondon.com: £8.50/mat, 2-day base, **+£1.50/mat per extra day**, **min 10, max 50**
-(current stock, no bulk discount); courier ≈ **£35–55 each way** to central London.
+Delivery is by **Addison Lee** courier from the NW3 base (pickup from NW3 is free). Hire facts:
+£8.50/mat, 2-day base, **+£1.50/mat per extra day**, **min 10, max 50** (no bulk discount).
 
-- **NOW — Route C (placeholder, LIVE):** the estimator is live on `index.html` as the
-  `.saia-est-stage` "Spotlight" section (dark interrupt, self-drawing route, total counts up),
-  ported from `tools/lab/estimator-lab.html`. A dependency-free zone estimator maps the event
-  postcode to a London zone and totals it with the mat-hire math. Placeholder courier numbers are
-  deliberately LOW: **Central from £35, Greater London from £45**, outside London → WhatsApp quote.
-  **Estimate only**; Cristina confirms the real courier price. (Older standalone component:
-  `tools/lab/delivery-estimator.html`.)
-- **LATER — Route B (the plan):** swap the estimate for **live quotes via the Addison Lee
-  "Quickbook" API** (Anypoint/MuleSoft). Has quote + booking endpoints (`POST /booking/create`,
-  plus a price-quote call); auth = `AL client_id:client_secret`. Wire the quote into `server.js`
-  and feed the hire panel. Requires SAÏA to open an **Addison Lee business account + API
-  credentials** — no public API fee (you pay per delivery, not per call); confirm account minimums
-  with AL. No-code alternative on the real Shopify store: the official **Addison Lee Shopify app**
-  (live same-day rates at checkout; free to install, bills in USD).
+- **Pricing model (LIVE):** flat across London — **£90 delivery + same-day collection** (the
+  DEFAULT, "two-way") or **£45 delivery-only** ("one-way", customer returns mats to NW3).
+  Outside London → WhatsApp quote. Old per-zone "from £35/£45" estimates are gone; postcode
+  zones now only pick the label + the outside-London case. Prices live in
+  `KB.delivery.twoWay/oneWay` in `js/saia-knowledge.js`.
+- **The choice is made in the estimator/assistant, never at checkout.** The `index.html`
+  estimator (`.saia-est-stage` "Spotlight" section) has an "After your event" toggle
+  (two-way pre-selected); the concierge asks via `set_collection`; `hire.collection` =
+  `'two' | 'one'`.
+- **In the cart it's a real line item** — `js/shopify-cart.js` adds the hidden "Courier
+  delivery" product (variant IDs in theme settings `variant_courier_two_way` /
+  `variant_courier_one_way`, exposed via `saia-boot.liquid`). Courier variants weigh 1kg,
+  everything else 0g, and the shipping profile is **weight-gated**: carts WITH a courier line
+  get the free "Courier — already included in your hire total" rate; carts without one (direct
+  product-page buys) get paid £90/£45 rates. No free-shipping loophole from either side.
+- **Changing the courier price = three places, all must match:** `KB.delivery` in
+  `js/saia-knowledge.js`, the two Shopify variant prices, and the paid fallback rates in the
+  "SAÏA mat hire (checkout plumbing)" shipping profile.
+- **LATER — live Addison Lee rates:** the official **AL Shopify app** is installed but in TEST
+  mode (real zonal prices ≈ £14–20 +VAT per leg). Blockers: AL must answer the van question
+  (app has no vehicle-size concept; 10–50 mats need a van), and live *dynamic* rates need the
+  carrier-service API (Advanced plan / yearly billing / paid add-on). Alternative remains the
+  AL "Quickbook" API (quote + `POST /booking/create`; needs an AL business account).
+
+## Shopify theme
+
+`theme/` is the on-brand Shopify theme (store `saialondon`, draft theme **182035448187**; live
+theme is still the old "Motion" until publish day). `theme/assets/` carries copies of the shared
+`js/` files (knowledge, planner, shopify-cart, checkout-handoff) — **re-copy them after editing
+the originals**; `concierge-core.js`/`saia-examples.js` are server-side only. `index.liquid`
+mirrors the `index.html` estimator — estimator edits must land in both. Push with
+`npx shopify theme push --store saialondon --theme 182035448187 --path theme --only <files>`.

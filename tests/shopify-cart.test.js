@@ -2,7 +2,28 @@ const test = require('node:test');
 const assert = require('node:assert');
 const { cartPermalink, cartPayload } = require('../js/shopify-cart.js');
 
-const CFG = { matHireVariant: '111', extraDayVariant: '222', depositVariant: '333' };
+const CFG = { matHireVariant: '111', extraDayVariant: '222', depositVariant: '333',
+  courierTwoWayVariant: '444', courierOneWayVariant: '555' };
+
+test('London delivery adds the two-way courier line by default', () => {
+  const url = cartPermalink({ mats: 20, days: 2, method: 'deliver', zone: 'central', postcode: 'EC2Y 8DS' }, CFG);
+  assert.ok(url.includes('444:1'));
+  assert.ok(!url.includes('555:1'));
+});
+
+test('one-way collection choice adds the delivery-only courier line', () => {
+  const payload = cartPayload({ mats: 20, days: 2, method: 'deliver', zone: 'greater', collection: 'one', postcode: 'TW5 9QA' }, CFG);
+  assert.ok(payload.items.some(i => i.id === 555 && i.quantity === 1));
+  assert.ok(!payload.items.some(i => i.id === 444));
+  assert.strictEqual(payload.attributes['Return journey'], 'You return the mats to NW3');
+});
+
+test('pickup and outside-London carts get NO courier line', () => {
+  const pk = cartPayload({ mats: 20, days: 2, method: 'pickup' }, CFG);
+  assert.ok(!pk.items.some(i => i.id === 444 || i.id === 555));
+  const out = cartPayload({ mats: 20, days: 2, method: 'deliver', zone: 'outside' }, CFG);
+  assert.ok(!out.items.some(i => i.id === 444 || i.id === 555));
+});
 
 test('base 2-day hire: mats + deposit lines only', () => {
   const url = cartPermalink({ mats: 20, days: 2 }, CFG);
