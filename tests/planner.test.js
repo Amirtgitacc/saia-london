@@ -298,3 +298,44 @@ test('"collect the mats from our venue" mid-delivery is the return journey, not 
   assert.ok(!r.actions.some(a => a.tool === 'set_method' && a.args.method === 'pickup'), '"from our venue" is where the courier collects, not a warehouse pickup');
   assert.ok(r.actions.some(a => a.tool === 'set_collection' && a.args.collection === 'two-way'), 'reads it as two-way collection');
 });
+
+// === Adversarial-review regressions: the three confirmed parser inversions ===
+test('"deliver and collect please" at the method question is a delivery, never a free pickup', () => {
+  const r = Planner.localPlan('deliver and collect please', { mats: 20, days: 2, method: null, awaiting: 'method' });
+  assert.ok(!r.actions.some(a => a.tool === 'set_method' && a.args.method === 'pickup'), 'must not book a free NW3 pickup');
+  assert.ok(r.actions.some(a => a.tool === 'set_method' && a.args.method === 'deliver'), 'it is a courier delivery');
+  assert.ok(r.actions.some(a => a.tool === 'set_collection' && a.args.collection === 'two-way'), 'with same-day collection');
+});
+
+test('fresh "can you deliver 20 mats and collect them after?" starts a delivery, not a pickup', () => {
+  const r = Planner.localPlan('can you deliver 20 mats and collect them after?', { mats: null, days: null, method: null, awaiting: null });
+  assert.ok(!r.actions.some(a => a.tool === 'set_method' && a.args.method === 'pickup'), 'must not book a pickup');
+  assert.ok(r.actions.some(a => a.tool === 'set_method' && a.args.method === 'deliver'), 'sets delivery');
+});
+
+test('collection step: "drop them off at 9am and collect them after the event please" is two-way', () => {
+  const r = Planner.localPlan('drop them off at 9am and collect them after the event please', { mats: 20, days: 2, method: 'deliver', zone: 'central', collection: null, date: null, awaiting: 'collection' });
+  assert.ok(r.actions.some(a => a.tool === 'set_collection' && a.args.collection === 'two-way'), 'explicit same-day collection wins, not £45 one-way');
+});
+
+test('collection step: a pure timing question must not silently book one-way', () => {
+  const r = Planner.localPlan('what time will you drop them off?', { mats: 20, days: 2, method: 'deliver', zone: 'central', collection: null, date: null, awaiting: 'collection' });
+  assert.ok(!r.actions.some(a => a.tool === 'set_collection'), 'no collection choice was made');
+  assert.strictEqual(r.matched, false, 'unclear answer goes to Tier 2 for a real reply');
+});
+
+test('collection step: "we\'ll return them ourselves" still books one-way', () => {
+  const r = Planner.localPlan("we'll return them ourselves", { mats: 20, days: 2, method: 'deliver', zone: 'central', collection: null, date: null, awaiting: 'collection' });
+  assert.ok(r.actions.some(a => a.tool === 'set_collection' && a.args.collection === 'one-way'));
+});
+
+test('mid-delivery "can we just collect them ourselves instead?" switches to pickup, not £90 two-way', () => {
+  const r = Planner.localPlan('actually can we just collect them ourselves instead?', { mats: 20, days: 2, method: 'deliver', zone: 'central', collection: null, date: null, awaiting: 'date' });
+  assert.ok(r.actions.some(a => a.tool === 'set_method' && a.args.method === 'pickup'), 'self-service wording is a genuine switch to pickup');
+  assert.ok(!r.actions.some(a => a.tool === 'set_collection' && a.args.collection === 'two-way'), 'must not confirm the courier they are trying to avoid');
+});
+
+test('mid-delivery "can I collect them instead of delivery?" switches to pickup', () => {
+  const r = Planner.localPlan('can I collect them instead of delivery?', { mats: 20, days: 2, method: 'deliver', zone: 'central', collection: null, date: null, awaiting: 'date' });
+  assert.ok(r.actions.some(a => a.tool === 'set_method' && a.args.method === 'pickup'), '"instead of delivery" is pickup intent');
+});

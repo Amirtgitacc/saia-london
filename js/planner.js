@@ -134,17 +134,24 @@
     // clear statements of inability — "cant collect", "won't be able to pick up" — must NOT
     // be read as a positive choice. When present we suppress keyword matching and let Tier 2 read it.
     const neg = has(/\b(can'?t|cannot|can ?not|won'?t|wont|unable|do ?n'?t want)\b/);
-    const wantsDeliver = !neg && has(/deliver|drop ?off|courier|bring them|ship|send (it|them|me|to|over)|post (it|them)|to my (address|place|home|venue)/);
+    // Self-service intent — "we'll collect them OURSELVES", "instead of delivery" — is the
+    // customer opting out of the courier, so it must never read as the courier's return journey.
+    const selfCollect = has(/\b(collect|pick|get|grab)\w*[^.?!]{0,20}\b(ourselves|myself)\b|\b(ourselves|myself)\b[^.?!]{0,20}\b(collect|pick)\w*|instead of (the |a )?deliver\w*|rather than deliver\w*/);
+    const wantsDeliver = !neg && !selfCollect && has(/deliver|drop ?off|courier|bring them|ship|send (it|them|me|to|over)|post (it|them)|to my (address|place|home|venue)/);
     // The courier's return journey, in the customer's words. Shared by the awaiting-collection
     // block below AND the generic flow, so a stale `awaiting` can never re-read "collect them
     // after" as NW3 pickup mid-delivery (the race that once flipped a live delivery to £0).
-    const RETURN_ONE = /one.?way|delivery only|\bmyself\b|\bourselves\b|return (them|the mats)|bring (them|the mats) back|drop (them|it|the mats)|take them back|we'?ll (return|bring)|i'?ll (return|bring|drop)/;
+    // NOTE "drop … back" — a bare "drop them off at 9am" is the DELIVERY leg, not the return.
+    const RETURN_ONE = /one.?way|delivery only|\bmyself\b|\bourselves\b|return (them|the mats)|bring (them|the mats) back|drop (them|it|the mats) back|take them back|we'?ll (return|bring)|i'?ll (return|bring|drop)/;
     const RETURN_TWO = /\bboth\b|two.?way|you (collect|come|pick)|collect (them|it|after)|collecting (them|it)|same.?day collection/;
-    // Explicit pickup phrasing — "collect FROM you/NW3/the warehouse", "come and collect" —
-    // is a genuine switch to pickup and always wins over the return-journey reading.
-    const explicitPickup = has(/\bwarehouse\b|\bnw3\b|come (and|to) collect|(pick.?up|pick (it|them) up|collect\w*).{0,12}\bfrom (you\b|yours\b|the warehouse|belsize)/);
+    // Explicit pickup phrasing — "collect FROM you/NW3/the warehouse", "come and collect",
+    // or any self-service wording — is a genuine switch to pickup and wins over the
+    // return-journey reading.
+    const explicitPickup = selfCollect || has(/\bwarehouse\b|\bnw3\b|come (and|to) collect|(pick.?up|pick (it|them) up|collect\w*).{0,12}\bfrom (you\b|yours\b|the warehouse|belsize)/);
     const collectReturn = !neg && hire.method === 'deliver' && !explicitPickup && has(RETURN_TWO);
-    const wantsPickup = !neg && !collectReturn && has(/pick.?up|collect|warehouse|\bnw3\b/);
+    // A bare "collect" only means NW3 pickup when the message doesn't ALSO ask for delivery —
+    // "deliver and collect please" is a delivery with the return journey, never a pickup.
+    const wantsPickup = !neg && !collectReturn && (explicitPickup || (!wantsDeliver && has(/pick.?up|collect|warehouse|\bnw3\b/)));
     const pcMatch = (text || '').match(/\b([A-Za-z]{1,2}\d[A-Za-z\d]?(?:\s*\d[A-Za-z]{2})?)\b/);
     const fullPc = !!(pcMatch && /\d[A-Za-z]{2}\s*$/.test(pcMatch[1].trim()));
     const pcZone = pcMatch && KB.classify && KB.classify(pcMatch[1]);
@@ -164,7 +171,10 @@
       const oneW = has(RETURN_ONE);
       const twoW = has(RETURN_TWO) || has(/^(yes|yep|yeah|sure|please|ok|okay|default|recommended|first|collection)\b/);
       if (oneW || twoW) {
-        const mode = oneW ? 'one' : 'two';
+        // When both readings match ("drop them off at 9 and collect them after"), strong
+        // self-return words decide; otherwise the same-day collection they mentioned wins.
+        const selfReturn = has(/\b(ourselves|myself)\b|bring (them|the mats) back|return (them|the mats)|drop (them|it|the mats) back/);
+        const mode = (oneW && twoW) ? (selfReturn ? 'one' : 'two') : (oneW ? 'one' : 'two');
         const acts = [{ tool: 'set_collection', args: { collection: mode === 'one' ? 'one-way' : 'two-way' } }];
         const sayBit = mode === 'one'
           ? "Perfect — delivery only, and you'll drop the mats back to us in NW3 after your event. "
