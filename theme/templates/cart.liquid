@@ -3,11 +3,44 @@
     <a class="saia-back" href="/" style="display:inline-flex; align-items:center; gap:8px; min-height:44px; padding:8px 16px 8px 12px; margin-bottom:14px; border:1px solid #E4DDCF; border-radius:999px; background:#FBF8F1; color:#2B2620; font-size:13px; text-decoration:none;">← Back to SAÏA</a>
     <div style="font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:#B8624A; margin-bottom:18px;">Your hire</div>
 
+    {% comment %}
+      Belt-and-braces: a hand-crafted /cart/<variant>:<qty> permalink can add mats without a
+      plumbing line (courier two-way / one-way / NW3 pickup). Settings store variant IDs as
+      text, so each is coerced to a number with `| plus: 0` before comparing against the
+      integer `item.variant_id` — Liquid's `==` does not coerce string/integer types itself.
+    {% endcomment %}
+    {% assign saia_mat_vid = settings.variant_mat_hire | plus: 0 %}
+    {% assign saia_two_way_vid = settings.variant_courier_two_way | plus: 0 %}
+    {% assign saia_one_way_vid = settings.variant_courier_one_way | plus: 0 %}
+    {% assign saia_pickup_vid = settings.variant_pickup | plus: 0 %}
+    {% assign saia_has_mat = false %}
+    {% assign saia_has_plumbing = false %}
+    {% for item in cart.items %}
+      {% if item.variant_id == saia_mat_vid %}
+        {% assign saia_has_mat = true %}
+      {% endif %}
+      {% if item.variant_id == saia_two_way_vid or item.variant_id == saia_one_way_vid or item.variant_id == saia_pickup_vid %}
+        {% assign saia_has_plumbing = true %}
+      {% endif %}
+    {% endfor %}
+    {% assign saia_missing_plumbing = false %}
+    {% if saia_has_mat and saia_has_plumbing == false %}
+      {% assign saia_missing_plumbing = true %}
+    {% endif %}
+
     {% if cart.item_count == 0 %}
       <p>Your cart is empty. <a href="/" style="color:#B8624A;">Plan a hire with the SAÏA assistant</a>.</p>
     {% else %}
       <form action="/cart" method="post" novalidate
             style="background:#FFFDF8; border:1px solid #E4DDCF; border-radius:8px; padding:24px;">
+        {% if saia_missing_plumbing %}
+          <div role="status" aria-live="polite"
+               style="background:#F8E9E3; border:1px solid #B8624A; border-radius:6px; padding:14px 16px; margin-bottom:18px; font-size:13px; line-height:1.5; color:#2B2620;">
+            Your delivery choice is missing from this basket — pop back through our
+            <a href="/#estimate" style="color:#9E4A34; font-weight:600; text-decoration:underline;">booking flow</a>
+            and we'll sort it, or delivery will be charged at checkout.
+          </div>
+        {% endif %}
         {% for item in cart.items %}
           <div style="display:flex; justify-content:space-between; gap:12px; padding:10px 0; border-bottom:1px solid #F0EADC;">
             <span>{{ item.product.title }}{% unless item.variant.title == 'Default Title' %} <span style="display:block; font-size:12px; color:#6B6358;">{{ item.variant.title }}</span>{% endunless %}{% if item.quantity > 1 %} <span style="color:#6B6358;">× {{ item.quantity }}</span>{% endif %}</span>
