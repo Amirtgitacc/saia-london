@@ -71,3 +71,29 @@ test('priceHire — defaults days to 2 when absent', () => {
   const q = KB.priceHire({ mats: 10, method: 'pickup' });
   assert.strictEqual(q.matCost, 85);
 });
+
+test('priceHire — 80 mats clamps to the 50-mat max (same total as 50)', () => {
+  const over = KB.priceHire({ mats: 80, days: 2, method: 'deliver', zone: 'central' });
+  const cap = KB.priceHire({ mats: 50, days: 2, method: 'deliver', zone: 'central' });
+  assert.strictEqual(over.matCost, cap.matCost);
+  assert.strictEqual(over.deposit, cap.deposit);
+  assert.strictEqual(over.total, cap.total);
+  assert.strictEqual(over.total, 590);
+});
+
+test('priceHire — 5 mats clamps up to the 10-mat minimum', () => {
+  const under = KB.priceHire({ mats: 5, days: 2, method: 'pickup' });
+  const min = KB.priceHire({ mats: 10, days: 2, method: 'pickup' });
+  assert.strictEqual(under.matCost, min.matCost);
+  assert.strictEqual(under.deposit, min.deposit);
+  assert.strictEqual(under.matCost, 85);
+});
+
+test('quoteLines — 80-mat hire displays 50 mats, never 80', () => {
+  const q = KB.quoteLines({ mats: 80, days: 2, method: 'deliver', zone: 'central', collection: 'two' });
+  const matsLine = q.lines.find((l) => l.label.indexOf('Mats') === 0);
+  assert.ok(matsLine, 'expected a Mats line');
+  assert.ok(/^50 /.test(matsLine.detail), 'expected detail to start with "50 ", got ' + matsLine.detail);
+  assert.ok(!/80/.test(matsLine.detail));
+  assert.strictEqual(q.total, 590);
+});

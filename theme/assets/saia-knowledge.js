@@ -124,7 +124,9 @@
   KB.priceHire = function (hire) {
     var H = KB.hire;
     hire = hire || {};
-    var mats = parseInt(hire.mats, 10) || 0;
+    // clamp once here so displayed prices always equal charged prices — matches the
+    // cart's own clamp (js/shopify-cart.js) so estimator/quote/WhatsApp/checkout agree.
+    var mats = Math.min(H.maxMats, Math.max(H.minMats, parseInt(hire.mats, 10) || 0));
     var days = parseInt(hire.days, 10) || H.hireDays;
     var matCost = mats * H.pricePerMat + mats * H.extraDayPerMat * Math.max(0, days - H.hireDays);
     var deposit = mats * H.depositPerMat;
@@ -166,7 +168,7 @@
     var H = KB.hire;
     hire = hire || {};
     var q = KB.priceHire(hire);
-    var mats = parseInt(hire.mats, 10) || 0;
+    var mats = Math.min(H.maxMats, Math.max(H.minMats, parseInt(hire.mats, 10) || 0));
     var days = parseInt(hire.days, 10) || H.hireDays;
     var money = function (v) { return H.currency + Number(v).toFixed(2); };
     var lines = [];
@@ -191,7 +193,7 @@
     hire = hire || {};
     var q = KB.quoteLines(hire);
     var money = function (v) { return H.currency + Number(v).toFixed(2); };
-    var mats = parseInt(hire.mats, 10) || 0;
+    var mats = Math.min(H.maxMats, Math.max(H.minMats, parseInt(hire.mats, 10) || 0));
     var days = parseInt(hire.days, 10) || H.hireDays;
     var loc = hire.method === 'pickup' ? 'collecting from NW3' : ('delivery to ' + String(hire.postcode || '').toUpperCase());
     var sum = q.total != null ? (money(q.total) + ' total') : (money(q.subtotal) + ' plus courier to confirm');

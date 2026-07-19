@@ -956,7 +956,7 @@
         <form class="est b" data-est onsubmit="return false">
           <p class="eyebrow">Build your quote</p>
           <div class="grid2" style="margin-top:14px;">
-            <div class="field"><label for="estMats">Mats</label><input id="estMats" data-mats type="number" min="10" step="1" placeholder="10+" inputmode="numeric"></div>
+            <div class="field"><label for="estMats">Mats</label><input id="estMats" data-mats type="number" min="10" max="50" step="1" placeholder="10+" inputmode="numeric"></div>
             <div class="field"><label for="estDays">Days</label><input id="estDays" data-days type="number" min="2" step="1" placeholder="2" inputmode="numeric"></div>
           </div>
           <div class="note" data-note aria-live="polite"></div>
@@ -1291,7 +1291,7 @@
   if(!stage) return;
   // KB (js/saia-knowledge.js) loads further down the page; wait for it before wiring.
   if(!(window.SAIA&&window.SAIA.KB&&window.SAIA.KB.classify)){ document.addEventListener('DOMContentLoaded',init); return; }
-  var MIN_MATS=10, BASE_DAYS=2;
+  var MIN_MATS=10, BASE_DAYS=2, MAX_MATS=(window.SAIA&&window.SAIA.KB&&window.SAIA.KB.hire&&window.SAIA.KB.hire.maxMats)||50;
   var STOPS=[{t:0,label:'NW3'},{t:0.36,label:'Details'},{t:0.68,label:'Delivery'},{t:1,label:'Your event'}];
   var VAN='<g class="van"><rect x="-12" y="-8" width="15" height="11" rx="2"></rect><path d="M3 -5 h4.5 l3.5 3.2 v4.8 h-8 z"></path><rect class="win" x="-9" y="-5.5" width="5.5" height="4" rx="1"></rect><circle class="wheel" cx="-6.5" cy="4.5" r="2.4"></circle><circle class="wheel" cx="6.5" cy="4.5" r="2.4"></circle></g>';
   var reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1362,7 +1362,8 @@
 
     function render(){
       var mats=parseInt(els.mats.value,10)||0, days=parseInt(els.days.value,10)||0;
-      if(els.note) els.note.textContent=(els.mats.value&&mats<MIN_MATS)?'Minimum hire is 10 mats.':((els.days.value&&days<BASE_DAYS)?'Minimum hire is 2 days.':'');
+      var pricedMats=Math.min(Math.max(mats,MIN_MATS),MAX_MATS);
+      if(els.note) els.note.textContent=(els.mats.value&&mats<MIN_MATS)?'Minimum hire is 10 mats.':((els.days.value&&days<BASE_DAYS)?'Minimum hire is 2 days.':(mats>MAX_MATS?'We have up to 50 mats in stock — for larger groups, staggered sessions can reuse the same 50. Priced here for 50.':''));
       var s1=mats>=MIN_MATS&&days>=BASE_DAYS, s2=s1&&method!==null;
       var z=method==='deliver'?window.SAIA.KB.classify(els.pc.value):null;
       var s3=s2&&(method==='pickup'||(method==='deliver'&&z!==null));
@@ -1376,10 +1377,10 @@
       els.result.classList.toggle('show',arrived);
       if(!arrived){ if(!els.mats.value&&!els.days.value) setTotal('—'); return; }
       var zoneKey=method==='pickup'?null:(z?z.key:null);
-      var q=window.SAIA.KB.priceHire({mats:mats,days:days,method:method,zone:zoneKey,collection:collection});
+      var q=window.SAIA.KB.priceHire({mats:pricedMats,days:days,method:method,zone:zoneKey,collection:collection});
       var matCost=q.matCost;
-      els.matCost.textContent=gbp(matCost); if(els.matSub) els.matSub.textContent=mats+' mats · '+days+' days';
-      if(els.depCost) els.depCost.textContent=gbp(q.deposit); if(els.depSub) els.depSub.textContent=mats+' × '+gbp(window.SAIA.KB.hire.depositPerMat)+', returned after';
+      els.matCost.textContent=gbp(matCost); if(els.matSub) els.matSub.textContent=pricedMats+' mats · '+days+' days';
+      if(els.depCost) els.depCost.textContent=gbp(q.deposit); if(els.depSub) els.depSub.textContent=pricedMats+' × '+gbp(window.SAIA.KB.hire.depositPerMat)+', returned after';
       if(els.depBack) els.depBack.innerHTML='<b>'+gbp(q.deposit)+'</b> of this is a refundable deposit — back to you once the mats are returned.';
       var totalNum=q.total,delText='—',zoneShow=false,wa;
       if(method==='pickup'){els.delK.innerHTML='Collection<small>Pick up from NW3, free</small>';delText='Free';wa='collect from NW3';}
@@ -1390,7 +1391,7 @@
       if(totalNum===null){setTotal(gbp(matCost+q.deposit)+' <span class="pre">+ quote</span>');totalNodes.forEach(function(n){n.dataset.val='0';});}
       else tweenTotal(totalNum,'');
       var label=totalNum===null?('£'+(matCost+q.deposit).toFixed(2)+' + delivery quote'):gbp(totalNum);
-      var msg='Hi Cristina! I\'d like to book '+mats+' mats for '+days+' days, '+wa+'. Due today '+label+' (incl. '+gbp(q.deposit)+' refundable deposit). Please confirm availability.';
+      var msg='Hi Cristina! I\'d like to book '+pricedMats+' mats for '+days+' days, '+wa+'. Due today '+label+' (incl. '+gbp(q.deposit)+' refundable deposit). Please confirm availability.';
       if(els.cta && els.cta.tagName==='A') els.cta.href='https://wa.me/447444611914?text='+encodeURIComponent(msg);
     }
 
@@ -1435,8 +1436,9 @@
     var collection=colEl?(colEl.getAttribute('data-c')||'two'):'two';
     var pc=((stage.querySelector('[data-pc]')||{}).value||'').toUpperCase();
     var zoneObj=(KB&&method==='deliver'&&pc)?KB.classify(pc):null;
+    var rawMats=parseInt((stage.querySelector('[data-mats]')||{}).value,10)||0;
     var hire={
-      mats:parseInt((stage.querySelector('[data-mats]')||{}).value,10)||null,
+      mats:rawMats?Math.min(50,Math.max(10,rawMats)):null,
       days:parseInt((stage.querySelector('[data-days]')||{}).value,10)||null,
       method:method||null,
       collection:method==='deliver'?collection:null,
@@ -1467,7 +1469,7 @@
 </script>
 <script src="vendor/three.min.js"></script>
 <script src="js/mat-core.js?v=20260629b"></script>
-<script src="js/saia-knowledge.js?v=20260717a"></script>
+<script src="js/saia-knowledge.js?v=20260719a"></script>
 <script src="js/planner.js?v=20260717a"></script>
 <script src="js/shopify-cart.js?v=20260717a"></script>
 <script src="js/checkout-handoff.js?v=20260716t11"></script>
