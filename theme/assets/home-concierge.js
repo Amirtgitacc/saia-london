@@ -123,7 +123,7 @@
     state.mode = mode || 'default';
     let text, chips = null;
     if (mode === 'hire') {
-      text = 'Tell me about your event and I’ll sort the mats. How many are you expecting?';
+      text = 'Tell me about your event and I’ll help with the mats. How many are you expecting?';
       chips = INTENT_CHIPS;
     } else if (mode === 'studio') {
       text = 'A studio, wonderful. Tell me your studio name, the days you need mats and roughly how many, and I’ll arrange a recurring rate. Prefer to talk it through? Email Cristina at ' + EMAIL + '.';
@@ -131,7 +131,7 @@
     } else if (mode === 'estimate') {
       text = 'Let’s turn your estimate into a booking.';
     } else {
-      text = "Hello, lovely. I can plan mat hire for your event, share what’s on, or book Pilates with Cristina. What brings you in?";
+      text = "Hello, and welcome to SAÏA. I can plan mat hire for your event, share what’s on, or book Pilates with Cristina. What can I help with?";
       chips = INTENT_CHIPS;
     }
     state.msgs = [{ from: 'bot', text: text, chips: chips }];
