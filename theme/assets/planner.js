@@ -205,7 +205,7 @@
     if (aw === 'confirm' && has(/^(no|nope|not yet|cancel|hold on|wait|stop|actually)\b/))
       return mk("No rush. Your quote's saved in the panel. Tell me what you'd like to change, or say 'checkout' when you're ready.", [], null);
     if (aw === 'confirm' && has(/^(yes|yep|yeah|sure|go ahead|do it|lock it|confirm|book it|sounds good|please|ok|okay|perfect)\b/))
-      return mk("Wonderful. Your secure checkout link is in the panel, so that's you booked. Delivery the day before, collection on the day once you've finished. Welcome to SAÏA.", [{ tool: 'checkout' }], null);
+      return mk("Your secure checkout link is in the panel, so that's you booked. Delivery the day before, collection on the day once you've finished. Welcome to SAÏA.", [{ tool: 'checkout' }], null);
 
     // explicit booking actions — also fired by the home basket buttons
     if (has(/^checkout\b|^pay\b|payment link|secure (checkout )?link/))

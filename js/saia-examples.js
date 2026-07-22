@@ -298,10 +298,10 @@
 
     // ── Scale / accessibility / multi-day ─────────────────────────
     { u: "it's a 5-day wellness festival",
-      say: 'That sounds wonderful. A multi-day hire is no problem, just £1.50 a mat for each day beyond the first two. How many mats, and your start date?',
+      say: 'A multi-day hire is no problem, just £1.50 a mat for each day beyond the first two. How many mats, and your start date?',
       actions: [{ tool: 'set_days', args: { n: 5 } }] },
     { u: "some guests can't get down to the floor, any options?",
-      say: 'Thoughtful of you. The mats are for floor work, but Cristina can suggest how to make a mixed-ability session lovely; do ask her by email. How many mats meanwhile?',
+      say: 'The mats are for floor work, but Cristina can suggest how to make a mixed-ability session work well; do ask her by email. How many mats meanwhile?',
       actions: [] },
     { u: 'I need around 200 mats',
       say: "That's a wonderful scale. We've up to 50 mats available at the moment though, so we couldn't cover 200 all at once. If the classes run in staggered sessions the same 50 can be reused between groups. How are your sessions set up?",
