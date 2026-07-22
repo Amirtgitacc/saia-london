@@ -5,7 +5,7 @@
 
      POST /api/concierge  { messages, hire } -> { say, actions }
      POST /api/log        { session, page, turns } -> 204 (chat review log)
-     GET  /health         -> { ok, model, hasKey }
+     GET  /health         -> { ok, model, hasKey, hasSupabase }
 
    The actual brain lives in js/concierge-core.js, shared with the
    Vercel serverless function (api/concierge.js) so the two never
@@ -27,7 +27,7 @@ const server = http.createServer((req, res) => {
   if (req.method === 'OPTIONS') { res.writeHead(204); return res.end(); }
   if (req.method === 'GET' && req.url === '/health') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
-    return res.end(JSON.stringify({ ok: true, model: MODEL, hasKey: !!process.env.ANTHROPIC_API_KEY }));
+    return res.end(JSON.stringify({ ok: true, model: MODEL, hasKey: !!process.env.ANTHROPIC_API_KEY, hasSupabase: !!(process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) }));
   }
   if (req.method === 'POST' && req.url === '/api/log') {
     let logBody = '';
