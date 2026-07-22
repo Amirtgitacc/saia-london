@@ -9,12 +9,18 @@
    ============================================================ */
 const { processConcierge } = require('../js/concierge-core.js');
 const { applyCors } = require('../js/http-guard.js');
+const { rateLimit } = require('../js/rate-limit.js');
+
+const RL = { name: 'concierge', limit: parseInt(process.env.RL_CONCIERGE_PER_MIN, 10) || 20, windowMs: 60000 };
 
 module.exports = async (req, res) => {
   const cors = applyCors(req, res);
   if (req.method === 'OPTIONS') { res.status(204).end(); return; }
   if (req.method !== 'POST') { res.status(404).end(); return; }
   if (!cors.allowed) { res.status(403).json({ error: 'forbidden_origin' }); return; }
+
+  const rl = await rateLimit(req, RL);
+  if (!rl.ok) { res.setHeader('Retry-After', String(rl.retryAfter)); res.status(429).json({ error: 'rate_limited' }); return; }
 
   // Vercel parses a JSON body into req.body; fall back to manual parse just in case.
   let payload = req.body;

@@ -18,8 +18,11 @@ const http = require('http');
 const { MODEL, processConcierge } = require('./js/concierge-core.js');
 const { normalizeLogPayload, insertChatLogs } = require('./js/log-core.js');
 const { applyCors } = require('./js/http-guard.js');
+const { rateLimit } = require('./js/rate-limit.js');
 
 const PORT = process.env.PORT || 8787;
+const RL_CONCIERGE = { name: 'concierge', limit: parseInt(process.env.RL_CONCIERGE_PER_MIN, 10) || 20, windowMs: 60000 };
+const RL_LOG = { name: 'log', limit: parseInt(process.env.RL_LOG_PER_MIN, 10) || 60, windowMs: 60000 };
 
 const server = http.createServer((req, res) => {
   const cors = applyCors(req, res);
@@ -33,6 +36,8 @@ const server = http.createServer((req, res) => {
     let logBody = '';
     req.on('data', (c) => { logBody += c; if (logBody.length > 1e5) req.destroy(); });
     req.on('end', async () => {
+      const rl = await rateLimit(req, RL_LOG);
+      if (!rl.ok) { res.writeHead(429, { 'Content-Type': 'application/json', 'Retry-After': String(rl.retryAfter) }); return res.end(JSON.stringify({ error: 'rate_limited' })); }
       let payload = {};
       try { payload = JSON.parse(logBody || '{}'); } catch (e) { /* ignore */ }
       const rows = normalizeLogPayload(payload);
@@ -54,6 +59,8 @@ const server = http.createServer((req, res) => {
   let body = '';
   req.on('data', (c) => { body += c; if (body.length > 1e5) req.destroy(); });
   req.on('end', async () => {
+    const rl = await rateLimit(req, RL_CONCIERGE);
+    if (!rl.ok) { res.writeHead(429, { 'Content-Type': 'application/json', 'Retry-After': String(rl.retryAfter) }); return res.end(JSON.stringify({ error: 'rate_limited' })); }
     let payload = {};
     try { payload = JSON.parse(body || '{}'); } catch (e) { /* ignore */ }
     try {
