@@ -36,7 +36,8 @@
   var head = (hire.mats || 0) + ' mats · ' + (hire.days || 2) + '-day hire · ' +
     (hire.method === 'pickup' ? 'collect from NW3' : ('delivery ' + String(hire.postcode || '').toUpperCase())) +
     (hire.date ? (' · ' + hire.date) : '');
-  sum.appendChild(el('div', 'muted', head));
+  // head carries user-supplied postcode/date — set as text, never innerHTML.
+  var headEl = el('div', 'muted'); headEl.textContent = head; sum.appendChild(headEl);
   q.lines.forEach(function (l) {
     var r = el('div', 'row');
     r.appendChild(el('span', null, l.label + ' <span class="d">' + l.detail + '</span>'));

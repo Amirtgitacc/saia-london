@@ -98,10 +98,16 @@ function systemPrompt(hire) {
   ].join('\n');
 }
 
+// Cost guard: a chat turn is a handful of short sentences, so cap the history we
+// forward to Claude. Bounds the tokens (and spend) any single call can incur, even
+// if a caller posts a huge messages[] array. Real conversations sit well inside these.
+const MAX_MESSAGES = 24;
+const MAX_MESSAGE_CHARS = 2000;
+
 function toAnthropicMessages(messages) {
   const out = [];
-  (messages || []).forEach((m) => {
-    const text = (m && m.text != null ? String(m.text) : '').trim();
+  (Array.isArray(messages) ? messages.slice(-MAX_MESSAGES) : []).forEach((m) => {
+    const text = (m && m.text != null ? String(m.text) : '').trim().slice(0, MAX_MESSAGE_CHARS);
     if (!text) return;
     out.push({ role: m.role === 'user' ? 'user' : 'assistant', content: text });
   });

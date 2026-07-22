@@ -8,13 +8,13 @@
      POST /api/concierge  { messages, hire } -> { say, actions }
    ============================================================ */
 const { processConcierge } = require('../js/concierge-core.js');
+const { applyCors } = require('../js/http-guard.js');
 
 module.exports = async (req, res) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  const cors = applyCors(req, res);
   if (req.method === 'OPTIONS') { res.status(204).end(); return; }
   if (req.method !== 'POST') { res.status(404).end(); return; }
+  if (!cors.allowed) { res.status(403).json({ error: 'forbidden_origin' }); return; }
 
   // Vercel parses a JSON body into req.body; fall back to manual parse just in case.
   let payload = req.body;

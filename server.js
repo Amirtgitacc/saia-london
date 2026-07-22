@@ -17,19 +17,19 @@
 const http = require('http');
 const { MODEL, processConcierge } = require('./js/concierge-core.js');
 const { normalizeLogPayload, insertChatLogs } = require('./js/log-core.js');
+const { applyCors } = require('./js/http-guard.js');
 
 const PORT = process.env.PORT || 8787;
 
 const server = http.createServer((req, res) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  const cors = applyCors(req, res);
   if (req.method === 'OPTIONS') { res.writeHead(204); return res.end(); }
   if (req.method === 'GET' && req.url === '/health') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
     return res.end(JSON.stringify({ ok: true, model: MODEL, hasKey: !!process.env.ANTHROPIC_API_KEY, hasSupabase: !!(process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) }));
   }
   if (req.method === 'POST' && req.url === '/api/log') {
+    if (!cors.allowed) { res.writeHead(403, { 'Content-Type': 'application/json' }); return res.end(JSON.stringify({ error: 'forbidden_origin' })); }
     let logBody = '';
     req.on('data', (c) => { logBody += c; if (logBody.length > 1e5) req.destroy(); });
     req.on('end', async () => {
@@ -39,7 +39,7 @@ const server = http.createServer((req, res) => {
       if (!rows) { res.writeHead(400, { 'Content-Type': 'application/json' }); return res.end(JSON.stringify({ error: 'bad_payload' })); }
       try {
         const out = await insertChatLogs(rows);
-        if (!out.stored) rows.forEach((r) => console.log('[chat-log]', r.session_id.slice(0, 8), r.role + (r.tier ? '/' + r.tier : ''), '·', r.message));
+        if (!out.stored) rows.forEach((r) => console.log('[chat-log]', r.session_id.slice(0, 8), r.role + (r.tier ? '/' + r.tier : ''), '·', JSON.stringify(r.message)));
         res.writeHead(204); res.end();
       } catch (err) {
         console.error('[chat-log]', err && err.message ? err.message : err);
@@ -49,6 +49,7 @@ const server = http.createServer((req, res) => {
     return;
   }
   if (req.method !== 'POST' || req.url !== '/api/concierge') { res.writeHead(404); return res.end(); }
+  if (!cors.allowed) { res.writeHead(403, { 'Content-Type': 'application/json' }); return res.end(JSON.stringify({ error: 'forbidden_origin' })); }
 
   let body = '';
   req.on('data', (c) => { body += c; if (body.length > 1e5) req.destroy(); });
