@@ -56,7 +56,7 @@
     club: {
       what: 'A female-led lifestyle brand empowering women through Fitness, Community and Mindset.',
       ethos: 'A SAÏA woman is not afraid to speak her truth, and is someone who inspires and lifts up other women.',
-      join: 'Free guest list. Pop your email in to hear about upcoming experiences.',
+      join: 'Free guest list. Share your email to hear about upcoming experiences.',
       taglines: ['The SAÏA Club', 'Join the SAÏA Community'],
     },
 

@@ -23,7 +23,7 @@
       delivery: 'Same-day courier across London from our Central London warehouse, with a 6-hour delivery window.',
       collection: 'We collect on the day, once your event has finished and the mats are packed away. No cleaning needed, we take care of that.' },
     contact: { email: 'Cristina@saialondon.com', whatsapp: '07444 611 914', person: 'Cristina', pickup: 'NW3 warehouse' },
-    club: { ethos: 'women who lift each other up', join: 'pop your email in to hear about gatherings' },
+    club: { ethos: 'women who lift each other up', join: 'share your email to hear about gatherings' },
     pilates: { method: 'small, slow and breath-led', format: '1-2-1 in NW3, group in Hampstead' },
     founder: { name: 'Cristina', bio: 'Cristina founded SAÏA in 2020.', meaning: 'SAÏA means “A Woman Who Wins”.' },
     events: ['the Brunch Club', 'a watercolour morning', 'Book Club with afternoon tea'],
@@ -101,8 +101,8 @@
         case 'checkout': if (hire.total == null) hire.total = total(hire); hire.status = 'Checkout link ready'; hire.quoted = true; acts.push('Generated a secure Shopify checkout link'); break;
         case 'confirm': if (hire.total == null) hire.total = total(hire); hire.status = 'Confirmed'; hire.quoted = true; acts.push('Hire confirmed. Confirmation on its way'); break;
         case 'rsvp_event': acts.push('Reserved your place · ' + (args.event || 'SAÏA event')); break;
-        case 'request_pilates': acts.push('Pilates request sent to Cristina' + (args.type ? ' · ' + args.type : '') + (args.date ? ' · ' + args.date : '') + ' — she\'ll confirm'); break;
-        case 'join_pilates_list': acts.push('Added you to the Pilates waitlist' + (args.email ? ' · ' + args.email : '') + ' — updates when a session opens'); break;
+        case 'request_pilates': acts.push('Pilates request sent to Cristina' + (args.type ? ' · ' + args.type : '') + (args.date ? ' · ' + args.date : '') + ', she\'ll confirm'); break;
+        case 'join_pilates_list': acts.push('Added you to the Pilates waitlist' + (args.email ? ' · ' + args.email : '') + ', updates when a session opens'); break;
         case 'join_newsletter': acts.push('Added you to the SAÏA guest list' + (args.email ? ' · ' + args.email : '')); break;
         default: break;
       }
@@ -177,8 +177,8 @@
         const mode = (oneW && twoW) ? (selfReturn ? 'one' : 'two') : (oneW ? 'one' : 'two');
         const acts = [{ tool: 'set_collection', args: { collection: mode === 'one' ? 'one-way' : 'two-way' } }];
         const sayBit = mode === 'one'
-          ? "Perfect — delivery only, and you'll drop the mats back to us in NW3 after your event. "
-          : "Lovely — we'll deliver, then collect the same day once your event has finished. ";
+          ? "Of course, delivery only, and you'll drop the mats back to us in NW3 after your event. "
+          : "Of course, we'll deliver, then collect the same day once your event has finished. ";
         if (!hire.date) return mk(sayBit + 'And what date is your event?', acts, 'date');
         return mk(sayBit + 'Shall I put your quote together?', acts, 'review');
       }
@@ -192,24 +192,24 @@
     // A bare "no/not yet/actually" with NO new detail → deflect. But "actually make it Sunday"
     // carries a real change, so let it fall through to the hire flow (below) to be applied.
     if (aw === 'review' && !hasSlotSignal && has(/^(no|nope|not yet|hold on|wait|stop|change|actually)\b/))
-      return mk("No rush at all — tell me what you'd like to change, or say 'go ahead' whenever you'd like to see it.", [], 'review');
+      return mk("No rush at all. Tell me what you'd like to change, or say 'go ahead' whenever you'd like to see it.", [], 'review');
     if (aw === 'review' && has(/^(yes|yep|yeah|sure|go ahead|go on|please|ok|okay|show me|sounds good|do it|let'?s|continue|book|see it)\b/)) {
       const qq = KB.priceHire ? KB.priceHire(hire) : { total: null, matCost: 0, deposit: 0, quoteOnly: false };
       const ready = qq.quoteOnly
-        ? "Here it is — your mats and deposit come to " + money(qq.matCost + qq.deposit) + "; as you're outside London, Cristina will confirm the courier. Press Book this hire and I'll pass your details to her. Anything else I can help with?"
-        : "Here it is — " + money(qq.total) + " all in, including a " + money(qq.deposit) + " refundable deposit returned after collection. Press Book this hire when you're ready — and anything else I can help with in the meantime?";
+        ? "Here it is. Your mats and deposit come to " + money(qq.matCost + qq.deposit) + "; as you're outside London, Cristina will confirm the courier. Press Book this hire and I'll pass your details to her. Anything else I can help with?"
+        : "Here it is. " + money(qq.total) + " all in, including a " + money(qq.deposit) + " refundable deposit returned after collection. Press Book this hire when you're ready. Anything else I can help with in the meantime?";
       return mk(ready, [{ tool: 'quote' }], null);
     }
 
     // ===== confirm step =====
     if (aw === 'confirm' && has(/^(no|nope|not yet|cancel|hold on|wait|stop|actually)\b/))
-      return mk("No rush — your quote's saved in the panel. Tell me what you'd like to change, or say 'checkout' when you're ready.", [], null);
+      return mk("No rush. Your quote's saved in the panel. Tell me what you'd like to change, or say 'checkout' when you're ready.", [], null);
     if (aw === 'confirm' && has(/^(yes|yep|yeah|sure|go ahead|do it|lock it|confirm|book it|sounds good|please|ok|okay|perfect)\b/))
       return mk("Wonderful. Your secure checkout link is in the panel, so that's you booked. Delivery the day before, collection on the day once you've finished. Welcome to SAÏA.", [{ tool: 'checkout' }], null);
 
     // explicit booking actions — also fired by the home basket buttons
     if (has(/^checkout\b|^pay\b|payment link|secure (checkout )?link/))
-      return mk("Your secure checkout link is ready in the panel. That's you joining the club — anything else for your day?", [{ tool: 'checkout' }], null);
+      return mk("Your secure checkout link is ready in the panel. That's you joining the club. Anything else for your day?", [{ tool: 'checkout' }], null);
     if (has(/^confirm\b|^confirm booking|^book it now\b/))
       return mk('Confirmed. Delivery the day before, collection on the day once your event has finished. Welcome to SAÏA.', [{ tool: 'confirm' }], null);
 
@@ -225,7 +225,7 @@
     // HIRE-ONLY guard: mats are never sold. Intercept buy/purchase intent BEFORE the hire
     // flow turns "buy 30 mats to keep" into a booking. Warmly reframe to hire.
     if (has(/\b(buy|buying|purchase|purchasing|sell|selling|for sale|to keep|keep them|own them|owning|permanently|outright|forever)\b/) && (has(/mat/) || inHireFlow || freshHire))
-      return m("We don't sell the mats, lovely — they're hire-only, so you get our studio-quality mats for your event and we handle everything after. Happy to set up a hire whenever you like; how many are you after?");
+      return m("We don't sell the mats. They're hire-only, so you get our studio-quality mats for your event and we handle everything after. Happy to set up a hire whenever you like; how many are you after?");
 
     // MAX-STOCK guard: we hold a hard ceiling of 50 mats. Intercept any bigger ask — a direct
     // "80 mats", a headcount that would need >50, or a bare number answering "how many mats?" —
@@ -294,15 +294,15 @@
 
       if (need === 'mats') return mk(
         (h.mats && h.mats < H.minMats)
-          ? 'We hire from a minimum of ' + H.minMats + " mats — shall I set you up with " + H.minMats + ', or did you have a higher number in mind?'
-          : "Lovely — let's plan your hire. How many mats do you need? (Minimum " + H.minMats + '.)',
+          ? 'We hire from a minimum of ' + H.minMats + " mats. Shall I set you up with " + H.minMats + ', or did you have a higher number in mind?'
+          : "Of course, let's plan your hire. How many mats do you need? (Minimum " + H.minMats + '.)',
         actions, 'mats');
-      if (need === 'days') return mk((h.mats ? h.mats + ' mats — perfect. ' : '') + 'How many days do you need them? Our standard hire is ' + H.hireDays + ' days.', actions, 'days');
+      if (need === 'days') return mk((h.mats ? h.mats + ' mats, perfect. ' : '') + 'How many days do you need them? Our standard hire is ' + H.hireDays + ' days.', actions, 'days');
       if (need === 'method') return mk('Shall we deliver by courier, or will you collect from our NW3 warehouse?', actions, 'method');
       if (need === 'postcode') return mk("What's the event postcode? I'll work out the courier from there.", actions, 'postcode');
       if (need === 'collection') {
         const D = KB.delivery || { twoWay: 90, oneWay: 45 };
-        return mk('And the return journey — shall our courier collect the mats once your event has finished (' + money(D.twoWay) + ' for delivery and same-day collection), or will you bring them back to NW3 yourself (' + money(D.oneWay) + ' delivery only)? Most people go with collection.', actions, 'collection');
+        return mk('And the return journey. Shall our courier collect the mats once your event has finished (' + money(D.twoWay) + ' for delivery and same-day collection), or will you bring them back to NW3 yourself (' + money(D.oneWay) + ' delivery only)? Most people go with collection.', actions, 'collection');
       }
 
       // need the date before we quote anything
@@ -310,16 +310,16 @@
 
       // everything gathered → DON'T reveal the quote yet. Ask first, so the guest opts in to
       // booking before any price or basket appears; the quote shows only on their 'yes' (above).
-      return mk("That's everything I need — shall I put your quote together?", actions, 'review');
+      return mk("That's everything I need. Shall I put your quote together?", actions, 'review');
     }
 
     // ===== everything below: the existing scripted FAQ intents (unchanged behaviour) =====
 
     // greeting / thanks
     if (has(/^(hi|hey|hello|good (morning|afternoon|evening)|yo|hiya)\b/))
-      return m("Hello, lovely. I can plan mat hire for an event, share what's on, or get you on the list for Pilates with Cristina. What brings you in?");
+      return m("Hello, and welcome to SAÏA. I can plan mat hire for an event, share what's on, or get you on the list for Pilates with Cristina. What can I help with?");
     if (has(/\b(thanks|thank you|cheers|ta)\b/))
-      return m('Any time. Anything else I can sort for your day?');
+      return m('Any time. Is there anything else I can help you with?');
 
     // who we are / founder / the name
     if (has(/who (runs|started|made|owns|is behind|founded)|founder|sa[ïi]a mean|meaning of|story behind|who.{0,4}cristina|about cristina|who is cristina|where.{0,14}cristina|cristina.{0,14}from/))
@@ -329,36 +329,36 @@
 
     // women-only space — men / husband / partner asking to attend
     if (has(/\b(men|man|male|males|husband|boyfriend|partner|son|guys|blokes|gentlemen)\b/) && has(/come|attend|join|allow|welcome|can (he|they|men|i)|bring|class|event|member|session/))
-      return m("SAÏA is a women's space, lovely — our classes and gatherings are for women, so everyone can move and gather freely. Our mats, though, are for hire by anyone for any event. Anything I can help you plan?");
+      return m("SAÏA is a women's space. Our classes and gatherings are for women, so everyone can move and gather freely. Our mats, though, are for hire by anyone for any event. Anything I can help you plan?");
 
     // privacy — never share another member's details
     if ((has(/\bmembers?\b/) || has(/someone else|another (woman|member|guest)|other (people|women|members|guests)/)) && has(/\b(number|phone|email|contact|details?|reach)\b/) && has(/\b(give|share|get|have|provide|can you|could you|pass)\b/))
-      return m("I can't share other members' details, I'm afraid — privacy matters here. But I'm happy to help you join the guest list, plan a hire, or book Pilates. What would you like?");
+      return m("I can't share other members' details, I'm afraid. Privacy matters here. But I'm happy to help you join the guest list, plan a hire, or book Pilates. What would you like?");
 
     // yoga (the teaching is Pilates; mats are for hire) — answer honestly, don't claim yoga classes
     if (has(/\byoga\b/) && !has(/mat/) && has(/\b(run|teach|offer|do you|have|class|classes|only|instead|vs|versus|difference|or pilates)\b/))
-      return m("Our classes are Pilates with Cristina — small, breath-led sessions for women. We don't run yoga classes ourselves, but our mats are lovely for a yoga event and I can hire you a set whenever you like. Shall I help with mats, or tell you more about Pilates?");
+      return m("Our classes are Pilates with Cristina, small, breath-led sessions for women. We don't run yoga classes ourselves, but our mats are lovely for a yoga event and I can hire you a set whenever you like. Shall I help with mats, or tell you more about Pilates?");
 
     // Pilates / classes — answer questions, only place a request/waitlist on a clear intent
     if (has(/pilates|reformer|class(es)?|yoga session|work ?out|sessions?\b|\b1.?(2|to|on).?1\b|one.?to.?one/) && !has(/mat/)) {
       const email = (text || '').match(/[\w.+-]+@[\w-]+\.[\w.-]+/);
       // pricing question → don't auto-request; pricing comes from Cristina
       if (has(/price|cost|how much|rate|fee|charge|expensive|per session|per class/))
-        return m("Pilates with Cristina is tailored to you, so she shares rates directly — drop her a line at " + KB.contact.email + " or WhatsApp " + KB.contact.whatsapp + ". Shall I put a 1-2-1 request to her so she can come back with details?");
+        return m("Pilates with Cristina is tailored to you, so she shares rates directly. Email her at " + KB.contact.email + " or WhatsApp " + KB.contact.whatsapp + ". Shall I put a 1-2-1 request to her so she can come back with details?");
       // private 1-2-1 — request only when they want to book / give a day
       if (has(/1.?(2|to|on).?1|one.?to.?one|private|personal|just me/)) {
         const wantsBook = has(/book|request|arrange|set ?up|sign me|put me|sort|want|like to|let'?s|^yes\b/) || !!dateWord;
         return wantsBook
-          ? m('Lovely — a private 1-2-1 with Cristina in NW3. Tell me a day or two that suit' + (dateWord ? ' (' + dateWord + ' works?)' : '') + ' and I’ll put your request to her; she confirms directly.',
+          ? m('Of course, a private 1-2-1 with Cristina in NW3. Tell me a day or two that suit' + (dateWord ? ' (' + dateWord + ' works?)' : '') + ' and I’ll put your request to her; she confirms directly.',
             [{ tool: 'request_pilates', args: { type: '1-2-1', date: dateWord || null } }])
-          : m('A private 1-2-1 with Cristina in NW3 — small, slow and breath-led. Want me to put a request to her? Tell me a day or two that suit and she confirms directly.');
+          : m('A private 1-2-1 with Cristina in NW3, small, slow and breath-led. Want me to put a request to her? Tell me a day or two that suit and she confirms directly.');
       }
       // group / waitlist — join only with an email or a clear "add me" intent
       if (email)
-        return m('Perfect — you’re on the Pilates waitlist. You’ll be first to hear the moment a group session opens.',
+        return m('You’re on the Pilates waitlist, and you’ll be first to hear the moment a group session opens.',
           [{ tool: 'join_pilates_list', args: { email: email[0] } }]);
       if (has(/group|wait ?list|notify|updates?|let me know|sign ?up|join the list|add me/))
-        return m('Group Pilates runs as occasional events in Hampstead. Pop your email in and I’ll add you to the waitlist — you’ll hear the moment a session opens.');
+        return m('Group Pilates runs as occasional events in Hampstead. Share your email and I’ll add you to the waitlist. You’ll hear the moment a session opens.');
       // generic — explain both, let them choose (no action)
       return m('Pilates with Cristina is ' + KB.pilates.method + ' ' + KB.pilates.format + ' For a 1-2-1 I can put a request to Cristina; group classes run as occasional events, so I can add you to the waitlist for updates. Which would you like?');
     }
@@ -366,7 +366,7 @@
     // events — list what's on; only RSVP on a clear "reserve me / I'll come" intent
     if (has(/what'?s on|whats on|upcoming|any events?|events\b|this month|brunch|book club|watercolou?r|gathering/) && !has(/\bmat|chair|table|equipment|furniture/)) {
       const wantsRsvp = has(/reserve|rsvp|book.*place|come to|coming to|attend|sign me|put me down|get me in|count me in|i'?d like to (come|go|attend)|can i come/);
-      return m('This season: ' + KB.events.slice(0, 3).join(', ') + (wantsRsvp ? ". Consider it reserved — I'll pass your name on." : '. Want me to reserve you a place?'),
+      return m('This season: ' + KB.events.slice(0, 3).join(', ') + (wantsRsvp ? ". Consider it reserved, and I'll pass your name on." : '. Want me to reserve you a place?'),
         wantsRsvp ? [{ tool: 'rsvp_event', args: { event: KB.events[0] } }] : []);
     }
 
@@ -374,8 +374,8 @@
     if (has(/right for me|is (it|this) for me|join\b|member|belong|guest list|newsletter|sign ?up|community/)) {
       const email = (text || '').match(/[\w.+-]+@[\w-]+\.[\w.-]+/);
       return email
-        ? m("You're on the guest list — welcome. You'll be first to hear about the next gathering.", [{ tool: 'join_newsletter', args: { email: email[0] } }])
-        : m("If you want to move, gather and breathe with women who lift each other up, this is your place — no pressure, no performing. " + KB.club.join + " Pop yours in and I'll add you.");
+        ? m("You're on the guest list, welcome. You'll be first to hear about the next gathering.", [{ tool: 'join_newsletter', args: { email: email[0] } }])
+        : m("If you want to move, gather and breathe with women who lift each other up, this is your place, with no pressure and no performing. " + KB.club.join + " Share yours and I'll add you.");
     }
 
     // mat spec
@@ -384,7 +384,7 @@
 
     // how hire works
     if (has(/how (does|do|to)\s?(it|this|the hire|i|we)?\s?(work|hire|rent)|how does (it|hire) work|process/))
-      return m('Simple: tell me your numbers and date, we deliver the day before (min ' + H.minMats + ' mats, from ' + money(H.pricePerMat) + ' each for a ' + H.hireDays + '-day hire) and collect after. Shall I start a quote?');
+      return m('Of course, tell me your numbers and date, we deliver the day before (min ' + H.minMats + ' mats, from ' + money(H.pricePerMat) + ' each for a ' + H.hireDays + '-day hire) and collect after. Shall I start a quote?');
 
     // two-day hire rationale — "same-day delivery+collection, do I still pay two days?"
     const twoDayQ = (has(/same.?day/) && has(/hire|pay|charg|still|why|both|2.?day|two.?day/))
@@ -422,7 +422,7 @@
 
     // VAT / invoices / receipts — Cristina handles the paperwork; never invent a tax answer
     if (has(/\bvat\b|invoice|receipt|\btax\b/))
-      return m('For VAT, invoices or receipts, Cristina sorts those directly — drop her a line at ' + KB.contact.email + " and she'll handle the paperwork. Want me to put your hire numbers together in the meantime?");
+      return m('For VAT, invoices or receipts, Cristina looks after those directly. Email her at ' + KB.contact.email + " and she'll handle the paperwork. Want me to put your hire numbers together in the meantime?");
 
     // pricing FAQ — answer the question; only start collecting mats if we're not already mid-hire
     if (has(/price|quote|cost|how much|rate|charge/)) {
