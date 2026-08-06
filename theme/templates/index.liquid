@@ -1,5 +1,9 @@
 
-<meta name="description" content="Yoga mat hire across London, with same-day delivery from £8.50 a mat. A female-led club: fitness, community & mindset.">
+{%- comment %}
+  The meta description that used to sit here rendered inside <body> (templates are injected via
+  content_for_layout), so the page shipped with two: the old admin copy in <head> and this one in
+  the body. It now lives in snippets/seo-meta.liquid, in the head, where crawlers read it.
+{% endcomment -%}
 <link rel="stylesheet" href="{{ 'base.css' | asset_url }}">
 <link rel="stylesheet" href="{{ 'buttons.css' | asset_url }}">
 <script type="importmap">{ "imports": { "three": "{{ 'three.module.min.js' | asset_url }}" } }</script>
@@ -40,7 +44,7 @@
   .flow-rail[data-band="0.972,1"] .band-inner { max-width: 430px !important; } /* Join band needs room for the email form */
   /* ===== Mobile / static fallback — "Editorial stack" (locked design) =====
      Fires via .is-static (≤767px, prefers-reduced-motion, or WebGL failure; set in
-     home-journey.js). The pinned 2000vh journey unpins into a clean single-column
+     home-journey.js). The pinned 900vh journey unpins into a clean single-column
      document. The scroll-scrubbed Cristina layers — #flowCanvas, #figureLayer and
      #matStage — are hidden here (the WebGL path hides them in JS, but the static
      path returns early before that, which used to leak the figures over the copy). */
@@ -636,13 +640,13 @@
   <section id="mobileJourney" aria-label="SAÏA mat hire & Pilates"></section>
 
   <!-- ============ THE PINNED 3D JOURNEY ============ -->
-  <div id="top" style="position:relative; height:2000vh; background:#F5F1E8;">
+  <div id="top" style="position:relative; height:900vh; background:#F5F1E8;">
     <div class="home-sticky" style="position:sticky; top:0; height:100vh; overflow:hidden; background:#F5F1E8;">
       <canvas id="homeCanvas" aria-hidden="true" style="position:absolute; inset:0; width:100%; height:100%; z-index:1; opacity:0;"></canvas>
 
       <!-- Watercolour stage mat — fades in under Cristina at the handoff (p≈0.50→0.56),
            sits behind the figures, above the canvas. Driven by matStageFor() in home-journey.js -->
-      <img id="matStage" src="{{ 'mat-stage-baked.png' | asset_url }}" alt=""
+      <img id="matStage" src="{{ 'mat-stage-baked.png' | asset_url }}" alt="" loading="lazy" decoding="async"
            style="position:absolute; left:55%; bottom:12vh; transform:translateX(-50%);
                   width:46vw; height:auto; transform-origin:bottom center; z-index:2;
                   opacity:0; pointer-events:none; will-change:opacity;
@@ -658,21 +662,21 @@
 
       <!-- Cristina — watercolour figure sequence, composited on the mat (walks in, flows through poses) -->
       <div id="figureLayer" aria-hidden="true" style="position:absolute; inset:0; z-index:2; pointer-events:none;">
-        <img class="saia-fig" data-fig="1" src="{{ 'figure-1.png' | asset_url }}" alt="">
-        <img class="saia-fig" data-fig="2" src="{{ 'figure-2.png' | asset_url }}" alt="">
-        <img class="saia-fig" data-fig="3" src="{{ 'figure-3.png' | asset_url }}" alt="">
-        <img class="saia-fig" data-fig="4" src="{{ 'figure-4.png' | asset_url }}" alt="">
-        <img class="saia-fig" data-fig="5" src="{{ 'figure-5.png' | asset_url }}" alt="">
-        <img class="saia-fig" data-fig="6" src="{{ 'figure-6.png' | asset_url }}" alt="">
-        <img class="saia-fig" data-fig="7" src="{{ 'figure-7.png' | asset_url }}" alt="">
-        <img class="saia-fig" data-fig="8" src="{{ 'figure-8.png' | asset_url }}" alt="">
-        <img class="saia-fig" data-fig="9" src="{{ 'figure-9.png' | asset_url }}" alt="">
-        <img class="saia-fig" data-fig="10" src="{{ 'figure-10.png' | asset_url }}" alt="">
-        <img class="saia-fig" data-fig="11" src="{{ 'figure-11.png' | asset_url }}" alt="">
-        <img class="saia-fig" data-fig="12" src="{{ 'figure-12.png' | asset_url }}" alt="">
-        <img class="saia-fig" data-fig="13" src="{{ 'figure-13.png' | asset_url }}" alt="">
-        <img class="saia-fig" data-fig="14" src="{{ 'figure-14.png' | asset_url }}" alt="">
-        <img class="saia-fig" data-fig="15" src="{{ 'figure-15.png' | asset_url }}" alt="">
+        <img class="saia-fig" data-fig="1" src="{{ 'figure-1.png' | asset_url }}" alt="" loading="lazy" decoding="async">
+        <img class="saia-fig" data-fig="2" src="{{ 'figure-2.png' | asset_url }}" alt="" loading="lazy" decoding="async">
+        <img class="saia-fig" data-fig="3" src="{{ 'figure-3.png' | asset_url }}" alt="" loading="lazy" decoding="async">
+        <img class="saia-fig" data-fig="4" src="{{ 'figure-4.png' | asset_url }}" alt="" loading="lazy" decoding="async">
+        <img class="saia-fig" data-fig="5" src="{{ 'figure-5.png' | asset_url }}" alt="" loading="lazy" decoding="async">
+        <img class="saia-fig" data-fig="6" src="{{ 'figure-6.png' | asset_url }}" alt="" loading="lazy" decoding="async">
+        <img class="saia-fig" data-fig="7" src="{{ 'figure-7.png' | asset_url }}" alt="" loading="lazy" decoding="async">
+        <img class="saia-fig" data-fig="8" src="{{ 'figure-8.png' | asset_url }}" alt="" loading="lazy" decoding="async">
+        <img class="saia-fig" data-fig="9" src="{{ 'figure-9.png' | asset_url }}" alt="" loading="lazy" decoding="async">
+        <img class="saia-fig" data-fig="10" src="{{ 'figure-10.png' | asset_url }}" alt="" loading="lazy" decoding="async">
+        <img class="saia-fig" data-fig="11" src="{{ 'figure-11.png' | asset_url }}" alt="" loading="lazy" decoding="async">
+        <img class="saia-fig" data-fig="12" src="{{ 'figure-12.png' | asset_url }}" alt="" loading="lazy" decoding="async">
+        <img class="saia-fig" data-fig="13" src="{{ 'figure-13.png' | asset_url }}" alt="" loading="lazy" decoding="async">
+        <img class="saia-fig" data-fig="14" src="{{ 'figure-14.png' | asset_url }}" alt="" loading="lazy" decoding="async">
+        <img class="saia-fig" data-fig="15" src="{{ 'figure-15.png' | asset_url }}" alt="" loading="lazy" decoding="async">
       </div>
 
       <div id="stage" style="position:absolute; inset:0; z-index:3; pointer-events:none;">
@@ -1093,7 +1097,7 @@
           </div>
           <div>
             <div style="font-size:11px; letter-spacing:.22em; text-transform:uppercase; color:rgba(245,241,232,.5); margin-bottom:18px;">About us</div>
-            <div style="display:flex; flex-direction:column; gap:12px; font-size:14px;"><a href="/pages/story" style="color:rgba(245,241,232,.78); text-decoration:none;">Our story</a><a href="/pages/events" style="color:rgba(245,241,232,.78); text-decoration:none;">Events</a><a href="#concierge-hire" style="color:rgba(245,241,232,.78); text-decoration:none;">Yoga mat hire</a><a href="#events" style="color:rgba(245,241,232,.78); text-decoration:none;">Gallery</a></div>
+            <div style="display:flex; flex-direction:column; gap:12px; font-size:14px;"><a href="/pages/story" style="color:rgba(245,241,232,.78); text-decoration:none;">Our story</a><a href="/blogs/news" style="color:rgba(245,241,232,.78); text-decoration:none;">Journal</a><a href="/pages/events" style="color:rgba(245,241,232,.78); text-decoration:none;">Events</a><a href="#concierge-hire" style="color:rgba(245,241,232,.78); text-decoration:none;">Yoga mat hire</a><a href="#events" style="color:rgba(245,241,232,.78); text-decoration:none;">Gallery</a></div>
           </div>
           <div style="max-width:240px;">
             <div style="font-size:11px; letter-spacing:.22em; text-transform:uppercase; color:rgba(245,241,232,.5); margin-bottom:18px;">Subscribe</div>

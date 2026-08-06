@@ -328,6 +328,99 @@
     const scrolled = -wrap.getBoundingClientRect().top;
     target = total > 0 ? Math.min(1, Math.max(0, scrolled / total)) : 0;
   }
+
+  /* ---- CHAPTER SNAP: one wheel gesture / swipe / arrow key = one chapter.
+     Instead of mapping raw scroll distance to p (which made the journey take ~19
+     screens of scrolling), a gesture tweens the window scroll to the next STOP over
+     SNAP_MS with an ease — so the mat unroll, the van and each pose transition always
+     play at the same deliberate ~2s speed regardless of how hard you flick.
+     Each stop sits inside its band's sharp plateau AND on a flow HOLD, so a chapter
+     never settles mid-blur or mid-pose. Past either end we don't preventDefault, so
+     the page scrolls out of the journey normally. ---- */
+  const STOPS = [
+    0.000,   // 1 hero — coiled mat
+    0.260,   // 2 signature mat, fully unrolled (UNROLL_END 0.22)
+    0.410,   // 3 mat hire — van has reached "Collect" (road finishes 0.38)
+    0.520,   // 4 for every gathering — range grid
+    0.600,   // 5 flow L1 — stands tall
+    0.695,   // 6 flow L2 — reach up
+    0.800,   // 7 flow L3 — downward dog
+    0.900,   // 8 flow L4 — low lunge
+    1.000,   // 9 flow L5 — seated, hands to heart + Join
+  ];
+  const SNAP_MS = 2000;          // one chapter transition, in ms
+  const GESTURE_GAP = 180;       // ms of quiet that ends a wheel gesture (kills trackpad momentum)
+  let snapping = false, snapFrom = 0, snapTo = 0, snapT0 = 0, lastWheel = -1e6, touchY = null;
+
+  function pinned() {
+    const r = wrap.getBoundingClientRect();
+    return r.top <= 1 && r.bottom >= window.innerHeight - 1;
+  }
+  function yForP(p) {
+    const total = wrap.offsetHeight - window.innerHeight;
+    const top = wrap.getBoundingClientRect().top + window.scrollY;
+    return top + p * Math.max(0, total);
+  }
+  /* next stop in `dir`, or -1 when there is none (→ let the page scroll away) */
+  function nextStop(dir) {
+    const p = target;
+    if (dir > 0) { for (let i = 0; i < STOPS.length; i++) if (STOPS[i] > p + 0.004) return i; return -1; }
+    for (let i = STOPS.length - 1; i >= 0; i--) if (STOPS[i] < p - 0.004) return i;
+    return -1;
+  }
+  function startSnap(p) {
+    snapFrom = window.scrollY; snapTo = yForP(p);
+    snapT0 = performance.now(); snapping = true;
+  }
+  function stepSnap(now) {
+    if (!snapping) return;
+    let t = (now - snapT0) / SNAP_MS;
+    if (t >= 1) { t = 1; snapping = false; }
+    const e = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;   // easeInOutCubic
+    window.scrollTo(0, snapFrom + (snapTo - snapFrom) * e);
+  }
+  function typing(el) {
+    return !!el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable);
+  }
+  function bindSnap() {
+    window.addEventListener('wheel', (e) => {
+      if (!pinned() || e.ctrlKey) return;
+      const dir = e.deltaY > 0 ? 1 : e.deltaY < 0 ? -1 : 0;
+      if (!dir) return;
+      const i = nextStop(dir);
+      if (i < 0) { lastWheel = performance.now(); return; }   // at an end — release to the page
+      e.preventDefault();
+      const now = performance.now(), fresh = now - lastWheel > GESTURE_GAP;
+      lastWheel = now;
+      if (snapping || !fresh) return;                          // one snap per gesture
+      startSnap(STOPS[i]);
+    }, { passive: false });
+
+    window.addEventListener('keydown', (e) => {
+      if (!pinned() || typing(e.target)) return;
+      let dir = 0;
+      if (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === ' ') dir = 1;
+      else if (e.key === 'ArrowUp' || e.key === 'PageUp') dir = -1;
+      else return;
+      const i = nextStop(dir);
+      if (i < 0) return;
+      e.preventDefault();
+      if (!snapping) startSnap(STOPS[i]);
+    });
+
+    window.addEventListener('touchstart', (e) => { touchY = e.touches[0].clientY; }, { passive: true });
+    window.addEventListener('touchmove', (e) => {
+      if (touchY == null || !pinned()) return;
+      const dy = touchY - e.touches[0].clientY;
+      if (Math.abs(dy) < 30) return;
+      const i = nextStop(dy > 0 ? 1 : -1);
+      if (i < 0) { touchY = null; return; }
+      e.preventDefault();
+      if (snapping) return;
+      touchY = null; startSnap(STOPS[i]);
+    }, { passive: false });
+    window.addEventListener('touchend', () => { touchY = null; }, { passive: true });
+  }
   function onResize() {
     if (!renderer) return;
     const w = canvas.clientWidth || window.innerWidth, h = canvas.clientHeight || window.innerHeight;
@@ -475,11 +568,18 @@
     };
 
     clock = new THREE.Clock();
-    const loop = () => {
+    bindSnap();
+    const loop = (now) => {
       if (!paused && visible) {
+        stepSnap(now || performance.now());
         updateTarget();
-        current = THREE.MathUtils.damp(current, target, 3.0, clock.getDelta());
-        if (Math.abs(current - target) < 0.0002) current = target;
+        // during a snap the tween IS the animation curve — follow it 1:1 so 2s means 2s.
+        // free scrolling (scrollbar drag, jump links) still gets the damped follow.
+        if (snapping) { current = target; clock.getDelta(); }
+        else {
+          current = THREE.MathUtils.damp(current, target, 3.0, clock.getDelta());
+          if (Math.abs(current - target) < 0.0002) current = target;
+        }
         paint(current);
       } else { clock.getDelta(); }
       requestAnimationFrame(loop);
