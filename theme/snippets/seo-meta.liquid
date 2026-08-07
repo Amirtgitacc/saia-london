@@ -1,0 +1,106 @@
+{%- comment %}
+  Per-route SEO metadata for the redesigned site. Emits <title>, meta description,
+  robots, canonical, Open Graph and Twitter card tags. Rendered from layout/theme.liquid.
+
+  WHY THIS EXISTS: the redesign's <title> and <meta description> live in the static
+  source files (index.html, pilates-with-cristina.html, ...), but tools/shopify-port/port.mjs
+  deliberately strips the <head> when it ports a page — "the layout owns meta/title".
+  Shopify then falls back to page_title / page_description, which come from each page's
+  SEO fields in admin. Those fields still held the OLD site's copy after the 2026-07-22
+  switch, so the home page went live titled just "SAÏA London", with a meta description
+  about a "Social Club empowering women" and no mention of mat hire at all.
+
+  This re-attaches the redesign's own metadata in code, so it ships with a theme push and
+  survives the next port. Routes not listed here fall through to whatever admin has set.
+  Keep each string in sync with the matching static file's <head>.
+
+  NOTE: this snippet OUTPUTS the tags rather than assigning variables for the layout to
+  use — {% render %} runs in an isolated scope, so assigns made here would not be visible
+  to theme.liquid.
+{% endcomment -%}
+
+{%- liquid
+  assign seo_title = page_title | default: shop.name
+  assign seo_description = page_description
+  assign seo_type = 'website'
+
+  case request.page_type
+    when 'index'
+      # mirrors index.html <head>
+      assign seo_title = 'SAÏA London: Yoga Mat Hire Across London'
+      assign seo_description = 'Yoga mat hire across London, with same-day delivery from £8.50 a mat. A female-led club: fitness, community & mindset.'
+
+    when 'page'
+      case page.handle
+        when 'pilates-with-cristina'
+          # mirrors pilates-with-cristina.html <head>
+          assign seo_title = 'Pilates with Cristina · SAÏA London'
+          assign seo_description = 'Pilates with Cristina, founder of SAÏA London. One-to-one classes for women in NW3 and group classes in Hampstead — Classical method and Reformer Pilates. Get in touch to work out together.'
+        when 'contact-us'
+          # mirrors contact-us.html <head>
+          assign seo_title = 'Contact Us · SAÏA London'
+          assign seo_description = 'Get in touch with SAÏA London. For mat hire, events and press — reach us on WhatsApp, or email the most relevant team. Business hours Monday to Friday, 9am–6pm UK time.'
+        when 'story'
+          # mirrors story.html <head>. Set here because the value in admin is the 203-character
+          # original, which Google truncates mid-sentence.
+          assign seo_title = 'Meet the Founder · SAÏA London'
+          assign seo_description = 'Meet Cristina, the English-Mexican founder of SAÏA London: from yoga mats in 2020 to the SAÏA Brunch Club and a community of women. SAÏA means ‘a woman who wins’.'
+      endcase
+
+    when 'collection' or 'list-collections'
+      # The catalogue is not browsable — mats are hire-only, booked from the home page.
+      # Without this the title read "All Products" while the H1 read "Mat hire, made simple".
+      assign seo_title = 'Mat hire, made simple · SAÏA London'
+      assign seo_description = 'SAÏA yoga mats are for hire, not for sale. Book mats and delivery for your London event from £8.50 a mat.'
+
+    when 'article'
+      assign seo_type = 'article'
+  endcase
+-%}
+
+{%- comment %}
+  noindex, by explicit handle rather than by page_type.
+
+  The old blanket rule was `request.page_type == 'product'`, which also deindexed
+  /products/yoga-mat-hire — a URL carried over from the pre-2026 site and the most likely
+  legacy ranking page for "yoga mat hire". Only the checkout-plumbing products (the hidden
+  line items the cart builds) belong out of the index. Indexability is independent of the
+  cart: js/shopify-cart.js adds lines by variant ID, never by handle.
+{% endcomment -%}
+{%- assign plumbing_handles = 'courier-delivery,refundable-deposit,extra-hire-day,mat-hire-2-day-hire,cleaning-deposit,refundable-cleaning-deposit-yoga-mat-hire,delivery-collection-to-central-london-zone-1,delivery-collection-london-zone-2' | split: ',' -%}
+{%- assign is_noindex = false -%}
+{%- if request.page_type == 'product' and plumbing_handles contains product.handle -%}
+  {%- assign is_noindex = true -%}
+{%- endif -%}
+{%- comment %} post-signup confirmation page — never meant to rank {% endcomment -%}
+{%- if page.handle == 'guest-list' -%}{%- assign is_noindex = true -%}{%- endif -%}
+{%- comment %} internal search results — crawl trap, no unique content {% endcomment -%}
+{%- if request.page_type == 'search' -%}{%- assign is_noindex = true -%}{%- endif -%}
+
+<title>{{ seo_title }}</title>
+{%- if seo_description != blank %}
+<meta name="description" content="{{ seo_description | escape }}">
+{%- endif %}
+<link rel="canonical" href="{{ canonical_url }}">
+{%- if is_noindex %}
+<meta name="robots" content="noindex, follow">
+{%- endif %}
+
+{%- assign og_image = 'SAIABRUNCHCLUB_38.png' | asset_url -%}
+{%- unless og_image contains 'https:' -%}{%- assign og_image = og_image | prepend: 'https:' -%}{%- endunless %}
+<meta property="og:site_name" content="{{ shop.name }}">
+<meta property="og:type" content="{{ seo_type }}">
+<meta property="og:title" content="{{ seo_title | escape }}">
+{%- if seo_description != blank %}
+<meta property="og:description" content="{{ seo_description | escape }}">
+{%- endif %}
+<meta property="og:url" content="{{ canonical_url }}">
+<meta property="og:image" content="{{ og_image }}">
+<meta property="og:image:alt" content="Women gathered at a long table at the SAÏA Brunch Club">
+<meta property="og:locale" content="en_GB">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{ seo_title | escape }}">
+{%- if seo_description != blank %}
+<meta name="twitter:description" content="{{ seo_description | escape }}">
+{%- endif %}
+<meta name="twitter:image" content="{{ og_image }}">

@@ -7,6 +7,15 @@
       Our yoga mats are for hire, not for sale — book delivery for your event straight from the home page.
     </div>
     <p style="margin-top:32px;"><a class="saia-btn saia-btn--terra" href="/#estimate" style="text-decoration:none;">Hire mats for your event</a></p>
+    {% comment %}
+      Crawl paths out. Without these this template is a dead end for anything that lands on
+      /collections/all from the old site or the sitemap.
+    {% endcomment %}
+    <p style="margin-top:26px; font-size:14px; color:#5A554C;">
+      Or read <a href="/blogs/news" style="color:var(--saia-accent);">the journal</a>,
+      see <a href="/pages/events" style="color:var(--saia-accent);">what we have coming up</a>, or
+      <a href="/pages/contact-us" style="color:var(--saia-accent);">talk to us</a>.
+    </p>
   </section>
 </main>
 {% render 'blog-chrome-foot' %}

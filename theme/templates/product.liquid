@@ -1,5 +1,44 @@
-{% comment %} stub — SAÏA does not use this template {% endcomment %}
-<main style="background:#F5F1E8; min-height:40vh;">
-  {{ product.title }}
-  {{ product.price | money }}
+{% comment %}
+  Product pages are not a shopping surface here — hires are planned on the home page and the cart
+  is built by js/shopify-cart.js from variant IDs. But this template used to render title + price
+  and nothing else, on URLs that have been live since before the redesign and that still carry
+  the mats' own description (spec, materials, dimensions). /products/yoga-mat-hire is the most
+  likely legacy ranking page for "yoga mat hire", so that copy is worth keeping on the page.
+
+  Deliberately NO add-to-cart: mats are hire-only, never for sale (see CLAUDE.md brand rules).
+  The checkout-plumbing products are noindexed in snippets/seo-meta.liquid; they just inherit
+  this layout so they don't look broken if someone opens one.
+{% endcomment %}
+{% render 'blog-chrome-head' %}
+<main>
+  <section class="bhead">
+    <div class="eyebrow">SAÏA London</div>
+    <h1>{{ product.title }}</h1>
+    <div class="meta">Hire only · from £8.50 a mat</div>
+  </section>
+
+  <div class="bwrap">
+    {% if product.featured_image %}
+    <img class="article-hero"
+         src="{{ product.featured_image | image_url: width: 1200 }}"
+         alt="{{ product.featured_image.alt | default: product.title | escape }}"
+         width="1200"
+         height="{{ 1200 | divided_by: product.featured_image.aspect_ratio | round }}"
+         loading="lazy">
+    {% endif %}
+
+    <div class="article-body">
+      {{ product.description }}
+    </div>
+
+    <p style="margin-top:36px;">
+      <a class="saia-btn saia-btn--terra" href="/#estimate" style="text-decoration:none;">Plan your hire</a>
+    </p>
+    <p style="margin-top:20px; font-size:14px; color:#5A554C;">
+      Mats are hired, not sold. Tell us your numbers and dates on the
+      <a href="/#estimate" style="color:var(--saia-accent);">home page</a> and we will quote delivery and
+      collection, or <a href="/pages/contact-us" style="color:var(--saia-accent);">talk to us</a>.
+    </p>
+  </div>
 </main>
+{% render 'blog-chrome-foot' %}

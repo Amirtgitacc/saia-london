@@ -1,2 +1,23 @@
-{% comment %} stub — SAÏA does not use this template {% endcomment %}
-<main style="background:#F5F1E8; min-height:40vh;"></main>
+{% comment %}
+  /collections — SAÏA does not use a browsable catalogue (mats are hire-only, booked from the
+  home page). This used to render an empty <main>, which reads as a soft 404: a 200 response
+  with no content, no nav and no way out. It now mirrors collection.liquid so the URL is a real,
+  useful page instead.
+{% endcomment %}
+{% render 'blog-chrome-head' %}
+<main>
+  <section class="bhead">
+    <div class="eyebrow">SAÏA London</div>
+    <h1>Mat hire, made simple</h1>
+    <div class="meta" style="text-transform:none; letter-spacing:0; font-size:16px; line-height:1.7; max-width:44ch; margin:0 auto;">
+      Our yoga mats are for hire, not for sale — book delivery for your event straight from the home page.
+    </div>
+    <p style="margin-top:32px;"><a class="saia-btn saia-btn--terra" href="/#estimate" style="text-decoration:none;">Hire mats for your event</a></p>
+    <p style="margin-top:26px; font-size:14px; color:#5A554C;">
+      Or read <a href="/blogs/news" style="color:var(--saia-accent);">the journal</a>,
+      see <a href="/pages/events" style="color:var(--saia-accent);">what we have coming up</a>, or
+      <a href="/pages/contact-us" style="color:var(--saia-accent);">talk to us</a>.
+    </p>
+  </section>
+</main>
+{% render 'blog-chrome-foot' %}
