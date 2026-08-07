@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Chat log · SAÏA London</title>
+  <style>
+    :root{ --cream:#F5F1E8; --ink:#2B2620; --terra:#B8624A; --muted:#6B6358; --line:#DAD4C8; }
+    *{ box-sizing:border-box; }
+    body{ margin:0; background:var(--cream); color:var(--ink);
+      font:16px/1.6 -apple-system,BlinkMacSystemFont,'Segoe UI',Inter,sans-serif; }
+    main{ max-width:900px; margin:0 auto; padding:40px 20px 80px; }
+    h1{ font-size:26px; font-weight:600; margin:0 0 6px; }
+    .sub{ color:var(--muted); font-size:14px; margin:0 0 32px; }
+    label{ display:block; font-size:13px; letter-spacing:.08em; text-transform:uppercase;
+      color:var(--muted); margin-bottom:8px; }
+    input[type=password]{ width:100%; max-width:340px; padding:12px 14px; font-size:16px;
+      border:1px solid var(--line); border-radius:8px; background:#fff; color:var(--ink); }
+    button{ font:inherit; cursor:pointer; border-radius:8px; }
+    .go{ margin-top:14px; padding:12px 24px; border:0; background:var(--ink); color:var(--cream); }
+    .go:hover{ background:var(--terra); }
+    :focus-visible{ outline:2px solid var(--terra); outline-offset:2px; }
+    .err{ color:var(--terra); font-size:14px; margin-top:12px; min-height:1.4em; }
+    ul{ list-style:none; margin:0; padding:0; }
+    li{ border-bottom:1px solid var(--line); }
+    .row{ display:flex; gap:14px; align-items:baseline; width:100%; text-align:left;
+      padding:14px 4px; background:none; border:0; color:inherit; }
+    .row:hover{ background:rgba(184,98,74,.06); }
+    .sid{ font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:14px; }
+    .meta{ color:var(--muted); font-size:13px; margin-left:auto; }
+    .turn{ padding:12px 0; border-bottom:1px solid var(--line); }
+    .who{ font-size:12px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); }
+    .who.user{ color:var(--terra); }
+    .msg{ margin-top:4px; white-space:pre-wrap; }
+    .back{ display:inline-block; margin-bottom:20px; color:var(--terra); background:none;
+      border:0; padding:0; font-size:14px; }
+    [hidden]{ display:none !important; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Chat log</h1>
+    <p class="sub">Conversations between visitors and the SAÏA assistant.</p>
+
+    <section id="gate" aria-labelledby="gate-h">
+      <h2 id="gate-h" class="sub" style="margin:0 0 12px;">Enter the password to continue</h2>
+      <form id="gate-form">
+        <label for="pw">Password</label>
+        <input id="pw" type="password" autocomplete="current-password" required>
+        <button class="go" type="submit">Open the log</button>
+        <p class="err" id="gate-err" role="alert" aria-live="polite"></p>
+      </form>
+    </section>
+
+    <section id="list" hidden aria-labelledby="list-h">
+      <h2 id="list-h" class="sub" style="margin:0 0 12px;">Conversations, most recent first</h2>
+      <ul id="sessions"></ul>
+      <p class="err" id="list-err" role="alert" aria-live="polite"></p>
+    </section>
+
+    <section id="detail" hidden aria-labelledby="detail-h">
+      <button class="back" id="back" type="button">&larr; All conversations</button>
+      <h2 id="detail-h" class="sub" style="margin:0 0 12px;"></h2>
+      <div id="turns"></div>
+    </section>
+  </main>
+
+  <script>
+  (function () {
+    var API = '/api/chat-log';
+    var gate = document.getElementById('gate'), list = document.getElementById('list'),
+        detail = document.getElementById('detail'), sessions = document.getElementById('sessions'),
+        turns = document.getElementById('turns'), gateErr = document.getElementById('gate-err'),
+        listErr = document.getElementById('list-err'), detailH = document.getElementById('detail-h');
+
+    function show(el) {
+      [gate, list, detail].forEach(function (s) { s.hidden = s !== el; });
+    }
+    function fmt(ms) {
+      var d = new Date(ms);
+      return isNaN(d) ? '' : d.toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' });
+    }
+
+    document.getElementById('gate-form').addEventListener('submit', function (e) {
+      e.preventDefault();
+      gateErr.textContent = '';
+      fetch(API, {
+        method: 'POST', credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: document.getElementById('pw').value }),
+      }).then(function (r) {
+        if (r.status === 204) { loadList(); return; }
+        if (r.status === 429) { gateErr.textContent = 'Too many attempts. Try again in a few minutes.'; return; }
+        if (r.status === 503) { gateErr.textContent = 'The log is not configured yet. The password and secret need setting in Vercel.'; return; }
+        gateErr.textContent = 'That password was not right.';
+      }).catch(function () { gateErr.textContent = 'Could not reach the server.'; });
+    });
+
+    function loadList() {
+      fetch(API + '?list=1', { credentials: 'same-origin' })
+        .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+        .then(function (data) {
+          sessions.textContent = '';
+          if (!data.sessions.length) { listErr.textContent = 'No conversations recorded yet.'; }
+          data.sessions.forEach(function (s) {
+            var li = document.createElement('li');
+            var b = document.createElement('button');
+            b.type = 'button'; b.className = 'row';
+            var id = document.createElement('span'); id.className = 'sid'; id.textContent = s.session;
+            var meta = document.createElement('span'); meta.className = 'meta';
+            meta.textContent = fmt(s.lastAt) + ' · ' + s.batches + (s.batches === 1 ? ' entry' : ' entries');
+            b.appendChild(id); b.appendChild(meta);
+            b.addEventListener('click', function () { loadOne(s.session); });
+            li.appendChild(b); sessions.appendChild(li);
+          });
+          show(list);
+        })
+        .catch(function () { gateErr.textContent = 'Could not load the conversations.'; show(gate); });
+    }
+
+    function loadOne(id) {
+      fetch(API + '?session=' + encodeURIComponent(id), { credentials: 'same-origin' })
+        .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+        .then(function (data) {
+          detailH.textContent = 'Session ' + data.session;
+          turns.textContent = '';
+          data.turns.forEach(function (t) {
+            var wrap = document.createElement('div'); wrap.className = 'turn';
+            var who = document.createElement('div');
+            who.className = 'who' + (t.role === 'user' ? ' user' : '');
+            who.textContent = (t.role === 'user' ? 'Visitor' : t.role === 'bot' ? 'Assistant' : 'Action')
+              + (t.tier ? ' · ' + t.tier : '') + ' · ' + fmt(t.at);
+            var msg = document.createElement('div');
+            msg.className = 'msg';
+            msg.textContent = t.message;      // textContent, never innerHTML — this is visitor input
+            wrap.appendChild(who); wrap.appendChild(msg); turns.appendChild(wrap);
+          });
+          show(detail);
+          document.getElementById('back').focus();
+        })
+        .catch(function () { listErr.textContent = 'Could not load that conversation.'; });
+    }
+
+    document.getElementById('back').addEventListener('click', loadList);
+    // an unexpired cookie from earlier today skips the password
+    fetch(API + '?list=1', { credentials: 'same-origin' }).then(function (r) { if (r.ok) loadList(); });
+  })();
+  </script>
+</body>
+</html>

@@ -1,12 +1,12 @@
 /* ============================================================
    SAÏA — chat transcript logging endpoint (VERCEL serverless function)
    The browser fires each chat turn here so conversations can be
-   reviewed later in Supabase (table `chat_logs`). Shares its brain
-   with the local dev server (server.js) via js/log-core.js.
+   reviewed later at /chat-log.html (stored in Vercel Blob). Shares
+   its brain with the local dev server (server.js) via js/log-core.js.
 
      POST /api/log  { session, page, turns:[{role, tier, message}] } -> 204
    ============================================================ */
-const { normalizeLogPayload, insertChatLogs } = require('../js/log-core.js');
+const { normalizeLogPayload, storeChatLogs } = require('../js/log-core.js');
 const { applyCors } = require('../js/http-guard.js');
 const { rateLimit } = require('../js/rate-limit.js');
 
@@ -28,7 +28,7 @@ module.exports = async (req, res) => {
   if (!rows) { res.status(400).json({ error: 'bad_payload' }); return; }
 
   try {
-    await insertChatLogs(rows);
+    await storeChatLogs(rows);
     res.status(204).end();
   } catch (err) {
     console.error('[chat-log]', err && err.message ? err.message : err);

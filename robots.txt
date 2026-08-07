@@ -1,0 +1,19 @@
+# This host (saia-london.vercel.app) is NOT the live site. It exists only to serve
+# the concierge API under /api/*. Every page path returns a 301 to the live
+# storefront: https://www.saialondon.com/
+#
+# Crawling is deliberately ALLOWED. A "Disallow: /" here would stop crawlers from
+# fetching these URLs at all, which means they'd never see the 301s and the old
+# link authority would never reach the live store. Let them crawl, get redirected,
+# and drop this host from the index on their own.
+#
+# No Sitemap line: the live sitemap is https://www.saialondon.com/sitemap.xml
+
+User-agent: *
+Allow: /
+
+# The concierge endpoints are JSON APIs, not content.
+Disallow: /api/
+
+# Cristina's password-gated chat transcript viewer — never indexed.
+Disallow: /chat-log.html
