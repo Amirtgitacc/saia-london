@@ -1354,7 +1354,7 @@
         '<input id="estDays' + sfx + '" data-days type="number" min="2" step="1" placeholder="2" inputmode="numeric"></div>' +
       '</div>' +
       '<div class="field full"><label for="estDate' + sfx + '">Event date</label>' +
-        '<input id="estDate' + sfx + '" data-date type="date" required></div>' +
+        '<input id="estDate' + sfx + '" data-date type="date" required min="' + window.SAIA.KB.todayISO() + '"></div>' +
       '<div class="note" data-note aria-live="polite"></div>' +
       '<div class="field full"><label>Getting the mats</label>' +
         '<div class="seg" data-method data-m="" role="group" aria-label="Delivery method">' +

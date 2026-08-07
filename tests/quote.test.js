@@ -103,3 +103,35 @@ test('dateLabels swap for a pickup hire', () => {
   assert.deepStrictEqual(KB.dateLabels({ method: 'deliver' }), { delivery: 'Delivery date', collection: 'Collection date' });
   assert.deepStrictEqual(KB.dateLabels({ method: 'pickup' }), { delivery: 'Pickup from NW3', collection: 'Return to NW3' });
 });
+
+/* The concierge stores dates as "16 July 2026" (planner.js), and the Tier-2 prompt
+   orders "DAY MONTH YEAR only". deriveDates originally accepted ISO alone, so every
+   chat-originated booking reached Shopify with one date instead of four. */
+test('KB.toISODate normalises the formats the concierge actually stores', () => {
+  assert.strictEqual(KB.toISODate('2026-07-16'), '2026-07-16');
+  assert.strictEqual(KB.toISODate('16 July 2026'), '2026-07-16');
+  assert.strictEqual(KB.toISODate('16 Jul 2026'), '2026-07-16');
+  assert.strictEqual(KB.toISODate('1 March 2027'), '2027-03-01');
+  // formatDate's own output must round-trip
+  assert.strictEqual(KB.toISODate(KB.formatDate('2026-07-16')), '2026-07-16');
+  // genuinely ambiguous or invalid input stays null rather than guessing
+  assert.strictEqual(KB.toISODate('Saturday'), null);
+  assert.strictEqual(KB.toISODate('next month'), null);
+  assert.strictEqual(KB.toISODate('32 July 2026'), null);
+  assert.strictEqual(KB.toISODate('16 Smarch 2026'), null);
+  assert.strictEqual(KB.toISODate(''), null);
+  assert.strictEqual(KB.toISODate(undefined), null);
+});
+
+test('a concierge-stored date yields all four dates, not just the event date', () => {
+  const d = KB.deriveDates({ mats: 20, days: 2, date: '16 July 2026' }, '2026-07-01');
+  assert.ok(d, 'deriveDates must accept the format the concierge stores');
+  assert.strictEqual(d.event, '2026-07-16');
+  assert.strictEqual(d.delivery, '2026-07-15');
+  assert.strictEqual(d.collection, '2026-07-16');
+  assert.strictEqual(d.booking, '2026-07-01');
+});
+
+test('a vague date still derives nothing, so no booking invents a day', () => {
+  assert.strictEqual(KB.deriveDates({ mats: 20, days: 2, date: 'Saturday' }), null);
+});

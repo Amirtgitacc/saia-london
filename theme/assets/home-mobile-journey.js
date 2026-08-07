@@ -6,7 +6,7 @@
    Powered by the vendored three.js r150 ES modules.
    ============================================================ */
 import * as THREE from 'three';
-import { GLTFLoader } from '../vendor/GLTFLoader.js';
+import { GLTFLoader } from './GLTFLoader.js';
 
 export function initMobileJourney() {
   var root = document.getElementById('mobileJourney');
@@ -87,7 +87,7 @@ export function initMobileJourney() {
       if (field) field.focus();
       return;
     }
-    window.location.href = 'guest-list.html';
+    window.location.href = '/pages/guest-list';
   });
   var hireBtn = root.querySelector('.mj-endcta-hire');
   if (hireBtn) hireBtn.addEventListener('click', function () {

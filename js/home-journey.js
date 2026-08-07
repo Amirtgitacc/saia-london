@@ -29,6 +29,37 @@
 
   function goStatic() { if (root) root.classList.add('is-static'); }
 
+  /* ---- #estimate must reach the estimator in EVERY mode ----
+     Desktop keeps the estimator inside a pinned chapter, so a plain anchor sails past it;
+     the flat #estimate section that owns the id is display:none above 767px. And in static
+     mode (reduced motion, WebGL failure, no THREE) every early return below fires before
+     the pinned handler binds, which left the nav CTA and the storefront's /#estimate links
+     dead on desktop. So bind this here, above all of them.
+     Targets the band by [data-journey-pause], never by chapter index. */
+  function wantsFlatEstimator() { return window.matchMedia('(max-width: 767px)').matches; }
+
+  function scrollToEstimate() {
+    const hook = window.SAIA && window.SAIA.__estimateScroll;   // set by the pinned path
+    if (hook) { hook(); return true; }
+    const band = document.querySelector('[data-journey-pause]');
+    if (!band) return false;
+    band.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    return true;
+  }
+
+  // href$= catches the same-page "#estimate" and the storefront's cross-page "/#estimate"
+  document.addEventListener('click', (e) => {
+    const a = e.target && e.target.closest && e.target.closest('a[href$="#estimate"]');
+    if (!a || wantsFlatEstimator()) return;          // mobile: the flat section is visible
+    if (scrollToEstimate()) e.preventDefault();
+  });
+
+  // Arriving from another page: the browser has already jumped to the hidden flat section,
+  // so re-aim once at the estimator that is actually on screen.
+  if (window.location.hash === '#estimate' && !wantsFlatEstimator()) {
+    window.addEventListener('load', () => setTimeout(scrollToEstimate, 0));
+  }
+
   if (!wrap || !canvas || !THREE || !mat) { goStatic(); return; }
 
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -406,18 +437,14 @@
     });
   }
 
-  /* The nav CTA links to #estimate. On desktop the estimator now lives INSIDE the pinned
-     journey (chapter 4), so a plain anchor jump would sail past it to the mobile-only flat
-     copy. Scroll to the chapter instead. Below 767px the pin doesn't run, so the native
-     anchor is correct and we leave it alone. */
+  /* When the pin IS running, the estimator sits inside chapter 4 and has no normal document
+     position, so scrollIntoView would land wrong. Hand the pinned scroll to the single
+     #estimate handler bound at the top of this file rather than listening a second time. */
   function bindEstimateLinks() {
-    document.addEventListener('click', (e) => {
-      const a = e.target.closest && e.target.closest('a[href="#estimate"]');
-      if (!a) return;
-      if (window.matchMedia('(max-width: 767px)').matches) return;   // mobile: native anchor
-      e.preventDefault();
+    window.SAIA = window.SAIA || {};
+    window.SAIA.__estimateScroll = function () {
       window.scrollTo({ top: yForP(STOPS[3]), behavior: 'smooth' });
-    });
+    };
   }
 
   function bindSnap() {

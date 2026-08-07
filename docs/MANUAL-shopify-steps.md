@@ -36,7 +36,23 @@ says £45.
 
 ---
 
-## 2. Archive the one-way courier product
+## 2. Require a phone number at checkout
+
+**Why it matters:** the courier needs a number to call on the day. Right now a real Shopify
+order can be completed with an email address alone. This is a Shopify setting, so code
+cannot do it.
+
+1. Shopify admin → **Settings** → **Checkout**.
+2. Find the **Customer contact method** / **Customer information** section.
+3. Set **Shipping address phone number** to **Required**.
+4. Save.
+
+**How you know it worked:** run through checkout on the preview and confirm the phone field
+shows as mandatory, and that leaving it blank blocks the order.
+
+---
+
+## 3. Archive the one-way courier product
 
 The £45 rate had a matching hidden product. Nothing adds it to a cart any more, but leaving
 it published means someone could still find it.
@@ -52,7 +68,7 @@ Active and the one-way as Archived.
 
 ---
 
-## 3. Add three environment variables in Vercel
+## 4. Add three environment variables in Vercel
 
 Without these, Cristina's chat transcript page shows an error and never opens.
 
@@ -62,14 +78,23 @@ Without these, Cristina's chat transcript page shows an error and never opens.
 
    | Name | Value | What it does |
    |---|---|---|
-   | `BLOB_READ_WRITE_TOKEN` | see step 3a | Lets the site save chat transcripts |
+   | `BLOB_READ_WRITE_TOKEN` | see 4a below | Lets the site save chat transcripts |
    | `CHAT_LOG_PASSWORD` | a password you choose | What Cristina types to read them |
    | `CHAT_LOG_SECRET` | a long random string | Keeps her login cookie tamper-proof |
 
-   Optional: `RL_CHATLOG_PER_15` limits password attempts. Leave it out and it allows 10
-   tries per 15 minutes, which is a sensible default.
+   Optional: `RL_CHATLOG_PER_15` limits password attempts. Left out, it allows 10 tries per
+   15 minutes.
 
-   **3a. Getting the blob token:** in the same Vercel project go to the **Storage** tab →
+   > ⚠️ **Choose a strong password — the attempt limit is weaker than it looks.** Vercel runs
+   > the site across many short-lived server instances, and the limiter counts attempts
+   > *per instance*, not globally. Someone guessing in bulk gets more than 10 tries per 15
+   > minutes in practice. The transcripts contain customers' names, postcodes and email
+   > addresses, so treat this like a real account password: use a generated one of 16+
+   > characters from a password manager, not a memorable phrase. Making the limit global
+   > would need a shared store (Upstash or Vercel KV) and is a developer job — worth asking
+   > for if this page is ever opened up beyond Cristina.
+
+   **4a. Getting the blob token:** in the same Vercel project go to the **Storage** tab →
    **Create** → **Blob** → name it `saia-chat-logs`. Vercel then offers to connect it to the
    project, which creates `BLOB_READ_WRITE_TOKEN` for you automatically. If it does, you can
    skip adding that one by hand.
@@ -87,9 +112,9 @@ missing or the redeploy has not finished.
 
 ---
 
-## 4. Give Cristina the transcript page
+## 5. Give Cristina the transcript page
 
-Once step 3 works, send her:
+Once step 4 works, send her:
 
 - the link: `https://saia-london.vercel.app/chat-log.html`
 - the password you chose
@@ -102,7 +127,7 @@ She only needs to type it once every 8 hours.
 
 ---
 
-## 5. Check the courier price still agrees in three places
+## 6. Check the courier price still agrees in three places
 
 Only relevant if you ever change the £90. All three must match or a customer sees a
 different delivery price depending on how they reached checkout:
@@ -116,7 +141,7 @@ knows all three exist.
 
 ---
 
-## 6. Publish the theme (when you are ready)
+## 7. Publish the theme (when you are ready)
 
 The work is on draft theme **182035448187**. Publishing is your call and is not part of this
 release.

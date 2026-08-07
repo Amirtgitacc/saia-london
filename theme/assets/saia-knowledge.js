@@ -153,9 +153,38 @@
     }
   };
 
+  /* Two brains write hire.date in two shapes: the estimator's <input type="date"> gives
+     ISO, while the concierge stores "16 July 2026" (planner.js, and the Tier-2 prompt
+     orders DAY MONTH YEAR). Accept both, and formatDate's own "Thu 16 July 2026" output
+     so a date can round-trip. Anything vague ("Saturday", "next month") stays null on
+     purpose: a booking must never invent a day. */
+  var MONTH_FULL = ['january', 'february', 'march', 'april', 'may', 'june',
+    'july', 'august', 'september', 'october', 'november', 'december'];
+  var DMY_RE = /^(?:[a-z]{3,9}\s+)?(\d{1,2})\s+([a-z]{3,9})\s+(\d{4})$/i;
+
+  KB.toISODate = function (s) {
+    var str = String(s == null ? '' : s).trim();
+    if (ISO_RE.test(str)) return str;
+    var m = DMY_RE.exec(str);
+    if (!m) return null;
+    var name = m[2].toLowerCase();
+    var mi = -1;
+    for (var i = 0; i < 12; i++) {
+      if (MONTH_FULL[i] === name || MONTH_FULL[i].slice(0, 3) === name) { mi = i; break; }
+    }
+    if (mi < 0) return null;
+    var day = parseInt(m[1], 10);
+    var year = parseInt(m[3], 10);
+    var d = new Date(Date.UTC(year, mi, day));
+    // rejects impossible days ("32 July") that Date would otherwise roll into next month
+    if (d.getUTCDate() !== day || d.getUTCMonth() !== mi || d.getUTCFullYear() !== year) return null;
+    var p2 = function (n) { return (n < 10 ? '0' : '') + n; };
+    return year + '-' + p2(mi + 1) + '-' + p2(day);
+  };
+
   KB.deriveDates = function (hire, todayISO) {
     hire = hire || {};
-    var event = ISO_RE.test(String(hire.date || '')) ? hire.date : null;
+    var event = KB.toISODate(hire.date);
     if (!event) return null;
     var days = Math.max(KB.hire.hireDays, parseInt(hire.days, 10) || KB.hire.hireDays);
     return {

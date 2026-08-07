@@ -168,6 +168,21 @@ Delivery is by **Addison Lee** courier from the NW3 base (pickup from NW3 is fre
 `theme/` is the on-brand Shopify theme (store `saialondon`, draft theme **182035448187**; live
 theme is still the old "Motion" until publish day). `theme/assets/` carries copies of the shared
 `js/` files (knowledge, planner, shopify-cart, checkout-handoff) — **re-copy them after editing
-the originals**; `concierge-core.js`/`saia-examples.js` are server-side only. `index.liquid`
-mirrors the `index.html` estimator — estimator edits must land in both. Push with
+the originals**; `concierge-core.js`/`saia-examples.js`/`log-core.js`/`http-guard.js` are
+server-side only and must never appear in `theme/assets/`. `index.liquid` mirrors the
+`index.html` estimator — estimator edits must land in both. Push with
 `npx shopify theme push --store saialondon --theme 182035448187 --path theme --only <files>`.
+
+> ⚠️ **`home-mobile-journey.js` is NOT a plain copy.** A bare `cp js/… theme/assets/…` breaks
+> the mobile storefront silently. `tools/shopify-port/port.mjs` rewrites two literals in it,
+> and they must survive every re-copy:
+>
+> | in `js/` | in `theme/assets/` |
+> |---|---|
+> | `import { GLTFLoader } from '../vendor/GLTFLoader.js';` | `from './GLTFLoader.js';` |
+> | `window.location.href = 'guest-list.html';` | `= '/pages/guest-list';` |
+>
+> There is no `theme/vendor/`, so the unported import 404s, `initMobileJourney()` never runs,
+> and on ≤767px the home page loses the journey that *replaces* its hero and hire bands — an
+> empty page, with nothing in the console pointing at the cause. After any sync, check:
+> `grep -n "vendor/\|guest-list.html" theme/assets/home-mobile-journey.js` must return nothing.
