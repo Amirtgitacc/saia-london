@@ -34,10 +34,22 @@
   var sum = el('div', 'card');
   sum.appendChild(el('h2', null, 'Order summary'));
   var head = (hire.mats || 0) + ' mats · ' + (hire.days || 2) + '-day hire · ' +
-    (hire.method === 'pickup' ? 'collect from NW3' : ('delivery ' + String(hire.postcode || '').toUpperCase())) +
-    (hire.date ? (' · ' + hire.date) : '');
-  // head carries user-supplied postcode/date — set as text, never innerHTML.
+    (hire.method === 'pickup' ? 'collect from NW3' : ('delivery ' + String(hire.postcode || '').toUpperCase()));
+  // head carries a user-supplied postcode — set as text, never innerHTML.
   var headEl = el('div', 'muted'); headEl.textContent = head; sum.appendChild(headEl);
+
+  // four dates on every booking: one entered, three derived
+  var dates = KB.deriveDates ? KB.deriveDates(hire) : null;
+  if (dates) {
+    var dateLabels = KB.dateLabels(hire);
+    [['Booked', dates.booking], ['Event', dates.event],
+      [dateLabels.delivery, dates.delivery], [dateLabels.collection, dates.collection]].forEach(function (pair) {
+      var r = el('div', 'row');
+      r.appendChild(el('span', null, pair[0]));
+      var v = el('span'); v.textContent = KB.formatDate(pair[1]); r.appendChild(v);
+      sum.appendChild(r);
+    });
+  }
   q.lines.forEach(function (l) {
     var r = el('div', 'row');
     r.appendChild(el('span', null, l.label + ' <span class="d">' + l.detail + '</span>'));
@@ -54,13 +66,13 @@
   // details + payment form
   var form = el('div', 'card');
   form.appendChild(el('h2', null, 'Your details'));
-  var needDate = !hire.date;   // estimator handoff has no date — collect it here
-  form.innerHTML += '<label>Name *</label><input id="f-name" autocomplete="name">' +
-    (needDate ? '<label>Event date *</label><input id="f-date" type="date">' : '') +
-    '<label>Address *</label><input id="f-addr" autocomplete="street-address">' +
-    '<label>Email</label><input id="f-email" type="email" autocomplete="email">' +
-    '<label>Phone</label><input id="f-phone" type="tel" autocomplete="tel">' +
-    '<div class="muted">* required · add an email or phone so we can confirm your booking.</div>' +
+  var needDate = !/^\d{4}-\d{2}-\d{2}$/.test(String(hire.date || ''));   // need a real ISO date to derive from
+  form.innerHTML += '<label for="f-name">Name *</label><input id="f-name" autocomplete="name">' +
+    (needDate ? '<label for="f-date">Event date *</label><input id="f-date" type="date">' : '') +
+    '<label for="f-addr">Address *</label><input id="f-addr" autocomplete="street-address">' +
+    '<label for="f-email">Email</label><input id="f-email" type="email" autocomplete="email">' +
+    '<label for="f-phone">Phone *</label><input id="f-phone" type="tel" autocomplete="tel" required>' +
+    '<div class="muted">* required. We need a phone number so the courier can reach you on the day.</div>' +
     '<h2 style="margin-top:18px">Payment · demo, no real charge</h2>' +
     '<div class="grid"><input placeholder="Card number" inputmode="numeric"><input placeholder="MM/YY"><input placeholder="CVC"></div>';
   var pay = el('button', 'pay', 'Pay ' + money(q.total) + ' →');
@@ -70,15 +82,17 @@
 
   // success panel
   var ok = el('div', 'ok');
-  ok.innerHTML = '<h2>Booking received</h2><p class="muted">Thank you. We\'ll confirm your courier and be in touch shortly. (This is a demo — no payment was taken.)</p>';
+  ok.innerHTML = '<h2>Booking received</h2><p class="muted">Thank you. We\'ll confirm your courier and be in touch shortly. (This is a demo, no payment was taken.)</p>';
   root.appendChild(ok);
 
   var name = document.getElementById('f-name');
   var addr = document.getElementById('f-addr');
+  var phone = document.getElementById('f-phone');
   var date = document.getElementById('f-date');   // null unless needDate
-  function check() { pay.disabled = !(name.value.trim() && addr.value.trim() && (!date || date.value)); }
-  name.addEventListener('input', check);
-  addr.addEventListener('input', check);
+  function check() {
+    pay.disabled = !(name.value.trim() && addr.value.trim() && phone.value.trim() && (!date || date.value));
+  }
+  [name, addr, phone].forEach(function (f) { f.addEventListener('input', check); });
   if (date) { date.addEventListener('input', check); date.addEventListener('change', check); }
 
   pay.addEventListener('click', function () {

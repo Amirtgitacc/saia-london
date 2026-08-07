@@ -35,13 +35,14 @@
       depositPerMat: 1.5,                   // £ per mat, REFUNDABLE — returned after mats come back
       depositRefundable: true,
       maxMats: 50,                          // hard ceiling: our current stock
-      delivery: 'Same-day Addison Lee courier from our NW3 base — £90 flat across London for delivery plus same-day collection after your event (the usual choice), or £45 delivery-only if you bring the mats back to NW3 yourself. Free if you pick up and return from NW3. We work to a 6-hour delivery window, so early or morning events are usually delivered the day before.',
+      delivery: 'Same-day Addison Lee courier from our NW3 base, £90 flat across London for delivery plus same-day collection after your event. Or collect from and return to our NW3 base yourself, which is free. It is one or the other: either we handle both journeys or you do. We work to a 6-hour delivery window, so early or morning events are usually delivered the day before.',
       deliveryWindow: 6,                    // hours
       collection: 'We collect on the day of your event, once it has finished and the mats are rolled up, bagged and stacked ready for the courier. Leave a little time to pack up afterwards, as a small charge can apply if the courier is kept waiting. No cleaning needed, we take care of that. You can also drop them back at our NW3 warehouse in working hours.',
       twoDayBasis: 'The hire is charged as a 2-day hire even when the mats are delivered and collected on the same day, because we reserve the mats for you and hold a 6-hour delivery window.',
       overnightStorage: "If your venue can't take a delivery the day before, we can deliver to your office, home or a colleague instead, and you bring the mats over on the day.",
       accessories: 'We hire yoga mats only. We do not offer blocks, bolsters, blankets or any other props.',
       noSale: true,                         // HIRE ONLY — never for sale
+      bespoke: 'Studios can commission bespoke mats made to order, in their own colours and branding. That is by enquiry only, by email to Cristina@saialondon.com, and never priced online.',
       retailReference: 79,                  // £ retail value, reference only (not for sale)
       mat: {
         size: '68 × 185 cm, 4 mm thick',
@@ -65,7 +66,7 @@
       instructor: 'Cristina',
       method: 'Classical Pilates and Reformer: small, slow and breath-led, drawn from Joseph Pilates’ Contrology. Pilates for women, every level; Cristina meets you where you are.',
       format: '1-2-1 classes in NW3 and group classes in Hampstead, London.',
-      booking: 'For a 1-2-1, tell me a day or two that suit and I’ll put a request to Cristina, who confirms directly. Group classes run as occasional events — join the waitlist with your email and you’ll be first to hear when a session opens.',
+      booking: 'For a 1-2-1, tell me a day or two that suit and I’ll put a request to Cristina, who confirms directly. Group classes run as occasional events. Join the waitlist with your email and you’ll be first to hear when a session opens.',
     },
 
     /* ---- FOUNDER ---- */
@@ -86,17 +87,17 @@
 
     /* ---- PARTNERSHIPS (small business — measured, personal) ---- */
     collab: "We love supporting other businesses, but as a small business ourselves we're not taking on collaborations right now. If you'd like to create content featuring our mats, tag @saialondon and send it over, and we're happy to offer a 10% refund once we've received the agreed content.",
-    affiliate: "We do have an affiliate programme. Email Cristina at Cristina@saialondon.com and she'll talk you through the details and set you up personally.",
+    affiliate: 'We do have an affiliate programme. Email us at Cristina@saialondon.com and we will talk you through the details and set you up personally.',
   };
 
   /* ---- delivery zones + pricing (single source, lifted from the home estimator) ----
      Flat London courier pricing, matched 1:1 to the Shopify "Courier delivery" product:
-       twoWay £90 = delivery + same-day collection (the DEFAULT — always ask, default to this)
-       oneWay £45 = delivery only, customer returns the mats to NW3 themselves
-     Zones only decide the label and the outside-London → quote-by-WhatsApp case now. */
+       twoWay £90 = delivery + same-day collection. This is the ONLY courier option —
+       either we handle both legs, or the customer handles both legs by collecting from
+       and returning to NW3 (free). There is no mixed "we deliver, you return" option.
+     Zones only decide the label and the outside-London → quote-by-WhatsApp case. */
   KB.delivery = {
     twoWay: 90,
-    oneWay: 45,
     zones: {
       central: { key: 'central', label: 'Zone 1 · Central London' },
       greater: { key: 'greater', label: 'Zone 2 · Greater London' },
@@ -120,6 +121,64 @@
     return { key: 'outside', label: 'outside' };
   };
 
+  /* ---- booking dates ----------------------------------------------------------
+     Every booking carries four dates. The customer enters ONE (the event date);
+     the other three are derived, so there is nothing extra to ask for.
+       booking    = the day the order was placed
+       event      = what the customer told us (the START of the event)
+       delivery   = the day before the event (our 2-day hire basis)
+       collection = the event day, plus any extra days beyond the 2-day base
+     All maths runs on the Y/M/D parts as plain integers. Do NOT round-trip these
+     through Date.toISOString(): a London date near a clock change slips by a day. */
+  var DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  var MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  var ISO_RE = /^(\d{4})-(\d{2})-(\d{2})$/;
+
+  // 'YYYY-MM-DD' + n days -> 'YYYY-MM-DD'. Uses UTC internally so no DST shift is possible.
+  function shiftISO(iso, n) {
+    var m = ISO_RE.exec(iso || '');
+    if (!m) return null;
+    var d = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3]));
+    d.setUTCDate(d.getUTCDate() + n);
+    var mm = d.getUTCMonth() + 1, dd = d.getUTCDate();
+    return d.getUTCFullYear() + '-' + (mm < 10 ? '0' : '') + mm + '-' + (dd < 10 ? '0' : '') + dd;
+  }
+
+  KB.todayISO = function () {
+    // 'en-CA' formats as YYYY-MM-DD; the timeZone keeps it a London date, not a UTC one.
+    try {
+      return new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/London' });
+    } catch (e) {
+      return new Date().toISOString().slice(0, 10);
+    }
+  };
+
+  KB.deriveDates = function (hire, todayISO) {
+    hire = hire || {};
+    var event = ISO_RE.test(String(hire.date || '')) ? hire.date : null;
+    if (!event) return null;
+    var days = Math.max(KB.hire.hireDays, parseInt(hire.days, 10) || KB.hire.hireDays);
+    return {
+      booking: ISO_RE.test(String(todayISO || '')) ? todayISO : KB.todayISO(),
+      event: event,
+      delivery: shiftISO(event, -1),
+      collection: shiftISO(event, days - KB.hire.hireDays),
+    };
+  };
+
+  KB.formatDate = function (iso) {
+    var m = ISO_RE.exec(iso || '');
+    if (!m) return '';
+    var d = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3]));
+    return DAY_NAMES[d.getUTCDay()] + ' ' + (+m[3]) + ' ' + MONTH_NAMES[+m[2] - 1] + ' ' + m[1];
+  };
+
+  KB.dateLabels = function (hire) {
+    return (hire && hire.method === 'pickup')
+      ? { delivery: 'Pickup from NW3', collection: 'Return to NW3' }
+      : { delivery: 'Delivery date', collection: 'Collection date' };
+  };
+
   // full hire price — the ONE place totals are computed
   KB.priceHire = function (hire) {
     var H = KB.hire;
@@ -131,17 +190,18 @@
     var matCost = mats * H.pricePerMat + mats * H.extraDayPerMat * Math.max(0, days - H.hireDays);
     var deposit = mats * H.depositPerMat;
 
-    // collection: 'two' = courier both ways (DEFAULT), 'one' = delivery only, they return the mats
-    var oneWay = hire.collection === 'one';
+    // Delivery is symmetric: we do both legs (£90 flat London) or the customer does both
+    // legs (free NW3 pickup). hire.collection is legacy and deliberately ignored — an old
+    // sessionStorage hire carrying collection:'one' must not resurrect a £45 price.
     var deliveryCost = null, deliveryLabel = null, quoteOnly = false;
     if (hire.method === 'pickup') {
       deliveryCost = 0; deliveryLabel = 'Pickup from NW3 · free';
     } else if (hire.zone === 'outside') {
       deliveryCost = null; deliveryLabel = 'Courier · by quote'; quoteOnly = true;
     } else if (hire.zone === 'central' || hire.zone === 'greater') {
-      deliveryCost = oneWay ? KB.delivery.oneWay : KB.delivery.twoWay;
-      deliveryLabel = (oneWay ? 'Courier · delivery only, you return the mats' : 'Courier · delivery + same-day collection')
-        + ' · ' + (hire.zone === 'central' ? 'Central London' : 'Greater London');
+      deliveryCost = KB.delivery.twoWay;
+      deliveryLabel = 'Courier · delivery + same-day collection · '
+        + (hire.zone === 'central' ? 'Central London' : 'Greater London');
     }
 
     var total = (deliveryCost == null) ? null : matCost + deliveryCost + deposit;
@@ -178,9 +238,9 @@
     }
     if (q.deliveryLabel) {
       lines.push({
-        label: hire.collection === 'one' ? 'Delivery only' : 'Delivery & collection',
+        label: 'Delivery & collection',
         detail: q.deliveryLabel,
-        value: q.deliveryCost == null ? 'confirmed by Cristina' : (q.deliveryCost === 0 ? 'free' : money(q.deliveryCost)),
+        value: q.deliveryCost == null ? 'confirmed by us' : (q.deliveryCost === 0 ? 'free' : money(q.deliveryCost)),
       });
     }
     lines.push({ label: 'Refundable deposit', detail: mats + ' × ' + money(H.depositPerMat), value: money(q.deposit) });
@@ -197,7 +257,7 @@
     var days = parseInt(hire.days, 10) || H.hireDays;
     var loc = hire.method === 'pickup' ? 'collecting from NW3' : ('delivery to ' + String(hire.postcode || '').toUpperCase());
     var sum = q.total != null ? (money(q.total) + ' total') : (money(q.subtotal) + ' plus courier to confirm');
-    return 'Hi Cristina! I would like to book ' + mats + ' mats for ' + days + ' days, ' + loc +
+    return 'Hi! I would like to book ' + mats + ' mats for ' + days + ' days, ' + loc +
       (hire.date ? (', on ' + hire.date) : '') + '. ' + sum + '. Please confirm availability.';
   };
 
@@ -210,18 +270,19 @@
     '',
     '### Mat hire (your #1 priority: this is what most people want)',
     '- Mats are for HIRE ONLY. Never for sale.',
+    '- ONE exception to hire-only: studios can commission BESPOKE mats made to order. ' + KB.hire.bespoke + ' Never quote a price for bespoke mats, and never invent one.',
     '- ' + KB.hire.currency + KB.hire.pricePerMat.toFixed(2) + ' per mat for a ' + KB.hire.hireDays + '-day hire (the day before the event through the end of it).',
     '- Minimum ' + KB.hire.minMats + ' mats. Maximum ' + KB.hire.maxMats + ' (our current stock). Extra days are ' + KB.hire.currency + KB.hire.extraDayPerMat.toFixed(2) + ' per mat per day.',
     '- If someone needs more than ' + KB.hire.maxMats + ' mats, ask whether their classes run in staggered sessions (the same ' + KB.hire.maxMats + ' can be reused between groups). If everyone needs a mat at the same time, we cannot go beyond ' + KB.hire.maxMats + '. Never book past ' + KB.hire.maxMats + '.',
     '- A ' + KB.hire.currency + KB.hire.depositPerMat.toFixed(2) + ' per mat REFUNDABLE deposit is taken upfront and returned once the mats come back. It is not a hire cost.',
     '- Delivery: ' + KB.hire.delivery,
-    '- Delivery choices (always ask which they want before quoting a delivery): courier BOTH ways at ' + KB.hire.currency + KB.delivery.twoWay + ' (delivery + same-day collection — the default, and what most people want), or delivery-only at ' + KB.hire.currency + KB.delivery.oneWay + ' if they will return the mats to NW3 themselves. NW3 pickup is free. Outside London is quoted by Cristina.',
+    '- Delivery is symmetric, and there are only two options: our courier does BOTH journeys at ' + KB.hire.currency + KB.delivery.twoWay + ' flat across London (delivery plus same-day collection), or the customer does both journeys by collecting from and returning to NW3, which is free. There is no mixed option where we deliver and they return the mats. Outside London is quoted by us.',
     '- Collection: ' + KB.hire.collection,
     '- Two-day basis: ' + KB.hire.twoDayBasis,
     '- Overnight storage: ' + KB.hire.overnightStorage,
     '- Accessories: ' + KB.hire.accessories,
     '- The mat: ' + KB.hire.mat.size + ', ' + KB.hire.mat.colour + ', ' + KB.hire.mat.material + '; ' + KB.hire.mat.features + '. (Retail value ~' + KB.hire.currency + KB.hire.retailReference + ' each, for reference only, still hire-only.)',
-    '- Booking/urgent: email ' + KB.contact.person + ' at ' + KB.contact.email + '. Pickup at ' + KB.contact.pickup + '.',
+    '- Booking/urgent: email us at ' + KB.contact.email + '. Pickup at ' + KB.contact.pickup + '.',
     '',
     '### Community / the club (#2)',
     '- ' + KB.club.ethos,
@@ -240,7 +301,7 @@
     '- Affiliates: ' + KB.affiliate,
     '',
     '### Contact',
-    '- Email ' + KB.contact.person + ': ' + KB.contact.email + ' · Instagram ' + KB.contact.social.instagram + ' · ' + KB.contact.area + ' (' + KB.contact.pickup + ').',
+    '- Email us: ' + KB.contact.email + ' · Instagram ' + KB.contact.social.instagram + ' · ' + KB.contact.area + ' (' + KB.contact.pickup + ').',
   ].join('\n');
 
   return KB;

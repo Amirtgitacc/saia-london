@@ -30,21 +30,33 @@
     // courier as a REAL cart line (priced by its Shopify variant), so the delivery the
     // guest chose in the estimator/assistant is in the total before checkout — the
     // checkout shipping rate is then the free "already included" one (weight-gated).
-    var oneWay = hire.collection === 'one';
+    // There is exactly ONE courier option: we do both legs. hire.collection is legacy
+    // and ignored, so a stale session can never resurrect the deleted one-way variant.
     var inLondon = hire.zone === 'central' || hire.zone === 'greater';
-    var courierVariant = oneWay ? cfg.courierOneWayVariant : cfg.courierTwoWayVariant;
-    if (hire.method !== 'pickup' && inLondon && courierVariant) lines.push({ variant: courierVariant, qty: 1 });
+    if (hire.method !== 'pickup' && inLondon && cfg.courierTwoWayVariant) {
+      lines.push({ variant: cfg.courierTwoWayVariant, qty: 1 });
+    }
     // pickup hires weigh 0g without a plumbing line, which wrongly shows the paid
-    // £90/£45 fallback shipping rates (weight-gated checkout) — this hidden £0 variant
-    // gives pickup carts the same 1kg signal the courier lines give delivery carts.
+    // £90 fallback shipping rate (weight-gated checkout) — this hidden £0 variant
+    // gives pickup carts the same 1kg signal the courier line gives delivery carts.
     if (hire.method === 'pickup' && cfg.pickupVariant) lines.push({ variant: cfg.pickupVariant, qty: 1 });
+
     var pairs = [];
     function attr(k, v) {
       if (v) pairs.push([k, v]);
     }
-    attr('Event date', hire.date);
+    // four dates on every booking: one asked for, three derived (js/saia-knowledge.js)
+    var dates = kb.deriveDates ? kb.deriveDates(hire, cfg.todayISO) : null;
+    var labels = kb.dateLabels ? kb.dateLabels(hire) : { delivery: 'Delivery date', collection: 'Collection date' };
+    if (dates) {
+      attr('Booking date', kb.formatDate(dates.booking));
+      attr('Event date', kb.formatDate(dates.event));
+      attr(labels.delivery, kb.formatDate(dates.delivery));
+      attr(labels.collection, kb.formatDate(dates.collection));
+    } else {
+      attr('Event date', hire.date);   // free-text date ("Saturday") — pass it through as given
+    }
     attr('Method', hire.method === 'pickup' ? 'Pickup from NW3' : 'Delivery');
-    if (hire.method !== 'pickup') attr('Return journey', oneWay ? 'You return the mats to NW3' : 'Same-day collection by courier');
     attr('Postcode', String(hire.postcode || '').toUpperCase() || null);
     var q = kb.quoteLines(hire);
     attr('Delivery estimate', q.deliveryLabel);

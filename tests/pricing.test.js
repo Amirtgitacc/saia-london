@@ -36,13 +36,6 @@ test('priceHire — 50 mats, 2 days, central delivery (two-way default)', () => 
   assert.strictEqual(q.quoteOnly, false);
 });
 
-test('priceHire — one-way delivery (guest returns the mats) is £45', () => {
-  const q = KB.priceHire({ mats: 50, days: 2, method: 'deliver', zone: 'greater', collection: 'one' });
-  assert.strictEqual(q.deliveryCost, 45);
-  assert.strictEqual(q.total, 545);          // 425 + 45 + 75
-  assert.ok(/delivery only/i.test(q.deliveryLabel));
-});
-
 test('priceHire — extra days add £1.50/mat/day', () => {
   const q = KB.priceHire({ mats: 20, days: 3, method: 'pickup' });
   assert.strictEqual(q.matCost, 200);        // 20*8.5 + 20*1.5*1

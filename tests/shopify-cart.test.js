@@ -11,11 +11,37 @@ test('London delivery adds the two-way courier line by default', () => {
   assert.ok(!url.includes('555:1'));
 });
 
-test('one-way collection choice adds the delivery-only courier line', () => {
+test('a stale collection:"one" still gets the two-way courier line', () => {
   const payload = cartPayload({ mats: 20, days: 2, method: 'deliver', zone: 'greater', collection: 'one', postcode: 'TW5 9QA' }, CFG);
-  assert.ok(payload.items.some(i => i.id === 555 && i.quantity === 1));
-  assert.ok(!payload.items.some(i => i.id === 444));
-  assert.strictEqual(payload.attributes['Return journey'], 'You return the mats to NW3');
+  assert.ok(payload.items.some(i => i.id === 444 && i.quantity === 1));
+  assert.ok(!payload.items.some(i => i.id === 555), 'the one-way variant must never be added');
+  assert.strictEqual(payload.attributes['Return journey'], undefined);
+});
+
+test('a delivery cart carries all four dates', () => {
+  const payload = cartPayload(
+    { mats: 20, days: 2, method: 'deliver', zone: 'central', postcode: 'EC2Y 8DS', date: '2026-03-14' },
+    Object.assign({ todayISO: '2026-03-03' }, CFG));
+  assert.strictEqual(payload.attributes['Booking date'], 'Tue 3 Mar 2026');
+  assert.strictEqual(payload.attributes['Event date'], 'Sat 14 Mar 2026');
+  assert.strictEqual(payload.attributes['Delivery date'], 'Fri 13 Mar 2026');
+  assert.strictEqual(payload.attributes['Collection date'], 'Sat 14 Mar 2026');
+});
+
+test('a pickup cart relabels the two journey dates', () => {
+  const payload = cartPayload(
+    { mats: 20, days: 2, method: 'pickup', date: '2026-03-14' },
+    Object.assign({ todayISO: '2026-03-03' }, CFG));
+  assert.strictEqual(payload.attributes['Pickup from NW3'], 'Fri 13 Mar 2026');
+  assert.strictEqual(payload.attributes['Return to NW3'], 'Sat 14 Mar 2026');
+  assert.strictEqual(payload.attributes['Delivery date'], undefined);
+});
+
+test('a hire with a non-ISO date still builds a cart, with no derived dates', () => {
+  const payload = cartPayload({ mats: 20, days: 2, method: 'pickup', date: 'Saturday' }, CFG);
+  assert.ok(payload.items.length > 0);
+  assert.strictEqual(payload.attributes['Event date'], 'Saturday');
+  assert.strictEqual(payload.attributes['Delivery date'], undefined);
 });
 
 test('pickup and outside-London carts get NO courier line', () => {

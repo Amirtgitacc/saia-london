@@ -341,7 +341,7 @@
     0.000,   // 1 hero — coiled mat
     0.260,   // 2 signature mat, fully unrolled (UNROLL_END 0.22)
     0.410,   // 3 mat hire — van has reached "Collect" (road finishes 0.38)
-    0.520,   // 4 for every gathering — range grid
+    0.520,   // 4 instant quotation — the estimator, at the end of the mat-hire scroll
     0.600,   // 5 flow L1 — stands tall
     0.695,   // 6 flow L2 — reach up
     0.800,   // 7 flow L3 — downward dog
@@ -379,12 +379,50 @@
     const e = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;   // easeInOutCubic
     window.scrollTo(0, snapFrom + (snapTo - snapFrom) * e);
   }
+  /* A form now lives inside a pinned band (the estimator, chapter 4). While the guest is
+     using it, chapter snapping must get out of the way or the page scrolls out from under
+     them mid-postcode. Any [data-journey-pause] subtree sets this on focusin.
+     NOTE: the helper is snapPaused(), not paused() — `paused` is already a module-level
+     let (the render-loop pause flag) and redeclaring it would be a SyntaxError. */
+  window.SAIA = window.SAIA || {};
+  window.SAIA.journeyPaused = false;
+
   function typing(el) {
-    return !!el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable);
+    return !!el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' ||
+      el.tagName === 'SELECT' || el.isContentEditable);
   }
+  function snapPaused() { return !!window.SAIA.journeyPaused; }
+
+  function bindPause() {
+    const zone = wrap.querySelector('[data-journey-pause]');
+    if (!zone) return;
+    zone.addEventListener('focusin', () => { window.SAIA.journeyPaused = true; });
+    zone.addEventListener('focusout', () => {
+      // focusout fires before the new element has focus — defer so a tab between two
+      // fields inside the estimator doesn't flicker the flag off and on.
+      setTimeout(() => {
+        if (!zone.contains(document.activeElement)) window.SAIA.journeyPaused = false;
+      }, 0);
+    });
+  }
+
+  /* The nav CTA links to #estimate. On desktop the estimator now lives INSIDE the pinned
+     journey (chapter 4), so a plain anchor jump would sail past it to the mobile-only flat
+     copy. Scroll to the chapter instead. Below 767px the pin doesn't run, so the native
+     anchor is correct and we leave it alone. */
+  function bindEstimateLinks() {
+    document.addEventListener('click', (e) => {
+      const a = e.target.closest && e.target.closest('a[href="#estimate"]');
+      if (!a) return;
+      if (window.matchMedia('(max-width: 767px)').matches) return;   // mobile: native anchor
+      e.preventDefault();
+      window.scrollTo({ top: yForP(STOPS[3]), behavior: 'smooth' });
+    });
+  }
+
   function bindSnap() {
     window.addEventListener('wheel', (e) => {
-      if (!pinned() || e.ctrlKey) return;
+      if (!pinned() || e.ctrlKey || snapPaused()) return;
       const dir = e.deltaY > 0 ? 1 : e.deltaY < 0 ? -1 : 0;
       if (!dir) return;
       const i = nextStop(dir);
@@ -397,7 +435,7 @@
     }, { passive: false });
 
     window.addEventListener('keydown', (e) => {
-      if (!pinned() || typing(e.target)) return;
+      if (!pinned() || typing(e.target) || snapPaused()) return;
       let dir = 0;
       if (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === ' ') dir = 1;
       else if (e.key === 'ArrowUp' || e.key === 'PageUp') dir = -1;
@@ -410,7 +448,7 @@
 
     window.addEventListener('touchstart', (e) => { touchY = e.touches[0].clientY; }, { passive: true });
     window.addEventListener('touchmove', (e) => {
-      if (touchY == null || !pinned()) return;
+      if (touchY == null || !pinned() || snapPaused()) return;
       const dy = touchY - e.touches[0].clientY;
       if (Math.abs(dy) < 30) return;
       const i = nextStop(dy > 0 ? 1 : -1);
@@ -444,6 +482,11 @@
       const kout = koutL * koutL * (3 - 2 * koutL);
       let k = Math.min(kin, kout); if (p < a - 0.001 || p > b + 0.001) k = 0;
       e.style.opacity = k.toFixed(3);
+      // A faded-out band is invisible but still tabbable. One of these bands holds the
+      // estimator form, so leaving it focusable would drop keyboard users into a form they
+      // cannot see. inert removes the whole subtree from the tab order and the a11y tree.
+      e.toggleAttribute('inert', k < 0.02);
+      if (k < 0.02 && e.contains(document.activeElement)) document.activeElement.blur();
       const inner = e.firstElementChild;
       if (inner) {
         // blur-settle, DECOUPLED from opacity: heavy focus-in blur that resolves into clarity,
@@ -569,6 +612,8 @@
 
     clock = new THREE.Clock();
     bindSnap();
+    bindEstimateLinks();
+    bindPause();
     const loop = (now) => {
       if (!paused && visible) {
         stepSnap(now || performance.now());
