@@ -50,10 +50,19 @@ send(text)
 
 Every chat turn (user, bot + tier, action lines) is fired from `js/home-concierge.js` to
 `POST /api/log` (fire-and-forget; endpoint derived from `conciergeEndpoint`). `js/log-core.js`
-(shared by `api/log.js` + `server.js`) validates and inserts into the Supabase `chat_logs`
-table — needs `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` env vars; without them rows are
-printed to the local server console / dropped in prod. Review conversations in the Supabase
-dashboard, grouped by `session_id`.
+(shared by `api/log.js` + `server.js`) validates and writes each turn to **Vercel Blob** —
+needs `BLOB_READ_WRITE_TOKEN`; without it rows are printed to the local server console /
+dropped in prod.
+
+Cristina reads conversations at **`/chat-log.html`**, a password-gated page backed by
+`GET /api/chat-log`. It needs `CHAT_LOG_PASSWORD` + `CHAT_LOG_SECRET` (and optionally
+`RL_CHATLOG_PER_15`, default 10 attempts per 15 min); without them the endpoint returns 503.
+The password buys an 8-hour HMAC cookie, so she types it once a day.
+
+> **Privacy — do not weaken.** Vercel Blob URLs are public-but-unguessable, and transcripts
+> carry names, postcodes and email addresses. Two mitigations are load-bearing: blobs are
+> written with `addRandomSuffix: true`, and **no blob URL is ever returned to the browser**
+> (`/api/chat-log` serves transcript *content* only). Never add a "download the raw file" link.
 
 ## Single source of truth: `js/saia-knowledge.js`
 
@@ -73,13 +82,18 @@ they can never disagree. **Change a fact once, here, and both brains update.** D
   examples beats hundreds of hardcoded scripts. Keep `say` to 1–3 warm British sentences and
   never put a computed price in it (emit an action instead).
 - **Change a fact/price/number:** edit `js/saia-knowledge.js` only.
-- **Booking math** lives in `applyActions()` in `planner.js` — shared by both tiers; the 13
-  tools are: `add_mats, set_event, recommend, set_date, set_collection, quote, book_delivery,
-  checkout, confirm, rsvp_event, request_pilates, join_pilates_list, join_newsletter`. Pilates is
-  **not** instant-booked: 1-2-1 → `request_pilates` (request to Cristina); group classes are
-  occasional events → `join_pilates_list` (email waitlist, updates when a session opens).
-  For delivery, the return journey (`set_collection`, two-way vs one-way) is a **required slot**
-  asked before quoting — slot order: mats → days → method → postcode → collection → date.
+- **Booking math** lives in `applyActions()` in `planner.js` — shared by both tiers; the 15
+  tools are: `add_mats, set_days, set_method, set_postcode, set_event, recommend, set_date,
+  quote, book_delivery, checkout, confirm, rsvp_event, request_pilates, join_pilates_list,
+  join_newsletter`. Pilates is **not** instant-booked: 1-2-1 → `request_pilates` (request to
+  Cristina); group classes are occasional events → `join_pilates_list` (email waitlist,
+  updates when a session opens).
+  There is **no return-journey slot**: `set_collection` was removed and `hire.collection` no
+  longer exists, because the delivery method already decides both journeys. Slot order:
+  mats → days → method → postcode → date.
+  Keep this list in sync with `TOOLS` in `js/concierge-core.js` — that array is what Tier 2 is
+  allowed to emit, and a tool advertised there but missing from `applyActions()` is silently
+  ignored at runtime.
 
 ## The concierge front end
 
@@ -94,6 +108,12 @@ they can never disagree. **Change a fact once, here, and both brains update.** D
 
 - Mats are **HIRE ONLY — never "buy"/"for sale"**. £8.50/mat, 2-day hire, **min 10, max 50**
   (our current stock — no bulk discount; over 50 → suggest staggered/reused sessions, never book past 50).
+  **One exception:** studios can commission **bespoke mats made to order**, in their own colours
+  and branding — **enquiry only, by email** to Cristina@saialondon.com. No price, no online
+  purchase, no checkout path. The concierge must never quote or invent a bespoke price.
+- Say **"us"/"we"** in every contact instruction and service promise ("email us", "talk to us",
+  "we confirm timings"). Keep Cristina's name for biography, her role as the Pilates instructor,
+  page/nav titles, filenames and the email address itself. She is a person, not a mascot.
 - Collection is **same day, after the event** (mats rolled, bagged, stacked; waiting charge if the
   courier waits) — **not** "the day after". Even same-day delivery+collection is charged as the 2-day hire.
 - Voice: warm, female-led, unpretentious, British English. English-only project.
@@ -111,29 +131,32 @@ they can never disagree. **Change a fact once, here, and both brains update.** D
 Tier-2 assist uses `claude-haiku-4-5` (fast, fires only on the long tail). Override with
 `SAIA_MODEL` in `.env`. Key stays server-side; it never reaches the browser.
 
-## Delivery — flat London courier, chosen BEFORE checkout
+## Delivery — symmetric, flat London courier, chosen BEFORE checkout
 
 Delivery is by **Addison Lee** courier from the NW3 base (pickup from NW3 is free). Hire facts:
 £8.50/mat, 2-day base, **+£1.50/mat per extra day**, **min 10, max 50** (no bulk discount).
 
-- **Pricing model (LIVE):** flat across London — **£90 delivery + same-day collection** (the
-  DEFAULT, "two-way") or **£45 delivery-only** ("one-way", customer returns mats to NW3).
-  Outside London → WhatsApp quote. Old per-zone "from £35/£45" estimates are gone; postcode
-  zones now only pick the label + the outside-London case. Prices live in
-  `KB.delivery.twoWay/oneWay` in `js/saia-knowledge.js`.
-- **The choice is made in the estimator/assistant, never at checkout.** The `index.html`
-  estimator (`.saia-est-stage` "Spotlight" section) has an "After your event" toggle
-  (two-way pre-selected); the concierge asks via `set_collection`; `hire.collection` =
-  `'two' | 'one'`.
+- **Pricing model (LIVE): delivery is symmetric.** Either **we handle both journeys**
+  (**£90 flat across London**, delivery + same-day collection) or **the customer handles both**
+  (free pickup from, and return to, NW3). There is **no mixed option** — the old £45
+  delivery-only price is gone. Outside London → WhatsApp quote. Postcode zones now only pick
+  the label + the outside-London case. The price lives in `KB.delivery.twoWay` in
+  `js/saia-knowledge.js`.
+- **The choice IS the delivery method**, made in the estimator or the assistant, never at
+  checkout. `hire.method` is `'deliver' | 'pickup'`. `hire.collection` and the `set_collection`
+  tool no longer exist; a stale `hire.collection` on an old saved hire is deliberately ignored
+  and still prices as two-way.
 - **In the cart it's a real line item** — `js/shopify-cart.js` adds the hidden "Courier
-  delivery" product (variant IDs in theme settings `variant_courier_two_way` /
-  `variant_courier_one_way`, exposed via `saia-boot.liquid`). Courier variants weigh 1kg,
-  everything else 0g, and the shipping profile is **weight-gated**: carts WITH a courier line
-  get the free "Courier — already included in your hire total" rate; carts without one (direct
-  product-page buys) get paid £90/£45 rates. No free-shipping loophole from either side.
-- **Changing the courier price = three places, all must match:** `KB.delivery` in
-  `js/saia-knowledge.js`, the two Shopify variant prices, and the paid fallback rates in the
-  "SAÏA mat hire (checkout plumbing)" shipping profile.
+  delivery" product (variant ID in theme setting `variant_courier_two_way`, exposed via
+  `saia-boot.liquid`). Courier variants weigh 1kg, everything else 0g, and the shipping profile
+  is **weight-gated**: carts WITH a courier line get the free "Courier — already included in
+  your hire total" rate; carts without one (direct product-page buys) get the paid £90 rate.
+  No free-shipping loophole from either side.
+- **Changing the courier price = three places, all must match** (get one wrong and a customer
+  sees a different delivery price depending on how they reached checkout):
+  1. `KB.delivery.twoWay` in `js/saia-knowledge.js`
+  2. the Shopify two-way courier variant price
+  3. the paid fallback rate in the "SAÏA mat hire (checkout plumbing)" shipping profile
 - **LATER — live Addison Lee rates:** the official **AL Shopify app** is installed but in TEST
   mode (real zonal prices ≈ £14–20 +VAT per leg). Blockers: AL must answer the van question
   (app has no vehicle-size concept; 10–50 mats need a van), and live *dynamic* rates need the

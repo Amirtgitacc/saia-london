@@ -126,7 +126,7 @@
       text = 'Tell me about your event and I’ll help with the mats. How many are you expecting?';
       chips = INTENT_CHIPS;
     } else if (mode === 'studio') {
-      text = 'A studio, wonderful. Tell me your studio name, the days you need mats and roughly how many, and I’ll arrange a recurring rate. Prefer to talk it through? Email Cristina at ' + EMAIL + '.';
+      text = 'A studio, wonderful. We hire mats for studio events on the same £8.50 rate, and for studios we also make bespoke mats to order in your own colours and branding. Tell me your studio name, the days you need mats and roughly how many. For bespoke, email us at ' + EMAIL + '.';
       chips = [{ label: 'Around 40 mats', q: 'I need 40 mats' }];
     } else if (mode === 'estimate') {
       text = 'Let’s turn your estimate into a booking.';
@@ -229,10 +229,10 @@
     totalLine.appendChild(el('span', BASKET_TOTAL, q.quoteOnly ? money(q.subtotal) : money(q.total)));
     wrap.appendChild(totalLine);
     wrap.appendChild(el('div', BASKET_STATUS, q.quoteOnly
-      ? 'Cristina will confirm your courier and total.'
+      ? 'We will confirm your courier and total.'
       : money(q.deposit) + ' of that is returned after collection.'));
 
-    const btn = el('button', BASKET_BTN, q.quoteOnly ? 'Book — confirm with Cristina →' : 'Book this hire →');
+    const btn = el('button', BASKET_BTN, q.quoteOnly ? 'Book · confirm with us →' : 'Book this hire →');
     btn.setAttribute('type', 'button');
     btn.addEventListener('click', () => { if (NS.bookHire) NS.bookHire(state.hire); });
     wrap.appendChild(btn);

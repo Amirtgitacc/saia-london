@@ -5,13 +5,12 @@
 
     {% comment %}
       Belt-and-braces: a hand-crafted /cart/<variant>:<qty> permalink can add mats without a
-      plumbing line (courier two-way / one-way / NW3 pickup). Settings store variant IDs as
+      plumbing line (courier two-way / NW3 pickup). Settings store variant IDs as
       text, so each is coerced to a number with `| plus: 0` before comparing against the
       integer `item.variant_id` — Liquid's `==` does not coerce string/integer types itself.
     {% endcomment %}
     {% assign saia_mat_vid = settings.variant_mat_hire | plus: 0 %}
     {% assign saia_two_way_vid = settings.variant_courier_two_way | plus: 0 %}
-    {% assign saia_one_way_vid = settings.variant_courier_one_way | plus: 0 %}
     {% assign saia_pickup_vid = settings.variant_pickup | plus: 0 %}
     {% assign saia_has_mat = false %}
     {% assign saia_has_plumbing = false %}
@@ -19,7 +18,7 @@
       {% if item.variant_id == saia_mat_vid %}
         {% assign saia_has_mat = true %}
       {% endif %}
-      {% if item.variant_id == saia_two_way_vid or item.variant_id == saia_one_way_vid or item.variant_id == saia_pickup_vid %}
+      {% if item.variant_id == saia_two_way_vid or item.variant_id == saia_pickup_vid %}
         {% assign saia_has_plumbing = true %}
       {% endif %}
     {% endfor %}

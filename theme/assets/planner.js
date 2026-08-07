@@ -71,14 +71,9 @@
           acts.push('Set hire length to ' + hire.days + ' days'); break;
         case 'set_method':
           hire.method = (args.method === 'pickup') ? 'pickup' : 'deliver';
-          if (hire.method === 'pickup') { hire.postcode = null; hire.zone = null; hire.collection = null; }
+          if (hire.method === 'pickup') { hire.postcode = null; hire.zone = null; }
           hire.total = total(hire);
           acts.push(hire.method === 'pickup' ? 'Collection from NW3 selected' : 'Courier delivery selected'); break;
-        case 'set_collection':
-          // 'two' = courier both ways (delivery + same-day collection, default), 'one' = they return the mats
-          hire.collection = (args.collection === 'one-way' || args.collection === 'one') ? 'one' : 'two';
-          hire.total = total(hire);
-          acts.push(hire.collection === 'one' ? 'Delivery only · you return the mats to NW3' : 'Delivery + same-day collection selected'); break;
         case 'set_postcode': {
           hire.postcode = args.pc || hire.postcode; hire.method = 'deliver';
           const z = KB.classify ? KB.classify(hire.postcode) : null;
@@ -93,7 +88,7 @@
           const g = parseInt(args.guests, 10) || hire.guests || 0;
           const rec = Math.min(H.maxMats, Math.max(H.minMats, Math.ceil(g * 1.1)));
           hire.guests = g || hire.guests; hire.mats = rec; hire.total = total(hire);
-          acts.push('Recommended ' + rec + ' mats for ' + (g || '—') + ' guests'); break;
+          acts.push('Recommended ' + rec + ' mats' + (g ? ' for ' + g + ' guests' : '')); break;
         }
         case 'set_date': hire.date = args.date; acts.push('Set date to ' + args.date); break;
         case 'quote': hire.total = total(hire); hire.status = 'Quoted'; hire.quoted = true; acts.push('Prepared your quote'); break;
@@ -138,11 +133,11 @@
     // customer opting out of the courier, so it must never read as the courier's return journey.
     const selfCollect = has(/\b(collect|pick|get|grab)\w*[^.?!]{0,20}\b(ourselves|myself)\b|\b(ourselves|myself)\b[^.?!]{0,20}\b(collect|pick)\w*|instead of (the |a )?deliver\w*|rather than deliver\w*/);
     const wantsDeliver = !neg && !selfCollect && has(/deliver|drop ?off|courier|bring them|ship|send (it|them|me|to|over)|post (it|them)|to my (address|place|home|venue)/);
-    // The courier's return journey, in the customer's words. Shared by the awaiting-collection
-    // block below AND the generic flow, so a stale `awaiting` can never re-read "collect them
-    // after" as NW3 pickup mid-delivery (the race that once flipped a live delivery to £0).
+    // The courier's return journey, in the customer's words. Delivery is symmetric now, so
+    // there is no choice to record here — but this reading is still load-bearing as a GUARD:
+    // it stops "collect them after" mid-delivery being re-read as a free NW3 pickup (the race
+    // that once flipped a live £90 delivery to £0).
     // NOTE "drop … back" — a bare "drop them off at 9am" is the DELIVERY leg, not the return.
-    const RETURN_ONE = /one.?way|delivery only|\bmyself\b|\bourselves\b|return (them|the mats)|bring (them|the mats) back|drop (them|it|the mats) back|take them back|we'?ll (return|bring)|i'?ll (return|bring|drop)/;
     const RETURN_TWO = /\bboth\b|two.?way|you (collect|come|pick)|collect (them|it|after)|collecting (them|it)|same.?day collection/;
     // Explicit pickup phrasing — "collect FROM you/NW3/the warehouse", "come and collect",
     // or any self-service wording — is a genuine switch to pickup and wins over the
@@ -159,31 +154,10 @@
     const looksPostcode = (pcZone && (hire.awaiting === 'postcode' || fullPc)) ? pcZone : null;
 
     // does THIS message carry an actionable hire slot? (used to apply changes at the review step)
-    const hasSlotSignal = (matsN != null) || (guests != null) || (daysN != null) || !!dateVal || wantsPickup || !!looksPostcode || wantsDeliver || collectReturn;
+    const hasSlotSignal = (matsN != null) || (guests != null) || (daysN != null) || !!dateVal || wantsPickup || !!looksPostcode || wantsDeliver;
 
     const aw = hire.awaiting;
-    const inHireFlow = !!(aw && /^(mats|days|method|postcode|collection|date|confirm)$/.test(aw));
-
-    // ===== collection step: answered in its own words, BEFORE the generic parse =====
-    // ("collect" here means the courier's return journey, not NW3 pickup — so the
-    // generic wantsPickup matcher must not see these answers.)
-    if (aw === 'collection') {
-      const oneW = has(RETURN_ONE);
-      const twoW = has(RETURN_TWO) || has(/^(yes|yep|yeah|sure|please|ok|okay|default|recommended|first|collection)\b/);
-      if (oneW || twoW) {
-        // When both readings match ("drop them off at 9 and collect them after"), strong
-        // self-return words decide; otherwise the same-day collection they mentioned wins.
-        const selfReturn = has(/\b(ourselves|myself)\b|bring (them|the mats) back|return (them|the mats)|drop (them|it|the mats) back/);
-        const mode = (oneW && twoW) ? (selfReturn ? 'one' : 'two') : (oneW ? 'one' : 'two');
-        const acts = [{ tool: 'set_collection', args: { collection: mode === 'one' ? 'one-way' : 'two-way' } }];
-        const sayBit = mode === 'one'
-          ? "Of course, delivery only, and you'll drop the mats back to us in NW3 after your event. "
-          : "Of course, we'll deliver, then collect the same day once your event has finished. ";
-        if (!hire.date) return mk(sayBit + 'And what date is your event?', acts, 'date');
-        return mk(sayBit + 'Shall I put your quote together?', acts, 'review');
-      }
-      return { say: '', actions: [], matched: false, awaiting: aw };   // unclear → Tier 2 reads it
-    }
+    const inHireFlow = !!(aw && /^(mats|days|method|postcode|date|confirm)$/.test(aw));
 
     // --- bare answers interpreted in the context of what we just asked ---
     const bareNum = (t.match(/^(?:just\s+)?(?:the\s+)?(\d+)\b/) || [])[1];
@@ -196,7 +170,7 @@
     if (aw === 'review' && has(/^(yes|yep|yeah|sure|go ahead|go on|please|ok|okay|show me|sounds good|do it|let'?s|continue|book|see it)\b/)) {
       const qq = KB.priceHire ? KB.priceHire(hire) : { total: null, matCost: 0, deposit: 0, quoteOnly: false };
       const ready = qq.quoteOnly
-        ? "Here it is. Your mats and deposit come to " + money(qq.matCost + qq.deposit) + "; as you're outside London, Cristina will confirm the courier. Press Book this hire and I'll pass your details to her. Anything else I can help with?"
+        ? "Here it is. Your mats and deposit come to " + money(qq.matCost + qq.deposit) + "; as you're outside London, we will confirm the courier. Press Book this hire and I'll pass your details on. Anything else I can help with?"
         : "Here it is. " + money(qq.total) + " all in, including a " + money(qq.deposit) + " refundable deposit returned after collection. Press Book this hire when you're ready. Anything else I can help with in the meantime?";
       return mk(ready, [{ tool: 'quote' }], null);
     }
@@ -210,8 +184,13 @@
     // explicit booking actions — also fired by the home basket buttons
     if (has(/^checkout\b|^pay\b|payment link|secure (checkout )?link/))
       return mk("Your secure checkout link is ready in the panel. That's you joining the club. Anything else for your day?", [{ tool: 'checkout' }], null);
-    if (has(/^confirm\b|^confirm booking|^book it now\b/))
-      return mk('Confirmed. Delivery the day before, collection on the day once your event has finished. Welcome to SAÏA.', [{ tool: 'confirm' }], null);
+    if (has(/^confirm\b|^confirm booking|^book it now\b/)) {
+      const dd = KB.deriveDates ? KB.deriveDates(hire) : null;
+      const when = dd
+        ? 'We deliver on ' + KB.formatDate(dd.delivery) + ' and collect on ' + KB.formatDate(dd.collection) + '. '
+        : 'Delivery the day before, collection on the day once your event has finished. ';
+      return mk('Confirmed. ' + when + 'Welcome to SAÏA.', [{ tool: 'confirm' }], null);
+    }
 
     // ===== build / continue the hire flow =====
     // Trigger: mid-flow, or a fresh hire signal (a count, “hire”, “book”, “rent”, “event with mats”)
@@ -225,7 +204,7 @@
     // HIRE-ONLY guard: mats are never sold. Intercept buy/purchase intent BEFORE the hire
     // flow turns "buy 30 mats to keep" into a booking. Warmly reframe to hire.
     if (has(/\b(buy|buying|purchase|purchasing|sell|selling|for sale|to keep|keep them|own them|owning|permanently|outright|forever)\b/) && (has(/mat/) || inHireFlow || freshHire))
-      return m("We don't sell the mats. They're hire-only, so you get our studio-quality mats for your event and we handle everything after. Happy to set up a hire whenever you like; how many are you after?");
+      return m("We keep our mats hire-only for events, so you always get them clean and event-ready. For a studio it is different: we make bespoke mats to order in your own colours and branding. Email us at Cristina@saialondon.com with what you have in mind and we will come back to you. Happy to set up a hire in the meantime; how many are you after?");
 
     // MAX-STOCK guard: we hold a hard ceiling of 50 mats. Intercept any bigger ask — a direct
     // "80 mats", a headcount that would need >50, or a bare number answering "how many mats?" —
@@ -265,15 +244,6 @@
       // date — explicit day+month or a weekday; vague dates fall to the handoff below
       if (dateVal) { h.date = dateVal; actions.push({ tool: 'set_date', args: { date: dateVal } }); }
 
-      // one-way / two-way said outright, in any phrasing, mid-flow — includes the return-journey
-      // reading of "collect them after" on a live delivery (collectReturn), so it lands here even
-      // when a stale `awaiting` means the dedicated collection block above never ran.
-      if (has(/\bone.?way\b|(return|bring|drop) (them|the mats).{0,14}(myself|ourselves|nw3)/)) {
-        h.collection = 'one'; actions.push({ tool: 'set_collection', args: { collection: 'one-way' } });
-      } else if (collectReturn || has(/both ways|two.?way|delivery and collection|deliver and collect/)) {
-        h.collection = 'two'; actions.push({ tool: 'set_collection', args: { collection: 'two-way' } });
-      }
-
       // HANDOFF: mid-flow, but this message gave us nothing to act on (an unrecognised phrasing
       // like "send to my address", "cant collect", "5 july", or an off-topic question). Rather than
       // re-ask the same slot and loop, escalate to Tier-2 Claude — it reads the intent in context,
@@ -287,7 +257,6 @@
         if (!x.days) return 'days';
         if (!x.method) return 'method';
         if (x.method === 'deliver' && !x.zone) return 'postcode';
-        if (x.method === 'deliver' && !x.collection) return 'collection';
         if (!x.date) return 'date';
         return 'confirm';
       })(h);
@@ -300,13 +269,10 @@
       if (need === 'days') return mk((h.mats ? h.mats + ' mats, perfect. ' : '') + 'How many days do you need them? Our standard hire is ' + H.hireDays + ' days.', actions, 'days');
       if (need === 'method') return mk('Shall we deliver by courier, or will you collect from our NW3 warehouse?', actions, 'method');
       if (need === 'postcode') return mk("What's the event postcode? I'll work out the courier from there.", actions, 'postcode');
-      if (need === 'collection') {
-        const D = KB.delivery || { twoWay: 90, oneWay: 45 };
-        return mk('And the return journey. Shall our courier collect the mats once your event has finished (' + money(D.twoWay) + ' for delivery and same-day collection), or will you bring them back to NW3 yourself (' + money(D.oneWay) + ' delivery only)? Most people go with collection.', actions, 'collection');
-      }
-
       // need the date before we quote anything
-      if (need === 'date') return mk('And what date is your event? We deliver the day before and collect once it has finished.', actions, 'date');
+      if (need === 'date') return mk('And what date is your event? ' + (h.method === 'pickup'
+        ? 'Your mats are ready at NW3 the day before, and come back to us once it has finished.'
+        : 'We deliver the day before, and take the mats away again once it has finished.'), actions, 'date');
 
       // everything gathered → DON'T reveal the quote yet. Ask first, so the guest opts in to
       // booking before any price or basket appears; the quote shows only on their 'yes' (above).
@@ -404,7 +370,7 @@
 
     // affiliate programme — yes, routed to Cristina personally
     if (has(/affiliate/))
-      return m(KB.affiliate || ("We do have an affiliate programme. Email Cristina at " + (KB.contact && KB.contact.email) + " and she'll set you up personally."));
+      return m(KB.affiliate || ("We do have an affiliate programme. Email us at " + (KB.contact && KB.contact.email) + " and we will set you up personally."));
 
     // delivery / collection facts — answer both halves; they're usually asked together
     if (has(/deliver|courier|ship|drop ?off|bring them/))
@@ -422,7 +388,7 @@
 
     // VAT / invoices / receipts — Cristina handles the paperwork; never invent a tax answer
     if (has(/\bvat\b|invoice|receipt|\btax\b/))
-      return m('For VAT, invoices or receipts, Cristina looks after those directly. Email her at ' + KB.contact.email + " and she'll handle the paperwork. Want me to put your hire numbers together in the meantime?");
+      return m('For VAT, invoices or receipts, we look after those directly. Email us at ' + KB.contact.email + ' and we will handle the paperwork. Want me to put your hire numbers together in the meantime?');
 
     // pricing FAQ — answer the question; only start collecting mats if we're not already mid-hire
     if (has(/price|quote|cost|how much|rate|charge/)) {

@@ -11,7 +11,7 @@ const KB = require('./saia-knowledge.js');
 const EX = require('./saia-examples.js');
 
 const MODEL = process.env.SAIA_MODEL || 'claude-haiku-4-5';
-const TOOLS = ['add_mats', 'set_event', 'recommend', 'set_days', 'set_method', 'set_collection', 'set_postcode', 'set_date', 'quote',
+const TOOLS = ['add_mats', 'set_event', 'recommend', 'set_days', 'set_method', 'set_postcode', 'set_date', 'quote',
   'book_delivery', 'checkout', 'confirm', 'rsvp_event', 'request_pilates', 'join_pilates_list', 'join_newsletter'];
 
 /* Structured-output schema — guarantees the {say, actions} shape.
@@ -38,7 +38,6 @@ const SCHEMA = {
               guests: { type: 'integer', description: 'headcount (set_event/recommend)' },
               date: { type: 'string', description: 'a day, e.g. "Saturday"' },
               method: { type: 'string', enum: ['deliver', 'pickup'], description: 'delivery method (set_method)' },
-              collection: { type: 'string', enum: ['two-way', 'one-way'], description: 'return journey (set_collection): two-way = courier collects same-day (default), one-way = guest returns the mats to NW3' },
               pc: { type: 'string', description: 'event postcode (set_postcode)' },
               event: { type: 'string', description: 'event name (rsvp_event)' },
               email: { type: 'string', description: 'email (join_newsletter)' },
@@ -70,18 +69,18 @@ function systemPrompt(hire) {
     '- Mats are for HIRE ONLY. Never say they are for sale.',
     '- Never invent a price, term, date, or fact that is not in your knowledge below. If you don’t know, say so and point to emailing ' + KB.contact.person + ' at ' + KB.contact.email + '.',
     '- You do NOT calculate totals yourself. To price or recommend a count, emit an action and the app computes it deterministically (mats + extra days + courier + a refundable £' + KB.hire.depositPerMat.toFixed(2) + '/mat deposit). NEVER write a pound amount you added up yourself in your reply text (no "that\u2019s \u00a3345 total"). The price card revealed by the quote action shows every number.',
-    '- For a mat hire, COLLECT EVERY DETAIL ONE AT A TIME before showing any price: number of mats (or guests → recommend), number of days (never assume, ask), delivery (courier + postcode, or free NW3 pickup), the RETURN JOURNEY when delivering (courier same-day collection at £' + KB.delivery.twoWay + ', the default, or £' + KB.delivery.oneWay + ' delivery-only where they return the mats to NW3), AND the event date. Do not quote a total until you have all of them. Ask for the next missing detail in a single warm sentence.',
-    '- ALWAYS RECORD THE ANSWER AS AN ACTION, in ANY phrasing. If they imply delivery ("send it to me", "to my address", "cant collect", "I can\'t pick up") emit set_method {method:"deliver"}; if they imply NW3 pickup ("we\'ll come get them", "I\'ll collect from the warehouse") emit set_method {method:"pickup"}. If they answer the return-journey question ("yes collect them" / "we\'ll bring them back ourselves") emit set_collection {collection:"two-way"|"one-way"}. A bare number answering your question → add_mats or set_days as appropriate. Never just describe the choice in words without emitting its action. If you only talk, the booking never advances.',
+    '- For a mat hire, COLLECT EVERY DETAIL ONE AT A TIME before showing any price: number of mats (or guests → recommend), number of days (never assume, ask), delivery (courier + postcode, or free NW3 pickup), AND the event date. Do not quote a total until you have all of them. There is no separate return-journey question: the delivery method already covers both journeys. Ask for the next missing detail in a single warm sentence.',
+    '- ALWAYS RECORD THE ANSWER AS AN ACTION, in ANY phrasing. If they imply delivery ("send it to me", "to my address", "cant collect", "I can\'t pick up") emit set_method {method:"deliver"}; if they imply NW3 pickup ("we\'ll come get them", "I\'ll collect from the warehouse") emit set_method {method:"pickup"}. A bare number answering your question → add_mats or set_days as appropriate. Never just describe the choice in words without emitting its action. If you only talk, the booking never advances.',
     '- DATES MUST BE EXACT BEFORE BOOKING. A booking needs one concrete calendar day. When the date is vague or relative ("next month", "the 26th", "26 next month", "next Saturday"), resolve it to a full date using today\'s date above, then CONFIRM it back in one warm question before finalising, e.g. "Just to confirm, that\'s 26 July 2026?". Confirm and store dates as DAY MONTH YEAR only (e.g. "26 July 2026"); do NOT state a weekday, as you often get the day-of-week wrong and a wrong weekday on a booking is worse than none. Never store a fuzzy date like "next month".',
     '- CRITICAL: if your previous message already proposed a specific date and the guest agrees ("yes", "correct", "that\'s right", "yep"), IMMEDIATELY emit set_date with that exact full date (e.g. {date:"26 July 2026"}). Do NOT ask for the date again, you already have it. Then proceed to gate the quote.',
     '- GATE THE QUOTE. Emitting quote (or checkout/confirm) REVEALS the price card to the guest, so treat it as an action you take only on their say-so. Once every detail (mats, days, delivery/postcode, date) is gathered, do NOT emit quote. First ask in one warm line whether they\'d like you to put their quote together (e.g. "That\'s everything. Shall I pull your quote together?"). When a guest asks a pricing QUESTION (e.g. "is it a flat rate?"), ANSWER it in words with an empty actions array and offer to show the quote, but do NOT emit quote. Only emit quote once they clearly say yes or ask to see it; then tell them to press "Book this hire". Say "Book", never "checkout".',
     '- After you reveal the quote, always close warmly with an offer of more help, e.g. "…and anything else I can help with?". Never end on the number alone.',
-    '- Courier is a flat London rate: ' + KB.hire.currency + KB.delivery.twoWay + ' for delivery + same-day collection (the default), ' + KB.hire.currency + KB.delivery.oneWay + ' delivery-only if the guest returns the mats to NW3, outside London → quote by email. NW3 pickup is free.',
+    '- Delivery is symmetric, and there are only two options: our courier does BOTH journeys at ' + KB.hire.currency + KB.delivery.twoWay + ' flat across London (delivery plus same-day collection), or the guest does both by collecting from and returning to NW3, which is free. There is no mixed option where we deliver and they return the mats. Outside London → quote by email.',
     '',
     KB.factSheet,
     '',
     'ACTIONS you may emit (only when they match the user’s intent, otherwise return an empty actions array):',
-    '- add_mats {n} · recommend {guests} (app picks a sensible count) · set_days {n} · set_method {method:"deliver"|"pickup"} · set_collection {collection:"two-way"|"one-way"} · set_postcode {pc} · set_date {date} · set_event {guests,date}',
+    '- add_mats {n} · recommend {guests} (app picks a sensible count) · set_days {n} · set_method {method:"deliver"|"pickup"} · set_postcode {pc} · set_date {date} · set_event {guests,date}',
     '- quote {} (price once mats+days+delivery are known) · book_delivery {date} · checkout {} (payment link) · confirm {}',
     '- rsvp_event {event} · request_pilates {type:"1-2-1"|"group", date} (1-2-1 request to Cristina) · join_pilates_list {email} (group-class waitlist) · join_newsletter {email}',
     'Prefer recommend over guessing a mat count. Emit set_days/set_method/set_postcode as the user supplies them. For a plain question, return actions: [].',

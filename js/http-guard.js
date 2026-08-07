@@ -6,7 +6,7 @@
      • api/log.js       — Vercel serverless function (prod)
 
    The concierge/log endpoints are public and call paid services
-   (Claude, Supabase). We can't require a user login on a static
+   (Claude, Vercel Blob). We can't require a user login on a static
    marketing site, but we can refuse browser requests coming from
    OTHER websites: legit callers are the SAÏA site itself (same
    origin) and, once published, the Shopify storefront. A foreign
