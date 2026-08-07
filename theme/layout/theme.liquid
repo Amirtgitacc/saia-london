@@ -3,32 +3,66 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{{ page_title | default: shop.name }}</title>
-  {%- if page_description %}
-  <meta name="description" content="{{ page_description | escape }}">
-  {%- endif %}
-  <link rel="canonical" href="{{ canonical_url }}">
-  {%- if request.page_type == 'product' or page.handle == 'guest-list' %}
-  {%- comment %} checkout plumbing products + post-signup page — never meant to rank {% endcomment %}
-  <meta name="robots" content="noindex">
-  {%- endif %}
-  <meta property="og:site_name" content="{{ shop.name }}">
-  <meta property="og:type" content="website">
-  <meta property="og:title" content="{{ page_title | default: shop.name }}">
-  {%- if page_description %}
-  <meta property="og:description" content="{{ page_description | escape }}">
-  {%- endif %}
-  <meta property="og:url" content="{{ canonical_url }}">
-  {%- assign og_image = 'SAIABRUNCHCLUB_38.png' | asset_url -%}
-  {%- unless og_image contains 'https:' -%}{%- assign og_image = og_image | prepend: 'https:' -%}{%- endunless %}
-  <meta property="og:image" content="{{ og_image }}">
-  <meta name="twitter:card" content="summary_large_image">
+  {%- comment %} title, description, robots, canonical, OG + Twitter — see snippets/seo-meta.liquid {% endcomment %}
+  {% render 'seo-meta' %}
   <link rel="icon" href="{{ 'saia-logo.avif' | asset_url }}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Inter:wght@100..900&display=swap" rel="stylesheet">
   {{ content_for_header }}
   {% render 'saia-boot' %}
+  {%- comment %}
+    Site-wide structured data. Only facts that are already visible on the site and recorded in
+    js/saia-knowledge.js — no address (the NW3 base is not published; the registered office in
+    the terms page is not a service location), no ratings, no reviews, no prices.
+  {% endcomment %}
+  {%- assign logo_url = 'saia-logo.avif' | asset_url -%}
+  {%- unless logo_url contains 'https:' -%}{%- assign logo_url = logo_url | prepend: 'https:' -%}{%- endunless -%}
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": {{ shop.url | append: '#organization' | json }},
+        "name": {{ shop.name | json }},
+        "url": {{ shop.url | json }},
+        "logo": {{ logo_url | json }},
+        "email": "Cristina@saialondon.com",
+        "telephone": "+447444611914",
+        "areaServed": {
+          "@type": "City",
+          "name": "London"
+        },
+        "founder": {
+          "@type": "Person",
+          "name": "Cristina"
+        },
+        "sameAs": [
+          "https://www.instagram.com/saialondon",
+          "https://www.facebook.com/saialondon",
+          "https://www.pinterest.com/saialondon"
+        ]
+      },
+      {
+        "@type": "WebSite",
+        "@id": {{ shop.url | append: '#website' | json }},
+        "url": {{ shop.url | json }},
+        "name": {{ shop.name | json }},
+        "inLanguage": "en-GB",
+        "publisher": { "@id": {{ shop.url | append: '#organization' | json }} },
+        "potentialAction": {
+          "@type": "SearchAction",
+          "target": {
+            "@type": "EntryPoint",
+            "urlTemplate": {{ shop.url | append: '/search?q={search_term_string}' | json }}
+          },
+          "query-input": "required name=search_term_string"
+        }
+      }
+    ]
+  }
+  </script>
 </head>
 <body>
   {{ content_for_layout }}

@@ -5,5 +5,24 @@
   "outputDirectory": ".",
   "functions": {
     "api/*.js": { "maxDuration": 30 }
-  }
+  },
+  "redirects": [
+    { "source": "/", "destination": "https://www.saialondon.com/", "permanent": true },
+    { "source": "/index.html", "destination": "https://www.saialondon.com/", "permanent": true },
+    { "source": "/events.html", "destination": "https://www.saialondon.com/pages/events", "permanent": true },
+    { "source": "/story.html", "destination": "https://www.saialondon.com/pages/story", "permanent": true },
+    { "source": "/pilates-with-cristina.html", "destination": "https://www.saialondon.com/pages/pilates-with-cristina", "permanent": true },
+    { "source": "/contact-us.html", "destination": "https://www.saialondon.com/pages/contact-us", "permanent": true },
+    { "source": "/guest-list.html", "destination": "https://www.saialondon.com/pages/guest-list", "permanent": true },
+    { "source": "/terms-and-conditions.html", "destination": "https://www.saialondon.com/pages/terms-and-conditions", "permanent": true },
+    { "source": "/event-book-club-petersham.html", "destination": "https://www.saialondon.com/pages/event-book-club-petersham", "permanent": true },
+    { "source": "/event-morena-self-love.html", "destination": "https://www.saialondon.com/pages/event-morena-self-love", "permanent": true },
+    { "source": "/event-mortimer-house.html", "destination": "https://www.saialondon.com/pages/event-mortimer-house", "permanent": true },
+    { "source": "/event-the-nest.html", "destination": "https://www.saialondon.com/pages/event-the-nest", "permanent": true },
+    { "source": "/event-watercolour-regents-park.html", "destination": "https://www.saialondon.com/pages/event-watercolour-regents-park", "permanent": true },
+    { "source": "/checkout.html", "destination": "https://www.saialondon.com/cart", "permanent": true },
+    { "source": "/samples.html", "destination": "https://www.saialondon.com/", "permanent": true },
+    { "source": "/sample-film.html", "destination": "https://www.saialondon.com/", "permanent": true },
+    { "source": "/sample-hybrid.html", "destination": "https://www.saialondon.com/", "permanent": true }
+  ]
 }

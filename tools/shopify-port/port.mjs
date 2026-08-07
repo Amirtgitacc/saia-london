@@ -30,6 +30,12 @@ const LINKS = {
 };
 
 // 1. keep page-specific <head> extras (styles/scripts); the layout owns meta/title/fonts
+//
+// NOTE: the <title> and <meta name="description"> stripped here are NOT recreated by the layout
+// on their own — Shopify falls back to each page's SEO fields in admin, which still held the old
+// site's copy after the 2026-07-22 switch (the home page went live titled just "SAÏA London").
+// The redesign's own title/description now live in theme/snippets/seo-meta.liquid. If you change
+// a <title> or description in a source .html file, mirror it there or it will not ship.
 const head = (html.match(/<head[^>]*>([\s\S]*?)<\/head>/i) || [, ''])[1]
   .replace(/<meta[^>]*(charset|viewport)[^>]*>\s*/gi, '')
   .replace(/<title>[\s\S]*?<\/title>\s*/i, '')
@@ -68,6 +74,28 @@ out = out.replace(/(['"])(?:\.\/)?((?:css|js|assets|vendor|photos)\/[^'"?]+\.(?:
 // 4c. JS-string page navigations (window.location.href = 'foo.html', etc.)
 out = out.replace(/(['"])([a-z0-9-]+\.html)(#[^'"]*)?\1/gi,
   (m, q, page, hash) => LINKS[page] ? `${q}${LINKS[page]}${hash || ''}${q}` : m);
+
+// 4d. Shopify-only footer link: the blog. The old store's 28 articles live at /blogs/news and
+// /blogs/resources and are still indexed, but the redesign links to them from nowhere, which
+// leaves them orphaned. There is no blog on the static/Vercel build, so the link can't live in
+// the source HTML (it would be a dead link there) — it's injected here, on the ported copy only,
+// next to the Events link in the footer's "About us" column.
+// Anchored on "Our story", which appears exactly once per page and only in the footer's
+// "About us" column — the /pages/events link itself is no good as an anchor because the header
+// nav and the mobile drawer both carry one, and the first match would be the header.
+// Case-sensitive on purpose: the header nav and drawer say "Our Story", only the footer says
+// "Our story". The link markup differs between pages (index.html styles it inline, the other
+// pages use .foot-col .links), so match the tag rather than a fixed string, and carry the
+// original's style attribute over so the new link looks identical to its neighbours.
+{
+  const footerStory = /<a href="\/pages\/story"([^>]*)>Our story<\/a>/g;
+  const hits = [...out.matchAll(footerStory)];
+  if (hits.length === 1) {
+    out = out.replace(footerStory, (m, attrs) => `${m}<a href="/blogs/news"${attrs}>Journal</a>`);
+  } else {
+    console.warn(`FOOTER ANCHOR matched ${hits.length}x (expected 1) — Journal link not injected; check the footer markup in`, src);
+  }
+}
 
 // 5. protect inline JS/CSS containing {{ or {% from Liquid
 out = out.replace(/<(script|style)(\s[^>]*)?>([\s\S]*?)<\/\1>/g, (m, tag, at, inner) =>
