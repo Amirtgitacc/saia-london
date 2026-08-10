@@ -15,14 +15,14 @@ test('set_days then quote prices extra days + deposit', () => {
   assert.strictEqual(h.total, 230);          // 200 mats + 0 courier + 30 deposit
 });
 
-test('set_postcode classifies the zone and prices courier (two-way default)', () => {
+test('set_postcode classifies the band and prices both courier journeys', () => {
   let h = base();
   h = Planner.applyActions(h, [{ tool: 'add_mats', args: { n: 50 } }]).hire;
   h = Planner.applyActions(h, [{ tool: 'set_postcode', args: { pc: 'EC2Y 8DS' } }]).hire;
   h = Planner.applyActions(h, [{ tool: 'quote' }]).hire;
-  assert.strictEqual(h.zone, 'central');
+  assert.strictEqual(h.zone, 'bandA');
   assert.strictEqual(h.method, 'deliver');
-  assert.strictEqual(h.total, 590);          // 425 + 90 two-way courier + 75
+  assert.strictEqual(h.total, 580);          // 425 + 80 Band A courier + 75
 });
 
 test('add_mats clamps a request for 80 mats to the 50-mat cap, so the quote can never exceed it', () => {
@@ -68,7 +68,7 @@ test('pickup but no date → asks date, no quote yet', () => {
 });
 
 test('all slots in (date answers the last question) → asks before quoting, no quote yet', () => {
-  const r = Planner.localPlan('saturday', { mats: 15, days: 2, method: 'deliver', zone: 'central', collection: 'two', date: null, awaiting: 'date' });
+  const r = Planner.localPlan('saturday', { mats: 15, days: 2, method: 'deliver', zone: 'bandA', collection: 'two', date: null, awaiting: 'date' });
   assert.strictEqual(r.awaiting, 'review');                 // gate: confirm before revealing
   assert.ok(r.actions.some(a => a.tool === 'set_date'));
   assert.ok(!r.actions.some(a => a.tool === 'quote'), 'must NOT quote until the guest opts in');
@@ -76,7 +76,7 @@ test('all slots in (date answers the last question) → asks before quoting, no 
 });
 
 test('review gate: "yes" reveals the quote + Book prompt + closing', () => {
-  const r = Planner.localPlan('yes please', { mats: 15, days: 2, method: 'deliver', zone: 'central', date: 'Saturday', awaiting: 'review' });
+  const r = Planner.localPlan('yes please', { mats: 15, days: 2, method: 'deliver', zone: 'bandA', date: 'Saturday', awaiting: 'review' });
   assert.strictEqual(r.awaiting, null);
   assert.ok(r.actions.some(a => a.tool === 'quote'));
   assert.ok(/Book this hire/i.test(r.say));
@@ -84,7 +84,7 @@ test('review gate: "yes" reveals the quote + Book prompt + closing', () => {
 });
 
 test('review gate: "not yet" holds without quoting', () => {
-  const r = Planner.localPlan('not yet', { mats: 15, days: 2, method: 'deliver', zone: 'central', date: 'Saturday', awaiting: 'review' });
+  const r = Planner.localPlan('not yet', { mats: 15, days: 2, method: 'deliver', zone: 'bandA', date: 'Saturday', awaiting: 'review' });
   assert.strictEqual(r.awaiting, 'review');
   assert.ok(!r.actions.some(a => a.tool === 'quote'));
 });
@@ -103,7 +103,7 @@ test('ready state outside London says we will confirm the courier (after opting 
 });
 
 test('confirm books it', () => {
-  const r = Planner.localPlan('yes please', { mats: 50, days: 2, method: 'deliver', zone: 'central', date: 'Saturday', awaiting: 'confirm' });
+  const r = Planner.localPlan('yes please', { mats: 50, days: 2, method: 'deliver', zone: 'bandA', date: 'Saturday', awaiting: 'confirm' });
   assert.ok(r.actions.some(a => a.tool === 'checkout' || a.tool === 'confirm'));
 });
 
@@ -152,29 +152,29 @@ test('A1 in sentence does not trigger postcode when not awaiting', () => {
 
 // === Finding 3: escape from confirm ===
 test('no cancels the confirm step instead of looping', () => {
-  const r = Planner.localPlan('no not yet', { mats: 50, days: 2, method: 'deliver', zone: 'central', date: 'Saturday', awaiting: 'confirm' });
+  const r = Planner.localPlan('no not yet', { mats: 50, days: 2, method: 'deliver', zone: 'bandA', date: 'Saturday', awaiting: 'confirm' });
   assert.ok(!r.actions.some(a => a.tool === 'checkout' || a.tool === 'confirm'), 'should not fire checkout or confirm');
   assert.ok(!r.awaiting, 'awaiting should be null — user stepped back out');
 });
 
 // === Fix: standalone checkout/confirm intents (basket buttons) ===
 test('basket checkout button fires checkout action', () => {
-  const r = Planner.localPlan('checkout', { mats: 50, days: 2, method: 'deliver', zone: 'central', date: 'Saturday', awaiting: 'confirm' });
+  const r = Planner.localPlan('checkout', { mats: 50, days: 2, method: 'deliver', zone: 'bandA', date: 'Saturday', awaiting: 'confirm' });
   assert.ok(r.actions.some(a => a.tool === 'checkout'), 'checkout action must be present');
 });
 
 test('basket confirm button fires confirm action', () => {
-  const r = Planner.localPlan('confirm', { mats: 50, days: 2, method: 'deliver', zone: 'central', date: 'Saturday', status: 'Checkout link ready', awaiting: null });
+  const r = Planner.localPlan('confirm', { mats: 50, days: 2, method: 'deliver', zone: 'bandA', date: 'Saturday', status: 'Checkout link ready', awaiting: null });
   assert.ok(r.actions.some(a => a.tool === 'confirm'), 'confirm action must be present');
 });
 
 test('regression: typed yes at confirm still fires checkout', () => {
-  const r = Planner.localPlan('yes please', { mats: 50, days: 2, method: 'deliver', zone: 'central', date: 'Saturday', awaiting: 'confirm' });
+  const r = Planner.localPlan('yes please', { mats: 50, days: 2, method: 'deliver', zone: 'bandA', date: 'Saturday', awaiting: 'confirm' });
   assert.ok(r.actions.some(a => a.tool === 'checkout'), 'yes at confirm step must fire checkout');
 });
 
 test('checkout intent does not emit a quote action', () => {
-  const r = Planner.localPlan('checkout', { mats: 50, days: 2, method: 'deliver', zone: 'central', date: 'Saturday', awaiting: 'confirm' });
+  const r = Planner.localPlan('checkout', { mats: 50, days: 2, method: 'deliver', zone: 'bandA', date: 'Saturday', awaiting: 'confirm' });
   assert.ok(!r.actions.some(a => a.tool === 'quote'), 'checkout must not loop the quote');
 });
 
@@ -232,12 +232,12 @@ test('"the 5th" while awaiting date escalates to Tier 2', () => {
 // === Race fix (2026-07-19): mid-delivery "collect them after" is the courier's return journey,
 // === never a switch to NW3 pickup — even when a stale `awaiting` skips the collection block ===
 test('stale awaiting=date mid-delivery: "collect them after" must NOT flip to pickup', () => {
-  const r = Planner.localPlan('collect them after', { mats: 30, days: 2, method: 'deliver', zone: 'central', collection: null, date: null, awaiting: 'date' });
+  const r = Planner.localPlan('collect them after', { mats: 30, days: 2, method: 'deliver', zone: 'bandA', collection: null, date: null, awaiting: 'date' });
   assert.ok(!r.actions.some(a => a.tool === 'set_method' && a.args.method === 'pickup'), 'must not switch a live delivery to pickup');
 });
 
 test('stale awaiting=postcode mid-delivery: "you collect after the event" stays a delivery', () => {
-  const r = Planner.localPlan('you collect after the event please', { mats: 30, days: 2, method: 'deliver', zone: 'central', collection: null, date: null, awaiting: 'postcode' });
+  const r = Planner.localPlan('you collect after the event please', { mats: 30, days: 2, method: 'deliver', zone: 'bandA', collection: null, date: null, awaiting: 'postcode' });
   assert.ok(!r.actions.some(a => a.tool === 'set_method' && a.args.method === 'pickup'), 'must not switch a live delivery to pickup');
 });
 
@@ -248,12 +248,12 @@ test('genuine pickup at the method step still works ("we\'ll pick up from NW3")'
 });
 
 test('explicit pickup phrasing mid-delivery still switches to pickup', () => {
-  const r = Planner.localPlan("actually we'll collect from the warehouse instead", { mats: 30, days: 2, method: 'deliver', zone: 'central', collection: null, date: null, awaiting: 'postcode' });
+  const r = Planner.localPlan("actually we'll collect from the warehouse instead", { mats: 30, days: 2, method: 'deliver', zone: 'bandA', collection: null, date: null, awaiting: 'postcode' });
   assert.ok(r.actions.some(a => a.tool === 'set_method' && a.args.method === 'pickup'), 'explicit "collect from the warehouse" is a real pickup switch');
 });
 
 test('"collect the mats from our venue" mid-delivery is the return journey, not pickup', () => {
-  const r = Planner.localPlan('can you collect the mats from our venue?', { mats: 30, days: 2, method: 'deliver', zone: 'central', collection: null, date: null, awaiting: 'date' });
+  const r = Planner.localPlan('can you collect the mats from our venue?', { mats: 30, days: 2, method: 'deliver', zone: 'bandA', collection: null, date: null, awaiting: 'date' });
   assert.ok(!r.actions.some(a => a.tool === 'set_method' && a.args.method === 'pickup'), '"from our venue" is where the courier collects, not a warehouse pickup');
 });
 
@@ -271,19 +271,19 @@ test('fresh "can you deliver 20 mats and collect them after?" starts a delivery,
 });
 
 test('mid-delivery "can we just collect them ourselves instead?" switches to pickup, not £90 two-way', () => {
-  const r = Planner.localPlan('actually can we just collect them ourselves instead?', { mats: 20, days: 2, method: 'deliver', zone: 'central', collection: null, date: null, awaiting: 'date' });
+  const r = Planner.localPlan('actually can we just collect them ourselves instead?', { mats: 20, days: 2, method: 'deliver', zone: 'bandA', collection: null, date: null, awaiting: 'date' });
   assert.ok(r.actions.some(a => a.tool === 'set_method' && a.args.method === 'pickup'), 'self-service wording is a genuine switch to pickup');
   assert.ok(!r.actions.some(a => a.tool === 'set_collection' && a.args.collection === 'two-way'), 'must not confirm the courier they are trying to avoid');
 });
 
 test('mid-delivery "can I collect them instead of delivery?" switches to pickup', () => {
-  const r = Planner.localPlan('can I collect them instead of delivery?', { mats: 20, days: 2, method: 'deliver', zone: 'central', collection: null, date: null, awaiting: 'date' });
+  const r = Planner.localPlan('can I collect them instead of delivery?', { mats: 20, days: 2, method: 'deliver', zone: 'bandA', collection: null, date: null, awaiting: 'date' });
   assert.ok(r.actions.some(a => a.tool === 'set_method' && a.args.method === 'pickup'), '"instead of delivery" is pickup intent');
 });
 
 // === the collection slot is gone: delivery is symmetric (both legs us, or both legs you) ===
 test('the hire ladder goes straight from postcode to date, with no collection step', () => {
-  const hire = { mats: 20, days: 2, method: 'deliver', zone: 'central', postcode: 'EC2Y 8DS', awaiting: 'postcode' };
+  const hire = { mats: 20, days: 2, method: 'deliver', zone: 'bandA', postcode: 'EC2Y 8DS', awaiting: 'postcode' };
   const r = Planner.localPlan('EC2Y 8DS', hire);
   assert.ok(r.matched);
   assert.strictEqual(r.awaiting, 'date', 'after a postcode the next question is the event date');
@@ -291,7 +291,7 @@ test('the hire ladder goes straight from postcode to date, with no collection st
 });
 
 test('set_collection is no longer a tool', () => {
-  const hire = { mats: 20, days: 2, method: 'deliver', zone: 'central' };
+  const hire = { mats: 20, days: 2, method: 'deliver', zone: 'bandA' };
   const out = Planner.applyActions(hire, [{ tool: 'set_collection', args: { collection: 'one-way' } }]).hire;
   assert.strictEqual(out.collection, undefined, 'an unknown tool must not set collection');
 });

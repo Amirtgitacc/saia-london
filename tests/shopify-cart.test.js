@@ -3,24 +3,36 @@ const assert = require('node:assert');
 const { cartPermalink, cartPayload } = require('../js/shopify-cart.js');
 
 const CFG = { matHireVariant: '111', extraDayVariant: '222', depositVariant: '333',
-  courierTwoWayVariant: '444', courierOneWayVariant: '555', pickupVariant: '666' };
+  courierBandAVariant: '444', courierBandBVariant: '777', pickupVariant: '666' };
 
-test('London delivery adds the two-way courier line by default', () => {
-  const url = cartPermalink({ mats: 20, days: 2, method: 'deliver', zone: 'central', postcode: 'EC2Y 8DS' }, CFG);
+test('a Band A delivery adds the Band A courier line, not Band B', () => {
+  const url = cartPermalink({ mats: 20, days: 2, method: 'deliver', zone: 'bandA', postcode: 'EC2Y 8DS' }, CFG);
   assert.ok(url.includes('444:1'));
-  assert.ok(!url.includes('555:1'));
+  assert.ok(!url.includes('777:1'));
 });
 
-test('a stale collection:"one" still gets the two-way courier line', () => {
-  const payload = cartPayload({ mats: 20, days: 2, method: 'deliver', zone: 'greater', collection: 'one', postcode: 'TW5 9QA' }, CFG);
-  assert.ok(payload.items.some(i => i.id === 444 && i.quantity === 1));
-  assert.ok(!payload.items.some(i => i.id === 555), 'the one-way variant must never be added');
+test('a Band B delivery adds the Band B courier line, not Band A', () => {
+  const payload = cartPayload({ mats: 20, days: 2, method: 'deliver', zone: 'bandB', postcode: 'SE1 9TG' }, CFG);
+  assert.ok(payload.items.some(i => i.id === 777 && i.quantity === 1));
+  assert.ok(!payload.items.some(i => i.id === 444), 'the Band A variant must not be added to a Band B hire');
+});
+
+test('a stale collection:"one" still gets the full band courier line', () => {
+  const payload = cartPayload({ mats: 20, days: 2, method: 'deliver', zone: 'bandB', collection: 'one', postcode: 'SE1 9TG' }, CFG);
+  assert.ok(payload.items.some(i => i.id === 777 && i.quantity === 1));
   assert.strictEqual(payload.attributes['Return journey'], undefined);
+});
+
+// Band C and outside London are quoted, so their carts must carry NO courier line —
+// otherwise a guest could check out at a band price we never quoted them.
+test('Band C (outer London) adds no courier line at all', () => {
+  const payload = cartPayload({ mats: 20, days: 2, method: 'deliver', zone: 'outer', postcode: 'BR1 1DN' }, CFG);
+  assert.ok(!payload.items.some(i => i.id === 444 || i.id === 777));
 });
 
 test('a delivery cart carries all four dates', () => {
   const payload = cartPayload(
-    { mats: 20, days: 2, method: 'deliver', zone: 'central', postcode: 'EC2Y 8DS', date: '2026-03-14' },
+    { mats: 20, days: 2, method: 'deliver', zone: 'bandA', postcode: 'EC2Y 8DS', date: '2026-03-14' },
     Object.assign({ todayISO: '2026-03-03' }, CFG));
   assert.strictEqual(payload.attributes['Booking date'], 'Tue 3 Mar 2026');
   assert.strictEqual(payload.attributes['Event date'], 'Sat 14 Mar 2026');
@@ -62,10 +74,10 @@ test('pickup hire adds the pickup line even when zone is null (pickup needs no p
 });
 
 test('delivery hires do NOT include the pickup line', () => {
-  const del = cartPayload({ mats: 20, days: 2, method: 'deliver', zone: 'central', postcode: 'EC2Y 8DS' }, CFG);
+  const del = cartPayload({ mats: 20, days: 2, method: 'deliver', zone: 'bandA', postcode: 'EC2Y 8DS' }, CFG);
   assert.ok(!del.items.some(i => i.id === 666));
-  const oneWay = cartPayload({ mats: 20, days: 2, method: 'deliver', zone: 'greater', collection: 'one', postcode: 'TW5 9QA' }, CFG);
-  assert.ok(!oneWay.items.some(i => i.id === 666));
+  const bandB = cartPayload({ mats: 20, days: 2, method: 'deliver', zone: 'bandB', collection: 'one', postcode: 'SE1 9TG' }, CFG);
+  assert.ok(!bandB.items.some(i => i.id === 666));
 });
 
 test('outside-London quote-only hires do NOT include the pickup line', () => {
@@ -124,7 +136,7 @@ test('cartPayload: quantity clamps to min 10 / max 50', () => {
 });
 
 test('cartPayload: attributes present when values are given', () => {
-  const payload = cartPayload({ mats: 12, days: 2, date: '2 Aug', method: 'deliver', postcode: 'ec2y 8ds', zone: 'central' }, CFG);
+  const payload = cartPayload({ mats: 12, days: 2, date: '2 Aug', method: 'deliver', postcode: 'ec2y 8ds', zone: 'bandA' }, CFG);
   assert.strictEqual(payload.attributes['Event date'], '2 Aug');
   assert.strictEqual(payload.attributes['Postcode'], 'EC2Y 8DS');
   assert.strictEqual(payload.attributes['Method'], 'Delivery');

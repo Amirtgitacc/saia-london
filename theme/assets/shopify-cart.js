@@ -30,14 +30,16 @@
     // courier as a REAL cart line (priced by its Shopify variant), so the delivery the
     // guest chose in the estimator/assistant is in the total before checkout — the
     // checkout shipping rate is then the free "already included" one (weight-gated).
-    // There is exactly ONE courier option: we do both legs. hire.collection is legacy
-    // and ignored, so a stale session can never resurrect the deleted one-way variant.
-    var inLondon = hire.zone === 'central' || hire.zone === 'greater';
-    if (hire.method !== 'pickup' && inLondon && cfg.courierTwoWayVariant) {
-      lines.push({ variant: cfg.courierTwoWayVariant, qty: 1 });
+    // One variant per priced band; both cover BOTH legs. hire.collection is legacy and
+    // ignored, so a stale session can never resurrect the deleted one-way variant.
+    // Band C (zone 'outer') and outside London have no variant on purpose — they are
+    // quoted, so their carts carry no courier line and fall to the paid checkout rate.
+    var courierVariant = { bandA: cfg.courierBandAVariant, bandB: cfg.courierBandBVariant }[hire.zone];
+    if (hire.method !== 'pickup' && courierVariant) {
+      lines.push({ variant: courierVariant, qty: 1 });
     }
     // pickup hires weigh 0g without a plumbing line, which wrongly shows the paid
-    // £90 fallback shipping rate (weight-gated checkout) — this hidden £0 variant
+    // fallback shipping rate (weight-gated checkout) — this hidden £0 variant
     // gives pickup carts the same 1kg signal the courier line gives delivery carts.
     if (hire.method === 'pickup' && cfg.pickupVariant) lines.push({ variant: cfg.pickupVariant, qty: 1 });
 

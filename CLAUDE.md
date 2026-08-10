@@ -136,26 +136,40 @@ Tier-2 assist uses `claude-haiku-4-5` (fast, fires only on the long tail). Overr
 Delivery is by **Addison Lee** courier from the NW3 base (pickup from NW3 is free). Hire facts:
 £8.50/mat, 2-day base, **+£1.50/mat per extra day**, **min 10, max 50** (no bulk discount).
 
-- **Pricing model (LIVE): delivery is symmetric.** Either **we handle both journeys**
-  (**£90 flat across London**, delivery + same-day collection) or **the customer handles both**
+- **Pricing model (LIVE): delivery is symmetric and banded by postcode.** Either **we handle
+  both journeys** (delivery + same-day collection, one price) or **the customer handles both**
   (free pickup from, and return to, NW3). There is **no mixed option** — the old £45
-  delivery-only price is gone. Outside London → WhatsApp quote. Postcode zones now only pick
-  the label + the outside-London case. The price lives in `KB.delivery.twoWay` in
-  `js/saia-knowledge.js`.
+  delivery-only price is gone. The flat £90 is gone too: it lost money outside Zone 2.
+
+  | Band | Price | Where | Real AL Small Van cost (round trip) |
+  |---|---|---|---|
+  | `bandA` | **£80** | NW1–3, NW5/6/8/10/11, N1–N8, N19, N22, W1, W2, W9–W11, EC1–EC4 | £65–78 |
+  | `bandB` | **£110** | WC, SW1–SW11, most SE + E, W3–W14, N9–N18, NW4, NW9 | £84–104 |
+  | `outer` | **quote** | rest of London + BR CR DA EN HA IG KT RM SM TW UB WD | £129–192 |
+  | `outside` | **quote** | not London | — |
+
+  Prices live in `KB.delivery.bands` in `js/saia-knowledge.js`; the district→band maps are
+  `bandADistricts`/`bandBDistricts` there. Band C has **no price on purpose** — its real cost
+  spans £129 (Harrow) to £192 (Bromley), so one number would either gouge or lose. It sets
+  `quoteOnly`, which routes the booking to the WhatsApp quote via `js/checkout-handoff.js`
+  and adds **no courier cart line**. Never give Band C a price without re-quoting AL.
+
+  > Band figures come from live Addison Lee **Small Van** quotes out of NW3, Aug 2026, inc VAT.
+  > They exclude AL's **waiting-time charge**. Re-quote all four corners when AL moves its tariff.
 - **The choice IS the delivery method**, made in the estimator or the assistant, never at
   checkout. `hire.method` is `'deliver' | 'pickup'`. `hire.collection` and the `set_collection`
   tool no longer exist; a stale `hire.collection` on an old saved hire is deliberately ignored
   and still prices as two-way.
 - **In the cart it's a real line item** — `js/shopify-cart.js` adds the hidden "Courier
-  delivery" product (variant ID in theme setting `variant_courier_two_way`, exposed via
-  `saia-boot.liquid`). Courier variants weigh 1kg, everything else 0g, and the shipping profile
-  is **weight-gated**: carts WITH a courier line get the free "Courier — already included in
-  your hire total" rate; carts without one (direct product-page buys) get the paid £90 rate.
-  No free-shipping loophole from either side.
-- **Changing the courier price = three places, all must match** (get one wrong and a customer
-  sees a different delivery price depending on how they reached checkout):
-  1. `KB.delivery.twoWay` in `js/saia-knowledge.js`
-  2. the Shopify two-way courier variant price
+  delivery" product, **one variant per priced band** (theme settings `variant_courier_band_a`
+  and `variant_courier_band_b`, exposed via `saia-boot.liquid`). Courier variants weigh 1kg,
+  everything else 0g, and the shipping profile is **weight-gated**: carts WITH a courier line
+  get the free "Courier — already included in your hire total" rate; carts without one (direct
+  product-page buys) get the paid fallback rate. No free-shipping loophole from either side.
+- **Changing a band price = three places, all must match** (get one wrong and a customer sees
+  a different delivery price depending on how they reached checkout):
+  1. `KB.delivery.bands.<band>` in `js/saia-knowledge.js`
+  2. that band's Shopify courier variant price
   3. the paid fallback rate in the "SAÏA mat hire (checkout plumbing)" shipping profile
 - **LATER — live Addison Lee rates:** the official **AL Shopify app** is installed but in TEST
   mode (real zonal prices ≈ £14–20 +VAT per leg). Blockers: AL must answer the van question

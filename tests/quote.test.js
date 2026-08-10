@@ -3,7 +3,7 @@ const assert = require('node:assert');
 const KB = require('../js/saia-knowledge.js');
 
 test('hireComplete: full deliver hire is complete', () => {
-  assert.strictEqual(KB.hireComplete({ mats: 15, days: 2, method: 'deliver', zone: 'central', date: 'Sat' }), true);
+  assert.strictEqual(KB.hireComplete({ mats: 15, days: 2, method: 'deliver', zone: 'bandA', date: 'Sat' }), true);
 });
 test('hireComplete: pickup needs no zone', () => {
   assert.strictEqual(KB.hireComplete({ mats: 15, days: 2, method: 'pickup', date: 'Sat' }), true);
@@ -12,25 +12,25 @@ test('hireComplete: deliver without zone is incomplete', () => {
   assert.strictEqual(KB.hireComplete({ mats: 15, days: 2, method: 'deliver', zone: null, date: 'Sat' }), false);
 });
 test('hireComplete: missing date is incomplete', () => {
-  assert.strictEqual(KB.hireComplete({ mats: 15, days: 2, method: 'deliver', zone: 'central', date: null }), false);
+  assert.strictEqual(KB.hireComplete({ mats: 15, days: 2, method: 'deliver', zone: 'bandA', date: null }), false);
 });
 test('hireComplete: below minimum mats is incomplete', () => {
   assert.strictEqual(KB.hireComplete({ mats: 8, days: 2, method: 'pickup', date: 'Sat' }), false);
 });
 
-test('quoteLines: 15 mats / 2 days / central (two-way default)', () => {
-  const q = KB.quoteLines({ mats: 15, days: 2, method: 'deliver', zone: 'central', date: 'Sat' });
-  assert.strictEqual(q.total, 240);          // 127.50 + 90 + 22.50
+test('quoteLines: 15 mats / 2 days / Band A (both journeys)', () => {
+  const q = KB.quoteLines({ mats: 15, days: 2, method: 'deliver', zone: 'bandA', date: 'Sat' });
+  assert.strictEqual(q.total, 230);          // 127.50 + 80 + 22.50
   assert.strictEqual(q.deposit, 22.5);
   assert.strictEqual(q.quoteOnly, false);
   assert.strictEqual(q.lines[0].value, '£127.50');           // mats base
   assert.ok(q.lines.some(l => l.label === 'Refundable deposit' && l.value === '£22.50'));
-  assert.ok(q.lines.some(l => /Delivery/.test(l.label) && l.value === '£90.00'));
+  assert.ok(q.lines.some(l => /Delivery/.test(l.label) && l.value === '£80.00'));
   assert.ok(!q.lines.some(l => l.label === 'Extra days'));    // no extra days at 2 days
 });
 test('quoteLines: 3 days adds an Extra days line', () => {
-  const q = KB.quoteLines({ mats: 15, days: 3, method: 'deliver', zone: 'central', date: 'Sat' });
-  assert.strictEqual(q.total, 262.5);        // 127.50 + 22.50 extra + 90 + 22.50
+  const q = KB.quoteLines({ mats: 15, days: 3, method: 'deliver', zone: 'bandA', date: 'Sat' });
+  assert.strictEqual(q.total, 252.5);        // 127.50 + 22.50 extra + 80 + 22.50
   assert.ok(q.lines.some(l => l.label === 'Extra days' && l.value === '£22.50'));
 });
 test('quoteLines: outside London is quote-only with a subtotal', () => {
@@ -45,22 +45,26 @@ test('buildWhatsAppText mentions mats, days and the postcode', () => {
   assert.ok(/15 mats/.test(t) && /2 days/.test(t) && /M1 1AA/i.test(t));
 });
 
-test('KB.delivery no longer carries a one-way price', () => {
+test('KB.delivery carries banded prices, not a flat or one-way one', () => {
   assert.strictEqual(KB.delivery.oneWay, undefined);
-  assert.strictEqual(KB.delivery.twoWay, 90);
+  assert.strictEqual(KB.delivery.twoWay, undefined);
+  assert.strictEqual(KB.delivery.bands.bandA, 80);
+  assert.strictEqual(KB.delivery.bands.bandB, 110);
+  // Band C has no price on purpose — it is quoted per postcode.
+  assert.strictEqual(KB.delivery.bands.outer, undefined);
 });
 
-test('a stale collection:"one" is ignored and still prices as two-way', () => {
-  const q = KB.priceHire({ mats: 20, days: 2, method: 'deliver', zone: 'central', collection: 'one' });
-  assert.strictEqual(q.deliveryCost, 90);
-  assert.strictEqual(q.deliveryLabel, 'Courier · delivery + same-day collection · Central London');
+test('a stale collection:"one" is ignored and still prices as both journeys', () => {
+  const q = KB.priceHire({ mats: 20, days: 2, method: 'deliver', zone: 'bandA', collection: 'one' });
+  assert.strictEqual(q.deliveryCost, 80);
+  assert.strictEqual(q.deliveryLabel, 'Courier · delivery + same-day collection · Band A');
 });
 
 test('a stale collection:"one" does not change the quote line label', () => {
-  const q = KB.quoteLines({ mats: 20, days: 2, method: 'deliver', zone: 'greater', collection: 'one', date: 'Sat' });
+  const q = KB.quoteLines({ mats: 20, days: 2, method: 'deliver', zone: 'bandB', collection: 'one', date: 'Sat' });
   const row = q.lines.find(l => l.label === 'Delivery & collection');
   assert.ok(row, 'delivery row should always read "Delivery & collection"');
-  assert.strictEqual(row.value, '£90.00');
+  assert.strictEqual(row.value, '£110.00');
   assert.ok(!q.lines.some(l => l.label === 'Delivery only'));
 });
 

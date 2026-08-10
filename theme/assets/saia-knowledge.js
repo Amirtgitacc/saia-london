@@ -35,7 +35,7 @@
       depositPerMat: 1.5,                   // £ per mat, REFUNDABLE — returned after mats come back
       depositRefundable: true,
       maxMats: 50,                          // hard ceiling: our current stock
-      delivery: 'Same-day Addison Lee courier from our NW3 base, £90 flat across London for delivery plus same-day collection after your event. Or collect from and return to our NW3 base yourself, which is free. It is one or the other: either we handle both journeys or you do. We work to a 6-hour delivery window, so early or morning events are usually delivered the day before.',
+      delivery: 'Same-day Addison Lee courier from our NW3 base, priced by how far your event is from us. Delivery plus same-day collection is £80 for our nearest postcodes (NW, N, W1, W2, W9 to W11 and EC) and £110 across central and inner London; further out we quote per postcode. Or collect from and return to our NW3 base yourself, which is free. It is one or the other: either we handle both journeys or you do. We work to a 6-hour delivery window, so early or morning events are usually delivered the day before.',
       deliveryWindow: 6,                    // hours
       collection: 'We collect on the day of your event, once it has finished and the mats are rolled up, bagged and stacked ready for the courier. Leave a little time to pack up afterwards, as a small charge can apply if the courier is kept waiting. No cleaning needed, we take care of that. You can also drop them back at our NW3 warehouse in working hours.',
       twoDayBasis: 'The hire is charged as a 2-day hire even when the mats are delivered and collected on the same day, because we reserve the mats for you and hold a 6-hour delivery window.',
@@ -90,21 +90,50 @@
     affiliate: 'We do have an affiliate programme. Email us at Cristina@saialondon.com and we will talk you through the details and set you up personally.',
   };
 
-  /* ---- delivery zones + pricing (single source, lifted from the home estimator) ----
-     Flat London courier pricing, matched 1:1 to the Shopify "Courier delivery" product:
-       twoWay £90 = delivery + same-day collection. This is the ONLY courier option —
-       either we handle both legs, or the customer handles both legs by collecting from
-       and returning to NW3 (free). There is no mixed "we deliver, you return" option.
-     Zones only decide the label and the outside-London → quote-by-WhatsApp case. */
+  /* ---- delivery bands + pricing (single source, lifted from the home estimator) ----
+     Banded London courier pricing, matched 1:1 to the Shopify "Courier delivery" product.
+     Every band price buys TWO Addison Lee journeys — delivery, then same-day collection
+     once the event has finished. This is the ONLY courier option: either we handle both
+     legs, or the customer handles both legs by collecting from and returning to NW3
+     (free). There is no mixed "we deliver, you return" option.
+
+     The bands come from real Addison Lee Small Van quotes out of NW3 (Aug 2026, inc VAT,
+     per single journey — double them for the round trip we actually book):
+       A   NW1 £32.70 · W1 £35.88 · N8 £39.00 · EC2 £39.00        → ≤ £78 round trip
+       B   SW1 £42.18 · SE1 £45.30 · E8 £45.30 · SW11/W6 £51.67   → ≤ £104 round trip
+       C   HA1 £64.27 · TW9 £76.87 · CR0 £83.24 · BR1 £95.84      → £129–£192 round trip
+     Band C spans far too wide a range for one honest number, so it is quoted per
+     postcode exactly like outside-London rather than priced up front.
+     AL also charges for waiting time, which these figures do NOT include.
+     Re-quote all four corners whenever AL moves its tariff. */
   KB.delivery = {
-    twoWay: 90,
+    // £ per hire, covering BOTH journeys. Band C is deliberately absent — it is quoted.
+    bands: { bandA: 80, bandB: 110 },
     zones: {
-      central: { key: 'central', label: 'Zone 1 · Central London' },
-      greater: { key: 'greater', label: 'Zone 2 · Greater London' },
+      bandA: { key: 'bandA', short: 'Band A', label: 'Band A · Local London' },
+      bandB: { key: 'bandB', short: 'Band B', label: 'Band B · Central & inner London' },
+      outer: { key: 'outer', short: 'Band C', label: 'Band C · Outer London' },
     },
-    central: ['EC1', 'EC2', 'EC3', 'EC4', 'WC1', 'WC2', 'W1', 'SW1', 'SE1', 'N1', 'NW1', 'E1', 'W2'],
+    /* Districts by area letter → the district numbers that sit in that band. Expressed as
+       ranges rather than a flat list of strings so an unusual district (E20, N21, SE28)
+       falls through to Band C — quoted — instead of being mispriced or read as non-London. */
+    bandADistricts: {
+      NW: [1, 2, 3, 5, 6, 8, 10, 11],
+      N: [1, 2, 3, 4, 5, 6, 7, 8, 19, 22],
+      W: [1, 2, 9, 10, 11],
+      EC: [1, 2, 3, 4],
+    },
+    bandBDistricts: {
+      WC: [1, 2],
+      SW: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+      SE: [1, 3, 5, 8, 10, 11, 13, 14, 15, 16, 17, 21, 22],
+      E: [1, 2, 3, 5, 6, 8, 9, 14, 15, 16, 17],
+      W: [3, 4, 5, 6, 7, 8, 12, 13, 14],
+      N: [9, 10, 11, 12, 13, 14, 15, 16, 17, 18],
+      NW: [4, 9],
+    },
     london: ['E', 'EC', 'N', 'NW', 'SE', 'SW', 'W', 'WC'],
-    outer: ['BR', 'CR', 'DA', 'EN', 'HA', 'IG', 'KT', 'RM', 'SM', 'TW', 'UB', 'WD'],
+    outerBoroughs: ['BR', 'CR', 'DA', 'EN', 'HA', 'IG', 'KT', 'RM', 'SM', 'TW', 'UB', 'WD'],
   };
 
   // postcode -> zone object (or null if it can't be read)
@@ -115,9 +144,14 @@
     var ow = pc.length > 3 ? pc.slice(0, pc.length - 3) : pc;
     var m = ow.match(/^([A-Z]{1,2})(\d{1,2})?/);
     if (!m) return null;
-    var area = m[1], key = area + (m[2] ? m[2] : '');
-    if (D.central.indexOf(key) !== -1) return D.zones.central;
-    if (D.london.indexOf(area) !== -1 || D.outer.indexOf(area) !== -1) return D.zones.greater;
+    var area = m[1], n = m[2] ? parseInt(m[2], 10) : null;
+    function inBand(map) {
+      var list = map[area];
+      return !!(list && n !== null && list.indexOf(n) !== -1);
+    }
+    if (inBand(D.bandADistricts)) return D.zones.bandA;
+    if (inBand(D.bandBDistricts)) return D.zones.bandB;
+    if (D.london.indexOf(area) !== -1 || D.outerBoroughs.indexOf(area) !== -1) return D.zones.outer;
     return { key: 'outside', label: 'outside' };
   };
 
@@ -219,18 +253,21 @@
     var matCost = mats * H.pricePerMat + mats * H.extraDayPerMat * Math.max(0, days - H.hireDays);
     var deposit = mats * H.depositPerMat;
 
-    // Delivery is symmetric: we do both legs (£90 flat London) or the customer does both
-    // legs (free NW3 pickup). hire.collection is legacy and deliberately ignored — an old
-    // sessionStorage hire carrying collection:'one' must not resurrect a £45 price.
+    // Delivery is symmetric: we do both legs (banded London price) or the customer does
+    // both legs (free NW3 pickup). hire.collection is legacy and deliberately ignored — an
+    // old sessionStorage hire carrying collection:'one' must not resurrect a £45 price.
+    // Band C (outer London) and outside London are both quoted, never priced here.
     var deliveryCost = null, deliveryLabel = null, quoteOnly = false;
     if (hire.method === 'pickup') {
       deliveryCost = 0; deliveryLabel = 'Pickup from NW3 · free';
     } else if (hire.zone === 'outside') {
       deliveryCost = null; deliveryLabel = 'Courier · by quote'; quoteOnly = true;
-    } else if (hire.zone === 'central' || hire.zone === 'greater') {
-      deliveryCost = KB.delivery.twoWay;
+    } else if (hire.zone === 'outer') {
+      deliveryCost = null; deliveryLabel = 'Courier · outer London · by quote'; quoteOnly = true;
+    } else if (KB.delivery.bands[hire.zone] != null) {
+      deliveryCost = KB.delivery.bands[hire.zone];
       deliveryLabel = 'Courier · delivery + same-day collection · '
-        + (hire.zone === 'central' ? 'Central London' : 'Greater London');
+        + KB.delivery.zones[hire.zone].short;
     }
 
     var total = (deliveryCost == null) ? null : matCost + deliveryCost + deposit;
@@ -305,7 +342,8 @@
     '- If someone needs more than ' + KB.hire.maxMats + ' mats, ask whether their classes run in staggered sessions (the same ' + KB.hire.maxMats + ' can be reused between groups). If everyone needs a mat at the same time, we cannot go beyond ' + KB.hire.maxMats + '. Never book past ' + KB.hire.maxMats + '.',
     '- A ' + KB.hire.currency + KB.hire.depositPerMat.toFixed(2) + ' per mat REFUNDABLE deposit is taken upfront and returned once the mats come back. It is not a hire cost.',
     '- Delivery: ' + KB.hire.delivery,
-    '- Delivery is symmetric, and there are only two options: our courier does BOTH journeys at ' + KB.hire.currency + KB.delivery.twoWay + ' flat across London (delivery plus same-day collection), or the customer does both journeys by collecting from and returning to NW3, which is free. There is no mixed option where we deliver and they return the mats. Outside London is quoted by us.',
+    '- Delivery is symmetric, and there are only two options: our courier does BOTH journeys (delivery plus same-day collection), or the customer does both journeys by collecting from and returning to NW3, which is free. There is no mixed option where we deliver and they return the mats.',
+    '- Courier price depends on the postcode, and covers both journeys: ' + KB.hire.currency + KB.delivery.bands.bandA + ' for our nearest areas (NW1-3, NW5, NW6, NW8, NW10, NW11, N1-N8, N19, N22, W1, W2, W9-W11, EC1-EC4) and ' + KB.hire.currency + KB.delivery.bands.bandB + ' across central and inner London (WC, SW1-SW11, most of SE and E, W3-W14, N9-N18, NW4, NW9). Outer London and anywhere outside London are QUOTED per postcode, never priced up front — say we will confirm the courier and never invent a number.',
     '- Collection: ' + KB.hire.collection,
     '- Two-day basis: ' + KB.hire.twoDayBasis,
     '- Overnight storage: ' + KB.hire.overnightStorage,

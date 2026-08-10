@@ -1376,7 +1376,7 @@
         '<p class="disc" data-dates style="margin-top:8px;"></p>' +
         '<button type="button" class="cta saia-btn saia-btn--terra" data-cta data-est-book>' +
           '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 5h16v11H7l-3 3z"/></svg> Book now</button>' +
-        '<p class="disc"><b>Flat London courier rate</b> — charged exactly as shown. We confirm timings with you before your event.</p>' +
+        '<p class="disc"><b>Courier priced by postcode</b> — one price covers delivery and same-day collection, charged exactly as shown. We confirm timings with you before your event.</p>' +
       '</div>';
   }
 
@@ -1410,12 +1410,20 @@
         placeAll(p);if(k<1)raf=requestAnimationFrame(step);else curT=to;}raf=requestAnimationFrame(step);}
 
     var totalNodes=[].slice.call(inst.querySelectorAll('[data-total]'));
-    function setTotal(html){totalNodes.forEach(function(n){n.innerHTML=html;});}
+    var totalRaf=null;
+    // paint() just writes; setTotal() writes AND kills any running count-up. Without that
+    // cancel, typing a quote-only postcode (Band C / outside London) while the previous
+    // priced total was still animating left the old number on screen — the guest saw a
+    // firm "DUE TODAY £380" for a hire we have not priced. Same guard driveVan uses.
+    function paint(html){totalNodes.forEach(function(n){n.innerHTML=html;});}
+    function setTotal(html){if(totalRaf){cancelAnimationFrame(totalRaf);totalRaf=null;}paint(html);}
     function tweenTotal(to,prefix){var from=parseFloat(totalNodes[0].dataset.val||'0')||0;
       if(to===null){totalNodes.forEach(function(n){n.dataset.val='0';});setTotal(prefix||'—');return;}
       if(reduce){totalNodes.forEach(function(n){n.dataset.val=to;});setTotal((prefix||'')+gbp(to));return;}
+      if(totalRaf)cancelAnimationFrame(totalRaf);
       var start=null;function f(ts){if(start===null)start=ts;var k=Math.min(1,(ts-start)/680),e=1-Math.pow(1-k,3),v=from+(to-from)*e;
-        setTotal((prefix||'')+gbp(v));if(k<1)requestAnimationFrame(f);else totalNodes.forEach(function(n){n.dataset.val=to;});}requestAnimationFrame(f);}
+        paint((prefix||'')+gbp(v));if(k<1){totalRaf=requestAnimationFrame(f);}else{totalRaf=null;totalNodes.forEach(function(n){n.dataset.val=to;});}}
+      totalRaf=requestAnimationFrame(f);}
 
     function render(){
       var mats=parseInt(els.mats.value,10)||0, days=parseInt(els.days.value,10)||0;
@@ -1441,7 +1449,7 @@
       if(els.depBack) els.depBack.innerHTML='<b>'+gbp(q.deposit)+'</b> of this is a refundable deposit — back to you once the mats are returned.';
       var totalNum=q.total,delText='—',zoneShow=false,wa;
       if(method==='pickup'){els.delK.innerHTML='Collection<small>Pick up from NW3, free</small>';delText='Free';wa='collect from NW3';}
-      else if(z.label==='outside'){els.delK.innerHTML='Delivery &amp; collection<small>Addison Lee, by quote</small>';delText='By quote';els.zoneTxt.textContent='Outside London';zoneShow=true;wa='delivery to '+els.pc.value.toUpperCase()+' (outside London)';}
+      else if(q.quoteOnly){var outer=z.key==='outer';els.delK.innerHTML='Delivery &amp; collection<small>Addison Lee, by quote</small>';delText='By quote';els.zoneTxt.textContent=outer?z.label:'Outside London';zoneShow=true;wa='delivery to '+els.pc.value.toUpperCase()+(outer?' (outer London, courier to confirm)':' (outside London)');}
       else {els.delK.innerHTML='Delivery &amp; collection<small>Addison Lee, same-day collection</small>';delText=gbp(q.deliveryCost);els.zoneTxt.textContent=z.label;zoneShow=true;wa='delivery to '+els.pc.value.toUpperCase()+' ('+z.label+', with same-day collection)';}
       els.delCost.textContent=delText; els.zone.style.display=zoneShow?'':'none';
       if(totalNum===null){setTotal(gbp(matCost+q.deposit)+' <span class="pre">+ quote</span>');totalNodes.forEach(function(n){n.dataset.val='0';});}
@@ -1533,9 +1541,9 @@
 </script>
 <script src="vendor/three.min.js"></script>
 <script src="js/mat-core.js?v=20260629b"></script>
-<script src="js/saia-knowledge.js?v=20260807a"></script>
+<script src="js/saia-knowledge.js?v=20260810a"></script>
 <script src="js/planner.js?v=20260807a"></script>
-<script src="js/shopify-cart.js?v=20260807a"></script>
+<script src="js/shopify-cart.js?v=20260810a"></script>
 <script src="js/checkout-handoff.js?v=20260716t11"></script>
 <script src="js/home-concierge.js?v=20260807a"></script>
 <script src="js/home.js?v=20260629b"></script>

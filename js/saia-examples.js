@@ -22,7 +22,7 @@
   var examples = [
     // ── Delivery & collection (the #1 confusion) ──────────────────
     { u: 'how does delivery and collection usually work?',
-      say: 'We work to a 6-hour delivery window, so early or morning events are usually delivered the day before. £90 flat across London covers delivery plus same-day collection after your event, with no cleaning needed as we take care of that. Or you can collect from and return to our NW3 warehouse yourself, which is free. It is one or the other, either we do both journeys or you do.',
+      say: 'We work to a 6-hour delivery window, so early or morning events are usually delivered the day before. One courier price covers delivery plus same-day collection after your event, and it depends on how far you are from our NW3 base, with no cleaning needed as we take care of that. Or you can collect from and return to our NW3 warehouse yourself, which is free. It is one or the other, either we do both journeys or you do. Share your postcode and I will show you the exact figure.',
       actions: [] },
     { u: 'yes collect them after please',
       say: "Of course. We deliver the day before, then collect the same day once your event has finished. And what date is your event?",
@@ -57,7 +57,7 @@
       say: "I understand. It covers quality mats, same-day courier both ways and the cleaning, and the deposit comes back to you in full. It's the same fair £8.50 rate whatever the size of your booking; shall I show you an itemised quote so you can see exactly what it is?",
       actions: [] },
     { u: 'how much would 30 mats cost?',
-      say: "For 30 it's £8.50 a mat on our 2-day hire, plus a refundable £1.50-a-mat deposit and a flat London courier. Give me your days and postcode and I'll show you the exact total.",
+      say: "For 30 it's £8.50 a mat on our 2-day hire, plus a refundable £1.50-a-mat deposit and the courier, which is set by your postcode. Give me your days and postcode and I'll show you the exact total.",
       actions: [{ tool: 'add_mats', args: { n: 30 } }] },
     { u: 'is the deposit refundable?',
       say: "Yes, the £1.50-per-mat deposit is fully refundable, returned once the mats come back to us. It's a hold, not a hire cost.",
@@ -135,7 +135,7 @@
       say: 'Every mat is properly cleaned and sanitised after each hire, so they always arrive fresh, and you never lift a finger. How many do you need?',
       actions: [] },
     { u: "what's included in the price?",
-      say: "Your hire covers the mats, same-day courier both ways across London and the cleaning afterwards, plus a deposit that comes back to you. The only extra is additional days beyond the standard two. It's the same flat rate whatever the size of your order, up to our 50-mat maximum. Shall I show you a quote?",
+      say: "Your hire covers the mats, same-day courier both ways and the cleaning afterwards, plus a deposit that comes back to you. The only extra is additional days beyond the standard two. The courier is priced by your postcode rather than by how many mats you take, so the size of your order never changes it, up to our 50-mat maximum. Shall I show you a quote?",
       actions: [] },
 
     // ── Product / suitability concerns ────────────────────────────
@@ -186,7 +186,7 @@
       say: "Of course. Each extra day is just £1.50 a mat. How many days in total would you like them for?",
       actions: [] },
     { u: "could you deliver but I'll drop them back myself?",
-      say: "We keep it to one or the other, I'm afraid: either our courier does both journeys at the flat London rate, or you collect from and return to our NW3 warehouse yourself for free. Which suits you better?",
+      say: "We keep it to one or the other, I'm afraid: either our courier does both journeys for the one postcode-based price, or you collect from and return to our NW3 warehouse yourself for free. Which suits you better?",
       actions: [] },
     { u: "there's no parking at the venue, is that a problem?",
       say: 'Not usually. Just share any access details with us when you book and the courier plans around it. Shall I get your hire set up?',
