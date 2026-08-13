@@ -94,6 +94,45 @@ async function storeChatLogs(rows, client) {
   return { stored: true, key: key };
 }
 
+/* ---- naming a conversation ------------------------------------
+   A uuid tells Cristina nothing, so a session is named after the
+   first thing the visitor said, plus a coarse topic. Both are
+   derived here (not in the page) so the list and the transcript
+   header can never disagree.
+   Topic order is deliberate: mat hire is the product, so "20 mats
+   delivered to NW5" reads as Mat hire, and only a chat with no mat
+   words at all is filed under Delivery.                          */
+const TOPIC_RULES = [
+  { topic: 'Pilates',  re: /pilates|reformer|1-?2-?1|one[- ]to[- ]one|instructor|class/i },
+  { topic: 'Events',   re: /\bevent|retreat|workshop|rsvp|guest ?list|social\b/i },
+  { topic: 'Bespoke',  re: /bespoke|custom|branded|logo|commission/i },
+  { topic: 'Mat hire', re: /\bmats?\b|hire|quote|price|book|£|\bdays?\b/i },
+  { topic: 'Delivery', re: /deliver|courier|collect|postcode|drop ?off|pick ?up/i },
+];
+
+function titleFrom(text) {
+  const clean = String(text || '').replace(/\s+/g, ' ').trim();
+  if (!clean) return '';
+  const cut = clean.length <= 68 ? clean : clean.slice(0, 68).replace(/\s+\S*$/, '') + '…';
+  return cut.charAt(0).toUpperCase() + cut.slice(1);
+}
+
+// Topic reads the visitor's own words only — the assistant's action lines
+// ("Delivery to NW5 · Band A") would file half the log under Delivery.
+function topicFrom(turns) {
+  const said = (Array.isArray(turns) ? turns : [])
+    .filter((t) => t && t.role === 'user')
+    .map((t) => String(t.message || '')).join('\n');
+  const hit = TOPIC_RULES.find((r) => r.re.test(said));
+  return hit ? hit.topic : 'General';
+}
+
+function summariseTurns(turns) {
+  const list = Array.isArray(turns) ? turns : [];
+  const opener = list.find((t) => t && t.role === 'user' && String(t.message || '').trim());
+  return { title: titleFrom(opener && opener.message), topic: topicFrom(list) };
+}
+
 // chats/<date>/<session>/<at>-<rand>.json  ->  { date, session, at }
 function parseKey(pathname) {
   const p = String(pathname || '').split('/');
@@ -102,26 +141,58 @@ function parseKey(pathname) {
   return { date: p[1], session: p[2], at: Number.isFinite(at) ? at : 0 };
 }
 
-async function readChatSessions(client, limit) {
+async function readChatSessions(client, limit, fetchFn) {
   const c = client === undefined ? blobClient() : client;
   if (!c) return [];
   const res = await c.list({ prefix: 'chats/', limit: 1000 });
   const bySession = new Map();
+  // Blob URLs stay in this local map and are NEVER copied onto a returned
+  // row — see the privacy note at the top of the file.
+  const openerUrl = new Map();
+  const openerAt = new Map();
   (res.blobs || []).forEach((b) => {
     const k = parseKey(b.pathname);
     if (!k) return;
     const cur = bySession.get(k.session);
-    if (!cur) bySession.set(k.session, { session: k.session, date: k.date, lastAt: k.at, batches: 1 });
-    else { cur.batches += 1; if (k.at > cur.lastAt) { cur.lastAt = k.at; cur.date = k.date; } }
+    if (!cur) {
+      bySession.set(k.session, { session: k.session, date: k.date, lastAt: k.at, batches: 1, startedAt: k.at });
+      openerUrl.set(k.session, b.url); openerAt.set(k.session, k.at);
+    } else {
+      cur.batches += 1;
+      if (k.at > cur.lastAt) { cur.lastAt = k.at; cur.date = k.date; }
+      if (k.at < openerAt.get(k.session)) {
+        cur.startedAt = k.at;
+        openerUrl.set(k.session, b.url); openerAt.set(k.session, k.at);
+      }
+    }
   });
-  return Array.from(bySession.values())
+  const rows = Array.from(bySession.values())
     .sort((a, b) => b.lastAt - a.lastAt)
     .slice(0, limit || 200);
+
+  // The opening batch names the conversation: one extra fetch per session,
+  // in small waves so a busy log never opens 200 sockets at once. A batch
+  // that will not load just leaves the row unnamed.
+  const get = fetchFn || fetch;
+  for (let i = 0; i < rows.length; i += 12) {
+    // eslint-disable-next-line no-await-in-loop
+    await Promise.all(rows.slice(i, i + 12).map(async (s) => {
+      let turns = [];
+      try {
+        const r = await get(openerUrl.get(s.session));
+        if (r && r.ok) { const body = await r.json(); if (body && Array.isArray(body.turns)) turns = body.turns; }
+      } catch (e) { turns = []; }
+      const sum = summariseTurns(turns);
+      s.title = sum.title;
+      s.topic = sum.topic;
+    }));
+  }
+  return rows;
 }
 
 async function readChatSession(session, client, fetchFn) {
   const c = client === undefined ? blobClient() : client;
-  if (!c) return { session: session, turns: [] };
+  if (!c) return { session: session, turns: [], title: '', topic: 'General' };
   const get = fetchFn || fetch;
   const res = await c.list({ prefix: 'chats/', limit: 1000 });
   const mine = (res.blobs || [])
@@ -140,7 +211,11 @@ async function readChatSession(session, client, fetchFn) {
       at: body.at || x.k.at, role: t.role, tier: t.tier || null, message: t.message,
     }));
   }
-  return { session: session, turns: turns };
+  const sum = summariseTurns(turns);
+  return { session: session, turns: turns, title: sum.title, topic: sum.topic };
 }
 
-module.exports = { normalizeLogPayload, blobKey, storeChatLogs, blobClient, readChatSessions, readChatSession };
+module.exports = {
+  normalizeLogPayload, blobKey, storeChatLogs, blobClient,
+  readChatSessions, readChatSession, summariseTurns,
+};

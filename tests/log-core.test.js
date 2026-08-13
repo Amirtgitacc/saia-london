@@ -99,7 +99,7 @@ test('storeChatLogs accepts an empty batch without calling the store', async () 
   assert.strictEqual(res.stored, false);
 });
 
-const { readChatSessions, readChatSession } = require('../js/log-core.js');
+const { readChatSessions, readChatSession, summariseTurns } = require('../js/log-core.js');
 
 const FAKE_BLOBS = [
   { pathname: 'chats/2026-08-06/a91f/1000-aaa.json', url: 'https://blob/1', uploadedAt: '2026-08-06T09:00:00Z' },
@@ -107,9 +107,16 @@ const FAKE_BLOBS = [
   { pathname: 'chats/2026-08-05/b7e4/500-ccc.json',  url: 'https://blob/3', uploadedAt: '2026-08-05T18:00:00Z' },
 ];
 
+const PREVIEW_BODIES = {
+  'https://blob/1': { session: 'a91f', at: 1000, turns: [{ role: 'user', message: 'hi I need 20 mats for 20th of augest' }] },
+  'https://blob/2': { session: 'a91f', at: 2000, turns: [{ role: 'bot', tier: 'local', message: 'second' }] },
+  'https://blob/3': { session: 'b7e4', at: 500,  turns: [{ role: 'user', message: 'do you run pilates classes?' }] },
+};
+const previewFetch = async (url) => ({ ok: true, json: async () => PREVIEW_BODIES[url] });
+
 test('readChatSessions groups blobs by session, newest first', async () => {
   const fake = { list: async () => ({ blobs: FAKE_BLOBS }) };
-  const out = await readChatSessions(fake);
+  const out = await readChatSessions(fake, 0, previewFetch);
   assert.strictEqual(out.length, 2);
   assert.strictEqual(out[0].session, 'a91f');
   assert.strictEqual(out[0].date, '2026-08-06');
@@ -117,8 +124,56 @@ test('readChatSessions groups blobs by session, newest first', async () => {
   assert.strictEqual(out[1].session, 'b7e4');
 });
 
+test('readChatSessions names each session from its opening batch', async () => {
+  const fake = { list: async () => ({ blobs: FAKE_BLOBS }) };
+  const out = await readChatSessions(fake, 0, previewFetch);
+  assert.strictEqual(out[0].title, 'Hi I need 20 mats for 20th of augest');
+  assert.strictEqual(out[0].topic, 'Mat hire');
+  assert.strictEqual(out[0].startedAt, 1000);
+  assert.strictEqual(out[1].title, 'Do you run pilates classes?');
+  assert.strictEqual(out[1].topic, 'Pilates');
+});
+
+test('readChatSessions never leaks a blob URL to the caller', async () => {
+  const fake = { list: async () => ({ blobs: FAKE_BLOBS }) };
+  const out = await readChatSessions(fake, 0, previewFetch);
+  assert.ok(!JSON.stringify(out).includes('https://blob/'));
+});
+
+test('readChatSessions still lists a session whose opening batch will not load', async () => {
+  const fake = { list: async () => ({ blobs: FAKE_BLOBS }) };
+  const out = await readChatSessions(fake, 0, async () => { throw new Error('gone'); });
+  assert.strictEqual(out.length, 2);
+  assert.strictEqual(out[0].title, '');
+  assert.strictEqual(out[0].topic, 'General');
+});
+
 test('readChatSessions returns an empty list when the store is unconfigured', async () => {
   assert.deepStrictEqual(await readChatSessions(null), []);
+});
+
+test('summariseTurns titles from the visitor, never the assistant', async () => {
+  const out = summariseTurns([
+    { role: 'bot', message: 'Hello, how can I help?' },
+    { role: 'user', message: '  20 mats\n please  ' },
+    { role: 'act', message: 'Delivery to NW52RX · Band A' },
+  ]);
+  assert.strictEqual(out.title, '20 mats please');
+  assert.strictEqual(out.topic, 'Mat hire');
+});
+
+test('summariseTurns truncates a long opener on a word boundary', async () => {
+  const long = 'I would like to know whether you can supply mats for a corporate wellness morning we are planning';
+  assert.strictEqual(summariseTurns([{ role: 'user', message: long }]).title,
+    'I would like to know whether you can supply mats for a corporate…');
+});
+
+test('summariseTurns ignores assistant action lines when picking a topic', async () => {
+  const out = summariseTurns([
+    { role: 'user', message: 'is there a class on Saturday?' },
+    { role: 'act', message: 'Delivery to NW52RX · Band A' },
+  ]);
+  assert.strictEqual(out.topic, 'Pilates');
 });
 
 test('readChatSession merges batches into one time-ordered transcript', async () => {

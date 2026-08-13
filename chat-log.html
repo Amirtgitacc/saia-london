@@ -5,63 +5,183 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
   <title>Chat log · SAÏA London</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
-    :root{ --cream:#F5F1E8; --ink:#2B2620; --terra:#B8624A; --muted:#6B6358; --line:#DAD4C8; }
+    :root{
+      --cream:#F5F1E8; --paper:#FFFDF8; --ink:#2B2620; --terra:#B8624A;
+      --muted:#6B6358; --soft:#8C8478; --line:#DAD4C8;
+      --hot:#B8624A;      /* today        */
+      --warm:#C08A52;     /* this week    */
+      --cool:#8E9479;     /* this month   */
+      --cold:#BFB6A6;     /* older        */
+      --display:'Playfair Display',Georgia,serif;
+      --body:'Inter',system-ui,sans-serif;
+      --mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+    }
     *{ box-sizing:border-box; }
-    body{ margin:0; background:var(--cream); color:var(--ink);
-      font:16px/1.6 -apple-system,BlinkMacSystemFont,'Segoe UI',Inter,sans-serif; }
-    main{ max-width:900px; margin:0 auto; padding:40px 20px 80px; }
-    h1{ font-size:26px; font-weight:600; margin:0 0 6px; }
-    .sub{ color:var(--muted); font-size:14px; margin:0 0 32px; }
-    label{ display:block; font-size:13px; letter-spacing:.08em; text-transform:uppercase;
-      color:var(--muted); margin-bottom:8px; }
-    input[type=password]{ width:100%; max-width:340px; padding:12px 14px; font-size:16px;
-      border:1px solid var(--line); border-radius:8px; background:#fff; color:var(--ink); }
-    button{ font:inherit; cursor:pointer; border-radius:8px; }
-    .go{ margin-top:14px; padding:12px 24px; border:0; background:var(--ink); color:var(--cream); }
-    .go:hover{ background:var(--terra); }
-    :focus-visible{ outline:2px solid var(--terra); outline-offset:2px; }
-    .err{ color:var(--terra); font-size:14px; margin-top:12px; min-height:1.4em; }
-    ul{ list-style:none; margin:0; padding:0; }
-    li{ border-bottom:1px solid var(--line); }
-    .row{ display:flex; gap:14px; align-items:baseline; width:100%; text-align:left;
-      padding:14px 4px; background:none; border:0; color:inherit; }
-    .row:hover{ background:rgba(184,98,74,.06); }
-    .sid{ font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:14px; }
-    .meta{ color:var(--muted); font-size:13px; margin-left:auto; }
-    .turn{ padding:12px 0; border-bottom:1px solid var(--line); }
-    .who{ font-size:12px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); }
-    .who.user{ color:var(--terra); }
-    .msg{ margin-top:4px; white-space:pre-wrap; }
-    .back{ display:inline-block; margin-bottom:20px; color:var(--terra); background:none;
-      border:0; padding:0; font-size:14px; }
+    html{ -webkit-text-size-adjust:100%; }
+    body{ margin:0; color:var(--ink); font:400 16px/1.65 var(--body);
+      background:radial-gradient(1100px 520px at 8% -12%, #FCF9F1 0%, rgba(252,249,241,0) 62%), var(--cream);
+      -webkit-font-smoothing:antialiased; }
+    main{ max-width:880px; margin:0 auto; padding:56px 22px 96px; }
+    :focus-visible{ outline:2px solid var(--terra); outline-offset:3px; border-radius:4px; }
     [hidden]{ display:none !important; }
+
+    /* ---- masthead ---- */
+    .eyebrow{ font-size:10px; font-weight:500; letter-spacing:.22em; text-transform:uppercase;
+      color:var(--terra); margin:0 0 14px; display:flex; align-items:center; gap:10px; }
+    .eyebrow::after{ content:''; height:1px; flex:1; background:linear-gradient(90deg,var(--line),transparent); }
+    h1{ font-family:var(--display); font-weight:500; font-size:clamp(38px,6vw,52px);
+      line-height:1.04; letter-spacing:-.01em; margin:0 0 10px; }
+    .sub{ color:var(--muted); font-size:15px; margin:0; max-width:46ch; }
+    header.mast{ margin-bottom:38px; }
+
+    /* ---- password gate ---- */
+    .gate-card{ background:var(--paper); border:1px solid var(--line); border-radius:16px;
+      padding:30px 30px 26px; max-width:430px; box-shadow:0 18px 40px -32px rgba(43,38,32,.5); }
+    .gate-card h2{ font-family:var(--display); font-weight:500; font-size:21px; margin:0 0 4px; }
+    .gate-card p.hint{ color:var(--soft); font-size:13px; margin:0 0 20px; }
+    label{ display:block; font-size:10px; font-weight:500; letter-spacing:.18em;
+      text-transform:uppercase; color:var(--soft); margin-bottom:8px; }
+    input[type=password], input[type=search]{ width:100%; font:400 15px/1.4 var(--body); color:var(--ink);
+      background:#fff; border:1px solid var(--line); border-radius:10px; padding:12px 14px; }
+    input::placeholder{ color:#B4AB9C; }
+    button{ font:inherit; cursor:pointer; border-radius:10px; }
+    .go{ margin-top:16px; padding:12px 26px; border:0; background:var(--ink); color:var(--cream);
+      font-size:12px; letter-spacing:.16em; text-transform:uppercase; transition:background .25s; }
+    .go:hover{ background:var(--terra); }
+    .err{ color:var(--terra); font-size:13.5px; margin:14px 0 0; min-height:1.4em; }
+
+    /* ---- list toolbar ---- */
+    .bar{ display:flex; gap:14px; align-items:center; flex-wrap:wrap;
+      padding-bottom:16px; border-bottom:1px solid var(--line); margin-bottom:6px; }
+    .bar .count{ font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--soft);
+      white-space:nowrap; }
+    .bar .search{ margin-left:auto; width:min(260px,100%); }
+
+    /* ---- day groups ---- */
+    .grp{ display:flex; align-items:center; gap:12px; margin:30px 0 12px;
+      font-size:10px; font-weight:500; letter-spacing:.2em; text-transform:uppercase; color:var(--soft); }
+    .grp::after{ content:''; height:1px; flex:1; background:var(--line); }
+    ul.rows{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px; }
+
+    /* ---- a conversation ---- */
+    .card{ position:relative; display:block; width:100%; text-align:left; background:var(--paper);
+      border:1px solid var(--line); border-left:0; border-radius:12px; padding:16px 18px 15px 22px;
+      color:inherit; overflow:hidden; transition:transform .22s cubic-bezier(.2,.7,.2,1),
+      box-shadow .22s, border-color .22s; animation:rise .55s cubic-bezier(.2,.7,.2,1) backwards;
+      animation-delay:calc(var(--i,0) * 45ms); }
+    .card::before{ content:''; position:absolute; left:0; top:0; bottom:0; width:4px; background:var(--age); }
+    .card:hover{ transform:translateY(-2px); border-color:#CDC5B6;
+      box-shadow:0 16px 28px -24px rgba(43,38,32,.55); }
+    .card:hover .ttl{ color:var(--terra); }
+    .card .ttl{ font-family:var(--display); font-weight:500; font-size:19px; line-height:1.35;
+      margin:0 0 8px; transition:color .22s; }
+    .card .ttl.none{ font-style:italic; color:var(--soft); }
+    .card .facts{ display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+      font-size:12.5px; color:var(--muted); }
+    .chip{ font-size:10px; font-weight:500; letter-spacing:.14em; text-transform:uppercase;
+      padding:3px 9px; border-radius:999px; color:var(--age);
+      background:color-mix(in srgb, var(--age) 12%, transparent);
+      border:1px solid color-mix(in srgb, var(--age) 30%, transparent); }
+    .when{ color:var(--age); font-weight:500; }
+    .dot{ color:var(--line); }
+    .sid{ font-family:var(--mono); font-size:11px; color:#A79E90; margin-left:auto; letter-spacing:-.01em; }
+    @keyframes rise{ from{ opacity:0; transform:translateY(10px); } to{ opacity:1; transform:none; } }
+
+    /* ---- transcript ---- */
+    .back{ display:inline-flex; align-items:center; gap:8px; margin-bottom:22px; color:var(--terra);
+      background:none; border:0; padding:4px 0; font-size:12px; letter-spacing:.14em; text-transform:uppercase; }
+    .back:hover{ gap:12px; }
+    .back{ transition:gap .2s; }
+    .thead{ padding-bottom:18px; border-bottom:1px solid var(--line); margin-bottom:8px; }
+    .thead h2{ font-family:var(--display); font-weight:500; font-size:clamp(24px,3.4vw,30px);
+      line-height:1.25; margin:0 0 10px; }
+    .thead h2.none{ font-style:italic; color:var(--soft); }
+    .thead .facts{ display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+      font-size:12.5px; color:var(--muted); }
+    .acts-toggle{ display:inline-flex; align-items:center; gap:8px; margin:16px 0 4px;
+      font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--soft); cursor:pointer; }
+    .acts-toggle input{ accent-color:var(--terra); width:15px; height:15px; cursor:pointer; }
+
+    .turn{ display:flex; flex-direction:column; margin:22px 0; max-width:78%;
+      animation:rise .5s cubic-bezier(.2,.7,.2,1) backwards; animation-delay:calc(var(--i,0) * 30ms); }
+    .who{ font-size:9.5px; font-weight:500; letter-spacing:.2em; text-transform:uppercase;
+      color:var(--soft); margin-bottom:6px; display:flex; align-items:center; gap:8px; }
+    .who .t{ color:#B0A798; letter-spacing:.04em; font-family:var(--mono); font-size:10px; text-transform:none; }
+    .bubble{ padding:13px 17px; white-space:pre-wrap; word-wrap:break-word; font-size:15.5px; line-height:1.6; }
+
+    .turn.user{ margin-left:auto; align-items:flex-end; }
+    .turn.user .who{ color:var(--terra); flex-direction:row-reverse; }
+    .turn.user .bubble{ background:linear-gradient(180deg,#F3DED6,#EFD6CC); color:#4A2A20;
+      border:1px solid rgba(184,98,74,.28); border-radius:16px 16px 4px 16px; }
+
+    .turn.bot .who{ color:var(--muted); }
+    .turn.bot .bubble{ background:var(--paper); border:1px solid var(--line);
+      border-radius:16px 16px 16px 4px; box-shadow:0 10px 24px -26px rgba(43,38,32,.6); }
+
+    .turn.act{ display:none; max-width:100%; align-items:center; margin:14px 0; }
+    #turns.show-acts .turn.act{ display:flex; }
+    .turn.act .bubble{ background:none; border:1px dashed #CFC7B8; border-radius:999px;
+      font-family:var(--mono); font-size:11.5px; color:var(--soft); padding:6px 15px; }
+    .turn.act .who{ display:none; }
+
+    .empty{ color:var(--soft); font-style:italic; padding:24px 0; }
+    @media (max-width:600px){
+      main{ padding:40px 18px 72px; }
+      .bar .search{ margin-left:0; width:100%; }
+      .turn{ max-width:92%; }
+      .sid{ display:none; }
+    }
+    @media (prefers-reduced-motion:reduce){
+      *{ animation:none !important; transition:none !important; }
+    }
   </style>
 </head>
 <body>
   <main>
-    <h1>Chat log</h1>
-    <p class="sub">Conversations between visitors and the SAÏA assistant.</p>
+    <header class="mast">
+      <p class="eyebrow">SAÏA London · internal</p>
+      <h1>Chat log</h1>
+      <p class="sub">Conversations between visitors and the SAÏA assistant.</p>
+    </header>
 
     <section id="gate" aria-labelledby="gate-h">
-      <h2 id="gate-h" class="sub" style="margin:0 0 12px;">Enter the password to continue</h2>
-      <form id="gate-form">
-        <label for="pw">Password</label>
-        <input id="pw" type="password" autocomplete="current-password" required>
-        <button class="go" type="submit">Open the log</button>
-        <p class="err" id="gate-err" role="alert" aria-live="polite"></p>
-      </form>
+      <div class="gate-card">
+        <h2 id="gate-h">Cristina, welcome back</h2>
+        <p class="hint">Enter the password to open the log. It stays open for eight hours.</p>
+        <form id="gate-form">
+          <label for="pw">Password</label>
+          <input id="pw" type="password" autocomplete="current-password" required>
+          <button class="go" type="submit">Open the log</button>
+          <p class="err" id="gate-err" role="alert" aria-live="polite"></p>
+        </form>
+      </div>
     </section>
 
     <section id="list" hidden aria-labelledby="list-h">
-      <h2 id="list-h" class="sub" style="margin:0 0 12px;">Conversations, most recent first</h2>
-      <ul id="sessions"></ul>
+      <div class="bar">
+        <span class="count" id="list-h">Conversations, most recent first</span>
+        <div class="search">
+          <label for="q" class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);">Search conversations</label>
+          <input id="q" type="search" placeholder="Search conversations…" autocomplete="off">
+        </div>
+      </div>
+      <div id="sessions"></div>
       <p class="err" id="list-err" role="alert" aria-live="polite"></p>
     </section>
 
     <section id="detail" hidden aria-labelledby="detail-h">
       <button class="back" id="back" type="button">&larr; All conversations</button>
-      <h2 id="detail-h" class="sub" style="margin:0 0 12px;"></h2>
+      <div class="thead">
+        <h2 id="detail-h"></h2>
+        <div class="facts" id="detail-facts"></div>
+      </div>
+      <label class="acts-toggle">
+        <input type="checkbox" id="acts"> Show booking actions
+      </label>
       <div id="turns"></div>
     </section>
   </main>
@@ -72,16 +192,50 @@
     var gate = document.getElementById('gate'), list = document.getElementById('list'),
         detail = document.getElementById('detail'), sessions = document.getElementById('sessions'),
         turns = document.getElementById('turns'), gateErr = document.getElementById('gate-err'),
-        listErr = document.getElementById('list-err'), detailH = document.getElementById('detail-h');
+        listErr = document.getElementById('list-err'), detailH = document.getElementById('detail-h'),
+        detailFacts = document.getElementById('detail-facts'), countEl = document.getElementById('list-h'),
+        search = document.getElementById('q'), acts = document.getElementById('acts');
+    var all = [];   // every session row the server sent, newest first
 
-    function show(el) {
-      [gate, list, detail].forEach(function (s) { s.hidden = s !== el; });
+    function show(el) { [gate, list, detail].forEach(function (s) { s.hidden = s !== el; }); }
+    function el(tag, cls, text) {
+      var n = document.createElement(tag);
+      if (cls) n.className = cls;
+      if (text != null) n.textContent = text;   // textContent, never innerHTML — this is visitor input
+      return n;
     }
-    function fmt(ms) {
+
+    /* ---- time: whole calendar days, so "yesterday" means yesterday ---- */
+    function midnight(ms) { var d = new Date(ms); d.setHours(0, 0, 0, 0); return d.getTime(); }
+    function daysOld(ms) { return Math.round((midnight(Date.now()) - midnight(ms)) / 86400000); }
+    function clock(ms) { return new Date(ms).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }); }
+    function fullStamp(ms) {
       var d = new Date(ms);
       return isNaN(d) ? '' : d.toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' });
     }
+    function when(ms) {
+      var n = daysOld(ms);
+      if (isNaN(new Date(ms))) return '';
+      if (n <= 0) return clock(ms);
+      if (n === 1) return 'Yesterday, ' + clock(ms);
+      if (n < 7) return n + ' days ago';
+      return new Date(ms).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+    }
+    function groupOf(ms) {
+      var n = daysOld(ms);
+      if (n <= 0) return 'Today';
+      if (n === 1) return 'Yesterday';
+      if (n < 7) return 'Earlier this week';
+      if (n < 31) return 'This month';
+      return 'Older';
+    }
+    // recency reads as heat: terracotta today, cooling to taupe with age
+    function ageColour(ms) {
+      var n = daysOld(ms);
+      return n <= 0 ? 'var(--hot)' : n < 7 ? 'var(--warm)' : n < 31 ? 'var(--cool)' : 'var(--cold)';
+    }
 
+    /* ---- gate ---- */
     document.getElementById('gate-form').addEventListener('submit', function (e) {
       e.preventDefault();
       gateErr.textContent = '';
@@ -97,50 +251,116 @@
       }).catch(function () { gateErr.textContent = 'Could not reach the server.'; });
     });
 
+    /* ---- the list ---- */
+    function row(s, i) {
+      var b = el('button', 'card');
+      b.type = 'button';
+      b.style.setProperty('--age', ageColour(s.lastAt));
+      b.style.setProperty('--i', i);
+
+      var t = el('h3', 'ttl' + (s.title ? '' : ' none'), s.title || 'Untitled conversation');
+      t.style.margin = '0 0 8px';
+
+      var facts = el('div', 'facts');
+      facts.appendChild(el('span', 'chip', s.topic || 'General'));
+      var w = el('span', 'when', when(s.lastAt));
+      w.title = fullStamp(s.lastAt);
+      facts.appendChild(w);
+      facts.appendChild(el('span', 'dot', '·'));
+      facts.appendChild(el('span', null, s.batches + (s.batches === 1 ? ' entry' : ' entries')));
+      facts.appendChild(el('span', 'sid', s.session.slice(0, 8)));
+
+      b.appendChild(t); b.appendChild(facts);
+      b.setAttribute('aria-label', (s.title || 'Untitled conversation') + ' — ' + fullStamp(s.lastAt));
+      b.addEventListener('click', function () { loadOne(s); });
+      return b;
+    }
+
+    function render(rows) {
+      sessions.textContent = '';
+      countEl.textContent = rows.length + (rows.length === 1 ? ' conversation' : ' conversations');
+      if (!rows.length) {
+        sessions.appendChild(el('p', 'empty', all.length ? 'Nothing matches that search.' : 'No conversations recorded yet.'));
+        return;
+      }
+      var group = null, ul = null, i = 0;
+      rows.forEach(function (s) {
+        var g = groupOf(s.lastAt);
+        if (g !== group) {
+          group = g;
+          sessions.appendChild(el('h2', 'grp', g));
+          ul = el('ul', 'rows');
+          sessions.appendChild(ul);
+        }
+        var li = document.createElement('li');
+        li.appendChild(row(s, i++));
+        ul.appendChild(li);
+      });
+    }
+
+    function filter() {
+      var q = search.value.trim().toLowerCase();
+      if (!q) { render(all); return; }
+      render(all.filter(function (s) {
+        return ((s.title || '') + ' ' + (s.topic || '') + ' ' + s.session).toLowerCase().indexOf(q) > -1;
+      }));
+    }
+    search.addEventListener('input', filter);
+
     function loadList() {
       fetch(API + '?list=1', { credentials: 'same-origin' })
         .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
         .then(function (data) {
-          sessions.textContent = '';
-          if (!data.sessions.length) { listErr.textContent = 'No conversations recorded yet.'; }
-          data.sessions.forEach(function (s) {
-            var li = document.createElement('li');
-            var b = document.createElement('button');
-            b.type = 'button'; b.className = 'row';
-            var id = document.createElement('span'); id.className = 'sid'; id.textContent = s.session;
-            var meta = document.createElement('span'); meta.className = 'meta';
-            meta.textContent = fmt(s.lastAt) + ' · ' + s.batches + (s.batches === 1 ? ' entry' : ' entries');
-            b.appendChild(id); b.appendChild(meta);
-            b.addEventListener('click', function () { loadOne(s.session); });
-            li.appendChild(b); sessions.appendChild(li);
-          });
+          all = data.sessions || [];
+          listErr.textContent = '';
+          search.value = '';
+          render(all);
           show(list);
         })
         .catch(function () { gateErr.textContent = 'Could not load the conversations.'; show(gate); });
     }
 
-    function loadOne(id) {
-      fetch(API + '?session=' + encodeURIComponent(id), { credentials: 'same-origin' })
+    /* ---- one transcript ---- */
+    function bubble(t, i) {
+      var role = t.role === 'user' ? 'user' : t.role === 'bot' ? 'bot' : 'act';
+      var wrap = el('div', 'turn ' + role);
+      wrap.style.setProperty('--i', i);
+      var who = el('div', 'who', role === 'user' ? 'Visitor' : 'SAÏA assistant');
+      who.appendChild(el('span', 't', clock(t.at)));
+      wrap.appendChild(who);
+      wrap.appendChild(el('div', 'bubble', t.message));   // textContent — never innerHTML
+      return wrap;
+    }
+
+    function loadOne(s) {
+      fetch(API + '?session=' + encodeURIComponent(s.session), { credentials: 'same-origin' })
         .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
         .then(function (data) {
-          detailH.textContent = 'Session ' + data.session;
+          var title = data.title || s.title || '';
+          detailH.textContent = title || 'Untitled conversation';
+          detailH.className = title ? '' : 'none';
+
+          var said = (data.turns || []).filter(function (t) { return t.role === 'user' || t.role === 'bot'; });
+          detailFacts.textContent = '';
+          var chip = el('span', 'chip', data.topic || s.topic || 'General');
+          chip.style.setProperty('--age', ageColour(s.lastAt));
+          detailFacts.appendChild(chip);
+          detailFacts.appendChild(el('span', null, said.length + ' messages'));
+          detailFacts.appendChild(el('span', 'dot', '·'));
+          detailFacts.appendChild(el('span', null, fullStamp(s.lastAt)));
+          detailFacts.appendChild(el('span', 'sid', s.session));
+
           turns.textContent = '';
-          data.turns.forEach(function (t) {
-            var wrap = document.createElement('div'); wrap.className = 'turn';
-            var who = document.createElement('div');
-            who.className = 'who' + (t.role === 'user' ? ' user' : '');
-            who.textContent = (t.role === 'user' ? 'Visitor' : t.role === 'bot' ? 'Assistant' : 'Action')
-              + (t.tier ? ' · ' + t.tier : '') + ' · ' + fmt(t.at);
-            var msg = document.createElement('div');
-            msg.className = 'msg';
-            msg.textContent = t.message;      // textContent, never innerHTML — this is visitor input
-            wrap.appendChild(who); wrap.appendChild(msg); turns.appendChild(wrap);
-          });
+          if (!(data.turns || []).length) turns.appendChild(el('p', 'empty', 'This conversation has no readable messages.'));
+          (data.turns || []).forEach(function (t, i) { turns.appendChild(bubble(t, i)); });
           show(detail);
           document.getElementById('back').focus();
         })
         .catch(function () { listErr.textContent = 'Could not load that conversation.'; });
     }
+
+    // the assistant's booking actions are noise next to the conversation — off by default
+    acts.addEventListener('change', function () { turns.classList.toggle('show-acts', acts.checked); });
 
     document.getElementById('back').addEventListener('click', loadList);
     // an unexpired cookie from earlier today skips the password
