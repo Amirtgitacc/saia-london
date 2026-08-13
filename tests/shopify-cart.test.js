@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert');
-const { cartPermalink, cartPayload } = require('../js/shopify-cart.js');
+const { cartPermalink, cartPayload, cartCourierMissing } = require('../js/shopify-cart.js');
 
 const CFG = { matHireVariant: '111', extraDayVariant: '222', depositVariant: '333',
   courierBandAVariant: '444', courierBandBVariant: '777', pickupVariant: '666' };
@@ -28,6 +28,37 @@ test('a stale collection:"one" still gets the full band courier line', () => {
 test('Band C (outer London) adds no courier line at all', () => {
   const payload = cartPayload({ mats: 20, days: 2, method: 'deliver', zone: 'outer', postcode: 'BR1 1DN' }, CFG);
   assert.ok(!payload.items.some(i => i.id === 444 || i.id === 777));
+});
+
+/* A PRICED band with no Shopify variant configured is the live shape of
+   settings_data.json today (variant_courier_band_a is ""). Left unguarded it builds a
+   cart with no courier line: the guest pays nothing for the £80 delivery we quoted, and
+   the 0g cart takes the paid fallback shipping rate. cartCourierMissing() flags it so
+   checkout-handoff.js sends the booking to the WhatsApp quote instead. */
+const NO_BAND_A = Object.assign({}, CFG, { courierBandAVariant: '' });
+
+test('a priced band with no configured variant is flagged as unsellable', () => {
+  assert.strictEqual(cartCourierMissing({ mats: 20, days: 2, method: 'deliver', zone: 'bandA', postcode: 'EC2Y 8DS' }, NO_BAND_A), true);
+});
+
+test('a priced band WITH its variant is sellable', () => {
+  assert.strictEqual(cartCourierMissing({ mats: 20, days: 2, method: 'deliver', zone: 'bandA', postcode: 'EC2Y 8DS' }, CFG), false);
+  assert.strictEqual(cartCourierMissing({ mats: 20, days: 2, method: 'deliver', zone: 'bandB', postcode: 'SE1 9TG' }, CFG), false);
+});
+
+test('quote-only bands are NOT flagged — they carry no courier line by design', () => {
+  assert.strictEqual(cartCourierMissing({ mats: 20, days: 2, method: 'deliver', zone: 'outer', postcode: 'BR1 1DN' }, CFG), false);
+  assert.strictEqual(cartCourierMissing({ mats: 20, days: 2, method: 'deliver', zone: 'outside' }, CFG), false);
+});
+
+test('pickup is never flagged — it needs no courier variant', () => {
+  assert.strictEqual(cartCourierMissing({ mats: 20, days: 2, method: 'pickup' }, NO_BAND_A), false);
+});
+
+test('a missing Band A variant still never fabricates a Band B courier line', () => {
+  const payload = cartPayload({ mats: 20, days: 2, method: 'deliver', zone: 'bandA', postcode: 'EC2Y 8DS' }, NO_BAND_A);
+  assert.ok(!payload.items.some((i) => i.id === 777), 'must not substitute the £110 band');
+  assert.ok(!payload.items.some((i) => i.id === 444));
 });
 
 test('a delivery cart carries all four dates', () => {

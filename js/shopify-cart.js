@@ -12,6 +12,7 @@
     var mod = factory(function () { return root.SAIA.KB; });
     root.SAIA.cartPermalink = mod.cartPermalink;
     root.SAIA.cartPayload = mod.cartPayload;
+    root.SAIA.cartCourierMissing = mod.cartCourierMissing;
   }
 }(typeof self !== 'undefined' ? self : this, function (KB) {
   // Shared core: clamps mats/days, builds the mat/extra-day/deposit lines and the
@@ -35,6 +36,14 @@
     // Band C (zone 'outer') and outside London have no variant on purpose — they are
     // quoted, so their carts carry no courier line and fall to the paid checkout rate.
     var courierVariant = { bandA: cfg.courierBandAVariant, bandB: cfg.courierBandBVariant }[hire.zone];
+    // A PRICED band (A/B) whose variant is not configured must never quietly produce a
+    // courier-free cart: the guest would pay nothing for delivery we just quoted them,
+    // and the 0g cart would fall through to the paid fallback shipping rate. Flag it and
+    // let checkout-handoff.js route the booking to the WhatsApp quote instead — the same
+    // path Band C already takes. Band C/outside are quote-only BY DESIGN, so they are not
+    // "missing" anything and must not trip this.
+    var bands = (kb.delivery && kb.delivery.bands) || {};
+    var courierMissing = hire.method !== 'pickup' && bands[hire.zone] != null && !courierVariant;
     if (hire.method !== 'pickup' && courierVariant) {
       lines.push({ variant: courierVariant, qty: 1 });
     }
@@ -62,7 +71,13 @@
     attr('Postcode', String(hire.postcode || '').toUpperCase() || null);
     var q = kb.quoteLines(hire);
     attr('Delivery estimate', q.deliveryLabel);
-    return { lines: lines, attrPairs: pairs };
+    return { lines: lines, attrPairs: pairs, courierMissing: courierMissing };
+  }
+
+  // "Is this hire unsellable through the cart?" — true when the band has a price we
+  // quoted but no Shopify variant to charge it with. Callers route these to the quote.
+  function cartCourierMissing(hire, cfg) {
+    return buildCart(hire, cfg).courierMissing;
   }
 
   function cartPermalink(hire, cfg) {
@@ -82,5 +97,5 @@
     return { items: items, attributes: attributes };
   }
 
-  return { cartPermalink: cartPermalink, cartPayload: cartPayload };
+  return { cartPermalink: cartPermalink, cartPayload: cartPayload, cartCourierMissing: cartCourierMissing };
 }));

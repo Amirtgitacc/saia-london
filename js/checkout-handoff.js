@@ -6,13 +6,19 @@
     var KB = NS.KB;
     if (!KB || !KB.quoteLines) return;
     var q = KB.quoteLines(hire);
-    if (q.quoteOnly) {
+    var cfg = window.SAIA_CONFIG || {};
+    // Two ways a hire cannot go through the cart:
+    //   quoteOnly       — Band C / outside London, priced by us on purpose
+    //   courierMissing  — a PRICED band whose Shopify courier variant is not configured,
+    //                     so the cart would silently drop the delivery charge we quoted
+    // Both take the same route: a pre-filled WhatsApp quote, never a cart.
+    var courierMissing = NS.cartCourierMissing ? NS.cartCourierMissing(hire, cfg) : false;
+    if (q.quoteOnly || courierMissing) {
       var text = KB.buildWhatsAppText(hire);
       window.open('https://wa.me/447444611914?text=' + encodeURIComponent(text), '_blank');
       return;
     }
     try { sessionStorage.setItem('saia_hire', JSON.stringify(hire)); } catch (e) { /* ignore */ }
-    var cfg = window.SAIA_CONFIG || {};
     if (cfg.matHireVariant && cfg.depositVariant && NS.cartPermalink) {
       // AJAX cart build: land the customer on the on-brand /cart page (deposit note,
       // "delivery confirmed by Cristina" messaging, qty clamp backstop) instead of a

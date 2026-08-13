@@ -21,7 +21,7 @@ const { parse: parseUrl } = require('url');
 const { MODEL, processConcierge } = require('./js/concierge-core.js');
 const { normalizeLogPayload, storeChatLogs, readChatSessions, readChatSession } = require('./js/log-core.js');
 const { applyCors } = require('./js/http-guard.js');
-const { rateLimit } = require('./js/rate-limit.js');
+const { rateLimit, HAS_STORE } = require('./js/rate-limit.js');
 // api/chat-log.js is the Vercel handler; its auth helpers are reused here so
 // local dev (plain node:http req/res) and prod can never drift on the login logic.
 const chatLog = require('./api/chat-log.js');
@@ -36,7 +36,14 @@ const server = http.createServer((req, res) => {
   if (req.method === 'OPTIONS') { res.writeHead(204); return res.end(); }
   if (req.method === 'GET' && req.url === '/health') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
-    return res.end(JSON.stringify({ ok: true, model: MODEL, hasKey: !!process.env.ANTHROPIC_API_KEY, hasBlobStore: !!process.env.BLOB_READ_WRITE_TOKEN }));
+    return res.end(JSON.stringify({
+      ok: true,
+      model: MODEL,
+      hasKey: !!process.env.ANTHROPIC_API_KEY,
+      hasBlobStore: !!process.env.BLOB_READ_WRITE_TOKEN,
+      hasChatLogAuth: !!(process.env.CHAT_LOG_PASSWORD && process.env.CHAT_LOG_SECRET),
+      hasRateStore: HAS_STORE,
+    }));
   }
   if (req.method === 'POST' && req.url === '/api/log') {
     if (!cors.allowed) { res.writeHead(403, { 'Content-Type': 'application/json' }); return res.end(JSON.stringify({ error: 'forbidden_origin' })); }

@@ -41,6 +41,10 @@ const SCHEMA = {
               pc: { type: 'string', description: 'event postcode (set_postcode)' },
               event: { type: 'string', description: 'event name (rsvp_event)' },
               email: { type: 'string', description: 'email (join_newsletter)' },
+              // args carries additionalProperties:false, so any key the prompt asks for
+              // but this schema omits can NEVER be emitted. tests/concierge-schema.test.js
+              // holds the two in sync.
+              type: { type: 'string', enum: ['1-2-1', 'group'], description: 'Pilates class type (request_pilates)' },
             },
           },
         },
@@ -165,4 +169,4 @@ async function processConcierge(payload) {
   return { say: sanitizeSay(parsed.say), actions };
 }
 
-module.exports = { MODEL, processConcierge, systemPrompt, sanitizeSay };
+module.exports = { MODEL, TOOLS, SCHEMA, processConcierge, systemPrompt, sanitizeSay };

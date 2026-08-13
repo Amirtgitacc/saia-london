@@ -171,6 +171,19 @@ Delivery is by **Addison Lee** courier from the NW3 base (pickup from NW3 is fre
   1. `KB.delivery.bands.<band>` in `js/saia-knowledge.js`
   2. that band's Shopify courier variant price
   3. the paid fallback rate in the "SAÏA mat hire (checkout plumbing)" shipping profile
+- **A priced band with no configured variant is refused, not silently discounted.**
+  `cartCourierMissing()` in `js/shopify-cart.js` returns true when `KB.delivery.bands[zone]`
+  has a price but the matching theme setting is empty; `js/checkout-handoff.js` then sends the
+  booking to the WhatsApp quote instead of building a cart. Without this the guest pays nothing
+  for the delivery we just quoted **and** the 0g cart takes the paid fallback shipping rate.
+  Band C/outside are quote-only by design and never trip it.
+- **Publish order when band prices change** (the bot and the storefront read *different*
+  deployments, so the wrong order leaves them quoting different numbers):
+  1. create/point the Shopify courier variant **first**
+  2. `npx shopify theme push …` — storefront estimator + cart move to the new prices
+  3. `git push` — Vercel redeploys, and the Tier-2 bot starts quoting them too
+
+  Push git first and the bot quotes the new price while the cart still charges the old one.
 - **LATER — live Addison Lee rates:** the official **AL Shopify app** is installed but in TEST
   mode (real zonal prices ≈ £14–20 +VAT per leg). Blockers: AL must answer the van question
   (app has no vehicle-size concept; 10–50 mats need a van), and live *dynamic* rates need the
