@@ -49,6 +49,6 @@
         .catch(toPermalink);          // any failure → still completes a purchase, just without the cart page
       return;
     }
-    window.location.href = 'checkout.html';                 // local/Vercel demo
+    window.location.href = '/cart';                 // local/Vercel demo
   };
 })();

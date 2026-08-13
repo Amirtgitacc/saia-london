@@ -487,10 +487,57 @@
     window.addEventListener('touchend', () => { touchY = null; }, { passive: true });
   }
   function onResize() {
+    fitBands();
     if (!renderer) return;
     const w = canvas.clientWidth || window.innerWidth, h = canvas.clientHeight || window.innerHeight;
     renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix();
     resizeFlowCanvas();
+  }
+
+  /* ---- CHAPTER FIT ------------------------------------------------------------------
+     A pinned chapter is a 100vh window with overflow:hidden, and a sticky navbar sits on
+     top of its first ~123px. Anything outside that strip is not "scrolled past" — it is
+     CUT, with nothing on screen to say so. On a 1366x640 laptop that silently swallowed
+     the "Hire mats for your event" button, the bottom of the quotation card, and the top
+     half of "Based in NW3.".
+
+     So once per resize we measure each chapter's own layout box (offsetTop/offsetHeight —
+     immune to the transforms bands() writes every frame) and derive two numbers:
+       nudge — push down until the content clears the navbar
+       k     — scale down until the bottom clears the fold
+     bands() folds both into the transform it already sets. A chapter that already fits
+     gets {0, 1} and is left exactly as it was. ---------------------------------------- */
+  const FIT_PAD = 16;          // breathing room under the navbar and above the fold
+  const FIT_MIN = 0.72;        // never shrink past this — below it, prefer the clip
+  const fits = new Map();
+  const NO_FIT = { nudge: 0, k: 1 };
+
+  function fitBands() {
+    if (root && root.classList.contains('is-static')) { fits.clear(); return; }  // static mode flows normally
+    const nav = document.querySelector('.snav');
+    const navH = nav ? Math.round(nav.getBoundingClientRect().height) : 0;
+    for (const e of bandEls) {
+      const inner = e.firstElementChild;
+      if (!inner || !inner.offsetHeight) { fits.delete(e); continue; }
+      const h = inner.offsetHeight;
+      const wantTop = navH + FIT_PAD;
+      const top = Math.max(inner.offsetTop, wantTop);      // never start under the navbar
+      const avail = window.innerHeight - FIT_PAD - top;
+      let k = h > avail && avail > 0 ? Math.max(FIT_MIN, avail / h) : 1;
+      // deliberately NOT vertically centred: the quotation card grows ~320px the moment a
+      // date opens the price breakdown, and re-centring would yank it upward mid-interaction.
+      // The room under it is the 3D mat, not dead space.
+      const nudge = top - inner.offsetTop;
+      inner.style.transformOrigin = 'top center';          // scale away from the navbar, not through it
+      fits.set(e, { nudge: nudge, k: k });
+    }
+  }
+
+  /* the quotation card grows by ~320px the moment a date opens the price breakdown, which
+     changes what fits — remeasure on content size, not just on window resize */
+  if ('ResizeObserver' in window && bandEls.length) {
+    const ro = new ResizeObserver(() => fitBands());
+    bandEls.forEach((e) => { if (e.firstElementChild) ro.observe(e.firstElementChild); });
   }
 
   function bands(p) {
@@ -521,7 +568,9 @@
         const invIn = 1 - kinL, invOut = 1 - koutL;
         const blur = invIn * 5 + invOut * 1.4;
         const lift = invIn * 8 - invOut * 4;   // rises in from below; drifts up a touch as it leaves
-        inner.style.transform = 'translateY(' + lift.toFixed(1) + 'px) scale(' + (1 + invIn * 0.02).toFixed(4) + ')';
+        const fit = fits.get(e) || NO_FIT;     // navbar clearance + shrink-to-fit (see fitBands)
+        inner.style.transform = 'translateY(' + (lift + fit.nudge).toFixed(1) + 'px) scale(' +
+          ((1 + invIn * 0.02) * fit.k).toFixed(4) + ')';
         inner.style.filter = blur > 0.05 ? 'blur(' + blur.toFixed(2) + 'px)' : 'none';
       }
       e.style.pointerEvents = k > 0.5 ? 'auto' : 'none';

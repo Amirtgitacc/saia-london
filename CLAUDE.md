@@ -192,8 +192,9 @@ Delivery is by **Addison Lee** courier from the NW3 base (pickup from NW3 is fre
 
 ## Shopify theme
 
-`theme/` is the on-brand Shopify theme (store `saialondon`, draft theme **182035448187**; live
-theme is still the old "Motion" until publish day). `theme/assets/` carries copies of the shared
+`theme/` is the on-brand Shopify theme (store `saialondon`, theme **182035448187** — "SAÏA v2",
+**PUBLISHED: it is what www.saialondon.com serves**, so a `theme push` to it is a production
+deploy with no preview step. The old "Motion" theme is gone). `theme/assets/` carries copies of the shared
 `js/` files (knowledge, planner, shopify-cart, checkout-handoff) — **re-copy them after editing
 the originals**; `concierge-core.js`/`saia-examples.js`/`log-core.js`/`http-guard.js` are
 server-side only and must never appear in `theme/assets/`. `index.liquid` mirrors the
