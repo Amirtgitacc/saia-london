@@ -25,7 +25,7 @@ export function initMobileJourney() {
      0.41–1.00 = Cristina watercolour flow: Pilates → method → where → every body
      (mirrors the desktop flow — the mat-hire story is told over the opening mat, not in separate sections) */
   var CH = [
-    { a: 0.00, b: 0.15, e: "A women's club in London", t: "Yoga mat hire,<br>across London.", x: "Rent our mats for £8.50 each, with same-day delivery from our Central London warehouse." },
+    { a: 0.00, b: 0.15, e: "Mats by SAÏA London", t: "Yoga mat hire,<br>across London.", x: "Rent our mats for £8.50 each, with same-day delivery from our Central London warehouse." },
     { a: 0.15, b: 0.30, e: "The signature mat", t: "Made for grip,<br>made to last.", x: "One mat, exceptionally made: an ethically sourced natural-rubber base with a non-slip, anti-odour PU surface. Weighted to fall open and lie flat the moment you unroll it." },
     { a: 0.30, b: 0.45, e: "Mat hire",   t: "Hiring is<br>effortless.", x: "From a 10-mat morning class to a 50-person retreat, we handle delivery and collection. £8.50 a mat, 2-day hire, minimum of ten." },
     { a: 0.45, b: 0.59, e: "The person behind SAÏA", t: "Run by<br>Cristina.",        x: "SAÏA Mats is run by Cristina, who looks after every hire herself, from your first enquiry to the moment the mats come home." },
