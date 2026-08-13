@@ -364,10 +364,16 @@
      Instead of mapping raw scroll distance to p (which made the journey take ~19
      screens of scrolling), a gesture tweens the window scroll to the next STOP over
      SNAP_MS with an ease — so the mat unroll, the van and each pose transition always
-     play at the same deliberate ~2s speed regardless of how hard you flick.
+     play at the same deliberate ~4.5s speed regardless of how hard you flick.
      Each stop sits inside its band's sharp plateau AND on a flow HOLD, so a chapter
      never settles mid-blur or mid-pose. Past either end we don't preventDefault, so
-     the page scrolls out of the journey normally. ---- */
+     the page scrolls out of the journey normally.
+
+     A snap is INTERRUPTIBLE: a second push while one is running re-aims at the stop
+     after it, from wherever the page has got to, and each chained hop is shorter than
+     the last (CHAIN_DECAY, floored at SNAP_MIN_MS). First view = slow and cinematic;
+     someone who keeps scrolling gets through the journey at their own pace instead of
+     watching their input get swallowed. The chain resets after CHAIN_MS of calm. ---- */
   const STOPS = [
     0.000,   // 1 hero — coiled mat
     0.260,   // 2 signature mat, fully unrolled (UNROLL_END 0.22)
@@ -379,9 +385,43 @@
     0.900,   // 8 flow L4 — low lunge
     1.000,   // 9 flow L5 — seated, hands to heart + Join
   ];
-  const SNAP_MS = 2000;          // one chapter transition, in ms
-  const GESTURE_GAP = 180;       // ms of quiet that ends a wheel gesture (kills trackpad momentum)
-  let snapping = false, snapFrom = 0, snapTo = 0, snapT0 = 0, lastWheel = -1e6, touchY = null;
+  const SNAP_MS = 4500;          // one chapter transition, in ms — the unhurried first pass
+  const SNAP_MIN_MS = 700;       // however hard you scroll, a chapter never flies past faster
+  const CHAIN_DECAY = 0.55;      // each push during a snap shortens the next hop: 4500→2475→1361→749→700
+  const CHAIN_MS = 500;          // calm for this long and the next chapter is slow again
+  const END_MIN_MS = 320;        // pushing on at the first/last stop can compress a hop to this
+  const CHAIN_GAP = 220;         // min ms between chapter advances — a trackpad's ramp-up and its
+                                 // momentum tail are dozens of events; without this floor ONE flick
+                                 // skips five chapters. Sustained scrolling still gets ~4.5/sec.
+  const GESTURE_GAP = 90;        // ms of quiet that ends a wheel gesture (kills trackpad momentum)
+  const ADVANCE_PX = 250;        // min wheel distance that earns the next chapter mid-snap...
+  const PEAK_FACTOR = 7;         // ...but a big gesture must travel proportionally further, or the
+                                 // ramp-up of ONE hard flick banks enough to buy a second chapter
+  const FALL_STREAK = 4;         // consecutive shrinking deltas that mean the fingers have lifted
+  const TAIL_RATIO = 0.5;        // or a delta this far under the gesture's peak — belt and braces
+  /* The tween must MOVE on the first frame. A symmetric ease over 4.5s spends its first
+     second doing ~0.5% of the distance, which reads as lag, not as easing — so use a
+     CSS-style cubic-bezier that leaves the mark straight away and lands soft instead. */
+  const SNAP_EASE = bezier(0.10, 0.12, 0.70, 1);
+  /* cubic-bezier(x1,y1,x2,y2) → f(t): Newton-solve the x polynomial, evaluate y */
+  function bezier(x1, y1, x2, y2) {
+    const cx = 3 * x1, bx = 3 * (x2 - x1) - cx, ax = 1 - cx - bx;
+    const cy = 3 * y1, by = 3 * (y2 - y1) - cy, ay = 1 - cy - by;
+    return function (t) {
+      let s = t;
+      for (let i = 0; i < 5; i++) {
+        const d = ((ax * s + bx) * s + cx) * s - t, g = (3 * ax * s + 2 * bx) * s + cx;
+        if (Math.abs(d) < 1e-5 || !g) break;
+        s -= d / g;
+      }
+      s = Math.min(1, Math.max(0, s));
+      return ((ay * s + by) * s + cy) * s;
+    };
+  }
+  let snapping = false, snapFrom = 0, snapTo = 0, snapT0 = 0, touchY = null;
+  let snapIdx = -1, snapMs = SNAP_MS, snapEnd = -1e6, chain = 0;
+  let lastWheel = -1e6, lastAbs = 0, lastAdvance = -1e6;
+  let peakAbs = 0, accum = 0, tailing = false, fallStreak = 0;
 
   function pinned() {
     const r = wrap.getBoundingClientRect();
@@ -392,23 +432,70 @@
     const top = wrap.getBoundingClientRect().top + window.scrollY;
     return top + p * Math.max(0, total);
   }
-  /* next stop in `dir`, or -1 when there is none (→ let the page scroll away) */
+  /* next stop in `dir`, or -1 when there is none (→ let the page scroll away).
+     Mid-snap the page sits BETWEEN stops, so counting from the live scroll position
+     would just re-aim at the stop we are already flying to. Count from the destination
+     instead — that is what makes a second push mean "and the one after that". */
   function nextStop(dir) {
+    if (snapping && snapIdx >= 0) {
+      const n = snapIdx + dir;
+      return n >= 0 && n < STOPS.length ? n : -1;
+    }
     const p = target;
     if (dir > 0) { for (let i = 0; i < STOPS.length; i++) if (STOPS[i] > p + 0.004) return i; return -1; }
     for (let i = STOPS.length - 1; i >= 0; i--) if (STOPS[i] < p - 0.004) return i;
     return -1;
   }
-  function startSnap(p) {
-    snapFrom = window.scrollY; snapTo = yForP(p);
-    snapT0 = performance.now(); snapping = true;
+  function startSnap(i) {
+    const now = performance.now();
+    // pushing while a snap runs (or right after one lands) = "faster, please"
+    chain = (snapping || now - snapEnd < CHAIN_MS) ? Math.min(chain + 1, 8) : 0;
+    snapMs = Math.max(SNAP_MIN_MS, SNAP_MS * Math.pow(CHAIN_DECAY, chain));
+    snapIdx = i;
+    snapFrom = window.scrollY; snapTo = yForP(STOPS[i]);
+    snapT0 = now; snapping = true;
   }
+  /* No stop left in `dir`. Two very different situations wear that same -1:
+       still flying to the first/last stop → the push means "get there sooner". Killing
+         the tween here strands the guest mid-chapter — half a hero, half a "Let's plan
+         your event" — with nothing but hand-scrolling to finish the move. That was the
+         sticky feel at both ends: chapter 8 → 9, and chapter 2 → back to the hero.
+       already parked ON that stop → they want out of the journey; let the page have it.
+     Returns true when the caller should swallow the event and leave the snap running. */
+  function holdEnd(push) {
+    if (!snapping || snapIdx < 0) { releaseSnap(); return false; }
+    if (push) hurry();                   // same destination, less time left
+    return true;
+  }
+  /* Squeeze the RUNNING tween rather than restarting it at the same stop. Restarting would
+     re-ease from wherever the page is, so each push covers a fraction of what is left and
+     the end never arrives (it stalled at p=0.05 short of the hero). Holding t and shrinking
+     the timeline around it keeps the position continuous this frame and monotonic after. */
+  function hurry() {
+    if (!snapping) return;
+    const now = performance.now();
+    if (now - lastAdvance < CHAIN_GAP) return;
+    lastAdvance = now; accum = 0;
+    const t = Math.min(1, (now - snapT0) / snapMs);
+    const ms = Math.max(END_MIN_MS, snapMs * CHAIN_DECAY);
+    snapMs = ms; snapT0 = now - t * ms;
+  }
+  /* every input path goes through here, so the CHAIN_GAP floor is enforced once. Returns
+     false when it refused, so the caller can keep the scroll credit and spend it later. */
+  function advance(i) {
+    if (performance.now() - lastAdvance < CHAIN_GAP) return false;
+    lastAdvance = performance.now(); accum = 0;
+    startSnap(i);
+    return true;
+  }
+  /* the guest wants OUT of the journey (scrolling on past either end) — stop driving the
+     scrollbar so the page can move, rather than fighting them for it every frame */
+  function releaseSnap() { snapping = false; snapEnd = performance.now(); }
   function stepSnap(now) {
     if (!snapping) return;
-    let t = (now - snapT0) / SNAP_MS;
-    if (t >= 1) { t = 1; snapping = false; }
-    const e = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;   // easeInOutCubic
-    window.scrollTo(0, snapFrom + (snapTo - snapFrom) * e);
+    let t = (now - snapT0) / snapMs;
+    if (t >= 1) { t = 1; snapping = false; snapEnd = now; }
+    window.scrollTo(0, snapFrom + (snapTo - snapFrom) * SNAP_EASE(t));
   }
   /* A form now lives inside a pinned band (the estimator, chapter 4). While the guest is
      using it, chapter snapping must get out of the way or the page scrolls out from under
@@ -423,6 +510,12 @@
       el.tagName === 'SELECT' || el.isContentEditable);
   }
   function snapPaused() { return !!window.SAIA.journeyPaused; }
+
+  /* read-only snap state — for tuning the chapter feel from the console */
+  window.SAIA.__snapState = function () {
+    return { snapping, snapIdx, snapMs: Math.round(snapMs), chain,
+      t: snapping ? +((performance.now() - snapT0) / snapMs).toFixed(3) : null, p: +target.toFixed(4) };
+  };
 
   function bindPause() {
     const zone = wrap.querySelector('[data-journey-pause]');
@@ -443,6 +536,7 @@
   function bindEstimateLinks() {
     window.SAIA = window.SAIA || {};
     window.SAIA.__estimateScroll = function () {
+      releaseSnap();      // a running snap would fight the jump for the scrollbar
       window.scrollTo({ top: yForP(STOPS[3]), behavior: 'smooth' });
     };
   }
@@ -452,13 +546,28 @@
       if (!pinned() || e.ctrlKey || snapPaused()) return;
       const dir = e.deltaY > 0 ? 1 : e.deltaY < 0 ? -1 : 0;
       if (!dir) return;
+      const now = performance.now(), abs = Math.abs(e.deltaY), gap = now - lastWheel;
+      /* Which events are a real push? A mouse wheel has no momentum tail — every notch is
+         deliberate, so every notch counts. A trackpad is harder: after the fingers lift it
+         throws dozens of events that must NOT chain chapters, while fingers that stay down
+         must. The tell is decay, not size — a tail falls away from the gesture's peak and
+         keeps falling; a finger still moving holds near it. So: bank the distance scrolled,
+         spend it a chapter at a time, and bank nothing once we are clearly in a tail.
+         (Watching for a RISING delta instead missed steady scrolling entirely — a smooth
+         drag plateaus, so every event looked like a tail and the input was swallowed.) */
+      if (gap > GESTURE_GAP) { peakAbs = 0; accum = 0; tailing = false; fallStreak = 0; }  // new gesture
+      if (abs < lastAbs) fallStreak++; else fallStreak = 0;   // momentum only ever shrinks
+      if (abs > lastAbs * 1.2 + 2) { peakAbs = abs; tailing = false; fallStreak = 0; }     // fingers back on
+      else if (fallStreak >= FALL_STREAK || abs < peakAbs * TAIL_RATIO) tailing = true;
+      if (abs > peakAbs) peakAbs = abs;
+      if (!tailing) accum += abs;
+      const mouse = e.deltaMode !== 0 || abs >= 100;
+      const push = mouse || gap > GESTURE_GAP || accum >= Math.max(ADVANCE_PX, peakAbs * PEAK_FACTOR);
+      lastWheel = now; lastAbs = abs;
       const i = nextStop(dir);
-      if (i < 0) { lastWheel = performance.now(); return; }   // at an end — release to the page
+      if (i < 0) { if (holdEnd(push)) e.preventDefault(); return; }
       e.preventDefault();
-      const now = performance.now(), fresh = now - lastWheel > GESTURE_GAP;
-      lastWheel = now;
-      if (snapping || !fresh) return;                          // one snap per gesture
-      startSnap(STOPS[i]);
+      if (push) advance(i);                                     // interrupts a running snap
     }, { passive: false });
 
     window.addEventListener('keydown', (e) => {
@@ -468,21 +577,21 @@
       else if (e.key === 'ArrowUp' || e.key === 'PageUp') dir = -1;
       else return;
       const i = nextStop(dir);
-      if (i < 0) return;
+      if (i < 0) { if (holdEnd(true)) e.preventDefault(); return; }
       e.preventDefault();
-      if (!snapping) startSnap(STOPS[i]);
+      advance(i);                                               // held key = chained, quickening
     });
 
     window.addEventListener('touchstart', (e) => { touchY = e.touches[0].clientY; }, { passive: true });
     window.addEventListener('touchmove', (e) => {
       if (touchY == null || !pinned() || snapPaused()) return;
-      const dy = touchY - e.touches[0].clientY;
-      if (Math.abs(dy) < 30) return;
+      const y = e.touches[0].clientY, dy = touchY - y;
+      if (Math.abs(dy) < 40) return;
       const i = nextStop(dy > 0 ? 1 : -1);
-      if (i < 0) { touchY = null; return; }
+      if (i < 0) { if (holdEnd(true)) { e.preventDefault(); touchY = y; } else touchY = null; return; }
       e.preventDefault();
-      if (snapping) return;
-      touchY = null; startSnap(STOPS[i]);
+      touchY = y;                                               // re-arm: 40px more travel = the next chapter
+      advance(i);
     }, { passive: false });
     window.addEventListener('touchend', () => { touchY = null; }, { passive: true });
   }
@@ -694,7 +803,7 @@
       if (!paused && visible) {
         stepSnap(now || performance.now());
         updateTarget();
-        // during a snap the tween IS the animation curve — follow it 1:1 so 2s means 2s.
+        // during a snap the tween IS the animation curve — follow it 1:1 so SNAP_MS means SNAP_MS.
         // free scrolling (scrollbar drag, jump links) still gets the damped follow.
         if (snapping) { current = target; clock.getDelta(); }
         else {
