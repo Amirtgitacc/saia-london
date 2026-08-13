@@ -8,7 +8,6 @@
   },
   "headers": [
     {
-      "//": "chat-log.html shows transcripts carrying names, postcodes and emails. frame-ancestors/X-Frame-Options stop it being framed, connect-src pins its fetches to /api on this host. 'unsafe-inline' is unavoidable: the page's script and styles are inline.",
       "source": "/chat-log.html",
       "headers": [
         { "key": "Content-Security-Policy", "value": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'" },
@@ -18,7 +17,6 @@
       ]
     },
     {
-      "//": "API responses are JSON, never markup — nosniff stops a browser guessing otherwise.",
       "source": "/api/(.*)",
       "headers": [
         { "key": "X-Content-Type-Options", "value": "nosniff" },
