@@ -386,13 +386,32 @@
     1.000,   // 9 flow L5 — seated, hands to heart + Join
   ];
   const SNAP_MS = 4500;          // one chapter transition, in ms — the unhurried first pass
-  const SNAP_MIN_MS = 700;       // however hard you scroll, a chapter never flies past faster
-  const CHAIN_DECAY = 0.55;      // each push during a snap shortens the next hop: 4500→2475→1361→749→700
+  const SNAP_MIN_MS = 1200;      // however hard you scroll, a chapter never flies past faster
+  const CHAIN_DECAY = 0.72;      // each push during a snap shortens the next hop: 4500→3240→2333→1680→1210
   const CHAIN_MS = 500;          // calm for this long and the next chapter is slow again
-  const END_MIN_MS = 320;        // pushing on at the first/last stop can compress a hop to this
-  const CHAIN_GAP = 220;         // min ms between chapter advances — a trackpad's ramp-up and its
+  const END_MIN_MS = 560;        // pushing on at the first/last stop can compress a hop to this
+  const CHAIN_GAP = 400;         // min ms between chapter advances — a trackpad's ramp-up and its
                                  // momentum tail are dozens of events; without this floor ONE flick
-                                 // skips five chapters. Sustained scrolling still gets ~4.5/sec.
+                                 // skips five chapters. Sustained scrolling still gets ~2.5/sec.
+  /* ---- CRISTINA'S FLOW RUNS SLOWER THAN THE COPY CHAPTERS ----
+     A text chapter is a cut: it can arrive quickly and still read. A pose morph is
+     ~70 watercolour frames of a body moving — played in a second it reads as a flicker,
+     not as yoga. Because a hop is a fixed-duration tween, the morph's on-screen speed is
+     the hop's DURATION, not its scroll distance, so the flow chapters get their own pace:
+     longer base, a gentler chain decay, a much higher floor, and more space between
+     advances so hammering the wheel can't stack morph on morph. ---- */
+  const FLOW_FIRST_STOP = 4;     // STOPS index where the watercolour flow takes over (p 0.600)
+  const SNAP_MS_FLOW = 6500;     // one pose-to-pose morph, unhurried
+  const SNAP_MIN_MS_FLOW = 2800; // however hard you scroll, a pose never morphs faster than this
+  const CHAIN_DECAY_FLOW = 0.80; // 6500→5200→4160→3328→2800 (floor), vs 0.72 for copy chapters
+  const CHAIN_GAP_FLOW = 1200;   // ≈0.8 poses/sec at full tilt — still the slowest thing on screen
+  const END_MIN_MS_FLOW = 1600;  // pushing on past the seated pose still lets you out, just not with a jerk
+  const isFlowStop = i => i >= FLOW_FIRST_STOP;
+  const baseMsFor = i => (isFlowStop(i) ? SNAP_MS_FLOW : SNAP_MS);
+  const minMsFor = i => (isFlowStop(i) ? SNAP_MIN_MS_FLOW : SNAP_MIN_MS);
+  const decayFor = i => (isFlowStop(i) ? CHAIN_DECAY_FLOW : CHAIN_DECAY);
+  const gapFor = i => (isFlowStop(i) ? CHAIN_GAP_FLOW : CHAIN_GAP);
+  const endMinFor = i => (isFlowStop(i) ? END_MIN_MS_FLOW : END_MIN_MS);
   const GESTURE_GAP = 90;        // ms of quiet that ends a wheel gesture (kills trackpad momentum)
   const ADVANCE_PX = 250;        // min wheel distance that earns the next chapter mid-snap...
   const PEAK_FACTOR = 7;         // ...but a big gesture must travel proportionally further, or the
@@ -450,7 +469,7 @@
     const now = performance.now();
     // pushing while a snap runs (or right after one lands) = "faster, please"
     chain = (snapping || now - snapEnd < CHAIN_MS) ? Math.min(chain + 1, 8) : 0;
-    snapMs = Math.max(SNAP_MIN_MS, SNAP_MS * Math.pow(CHAIN_DECAY, chain));
+    snapMs = Math.max(minMsFor(i), baseMsFor(i) * Math.pow(decayFor(i), chain));
     snapIdx = i;
     snapFrom = window.scrollY; snapTo = yForP(STOPS[i]);
     snapT0 = now; snapping = true;
@@ -474,16 +493,18 @@
   function hurry() {
     if (!snapping) return;
     const now = performance.now();
-    if (now - lastAdvance < CHAIN_GAP) return;
+    if (now - lastAdvance < gapFor(snapIdx)) return;
     lastAdvance = now; accum = 0;
     const t = Math.min(1, (now - snapT0) / snapMs);
-    const ms = Math.max(END_MIN_MS, snapMs * CHAIN_DECAY);
+    const ms = Math.max(endMinFor(snapIdx), snapMs * decayFor(snapIdx));
     snapMs = ms; snapT0 = now - t * ms;
   }
   /* every input path goes through here, so the CHAIN_GAP floor is enforced once. Returns
      false when it refused, so the caller can keep the scroll credit and spend it later. */
   function advance(i) {
-    if (performance.now() - lastAdvance < CHAIN_GAP) return false;
+    // gate on the SLOWER of the two chapters involved, so leaving a pose is as calm as entering one
+    const gap = Math.max(gapFor(i), snapping && snapIdx >= 0 ? gapFor(snapIdx) : 0);
+    if (performance.now() - lastAdvance < gap) return false;
     lastAdvance = performance.now(); accum = 0;
     startSnap(i);
     return true;
